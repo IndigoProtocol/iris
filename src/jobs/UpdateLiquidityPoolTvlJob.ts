@@ -1,0 +1,91 @@
+import { BaseJob } from './BaseJob';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { dbService, queue } from '../indexerServices';
+import { EntityManager } from 'typeorm';
+import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { logError } from '../logger';
+import { Asset } from '../db/entities/Asset';
+import { UpdateLiquidityPoolTicks } from './UpdateLiquidityPoolTicks';
+
+export class UpdateLiquidityPoolTvlJob extends BaseJob {
+
+    private readonly _liquidityPoolState: LiquidityPoolState;
+
+    constructor(liquidityPoolState: LiquidityPoolState) {
+        super();
+
+        this._liquidityPoolState = liquidityPoolState;
+    }
+
+    public async handle(): Promise<any> {
+        return dbService.transaction((manager: EntityManager) => {
+            if (! this._liquidityPoolState.liquidityPool) {
+                return Promise.reject('Liquidity Pool not found for liquidity pool state');
+            }
+
+            return (
+                ! this._liquidityPoolState.liquidityPool.tokenA
+                    ? this.updateAdaPoolTvl(manager, this._liquidityPoolState.liquidityPool)
+                    : this.updateNonAdaPoolTvl(manager, this._liquidityPoolState.liquidityPool)
+            )
+        }).then(() => {
+            if (this._liquidityPoolState.tvl !== 0) {
+                queue.dispatch(new UpdateLiquidityPoolTicks(this._liquidityPoolState));
+            }
+        }).catch((e) => logError(e));
+    }
+
+    private updateAdaPoolTvl(manager: EntityManager, liquidityPool: LiquidityPool): Promise<any> {
+        const tokenADecimals: number = 6;
+        const tokenBDecimals: number = liquidityPool.tokenB.decimals ?? 0;
+
+        const price: number = this._liquidityPoolState.reserveB !== 0 ? (this._liquidityPoolState.reserveA / 10**tokenADecimals) / (this._liquidityPoolState.reserveB / 10**tokenBDecimals) : 0;
+        const reserveAValue: number = Number(this._liquidityPoolState.reserveA) / 10**tokenADecimals;
+        const reserveBValue: number = (Number(this._liquidityPoolState.reserveB) / 10**tokenBDecimals) * price;
+
+        this._liquidityPoolState.tvl = Math.floor((reserveAValue + reserveBValue) * 10**6);
+
+        return manager.save(this._liquidityPoolState);
+    }
+
+    private async updateNonAdaPoolTvl(manager: EntityManager, liquidityPool: LiquidityPool): Promise<any> {
+        const retrieveLiquidityPool: any = (tokenB: Asset) => {
+            return manager.createQueryBuilder(LiquidityPool, 'pools')
+               .leftJoinAndSelect('pools.tokenA', 'tokenA')
+               .leftJoinAndSelect('pools.tokenB', 'tokenB')
+               .leftJoinAndSelect('pools.latestState', 'latestState')
+               .where("pools.dex = :dex", {
+                   dex: liquidityPool.dex,
+               })
+               .andWhere('pools.tokenA IS NULL')
+               .andWhere("pools.tokenB.id = :tokenBId", {
+                   tokenBId: tokenB.id,
+               })
+               .orderBy('pools.createdSlot', 'DESC')
+               .getOne();
+        };
+
+        const tokenAPool: LiquidityPool | null = await retrieveLiquidityPool(liquidityPool.tokenA);
+        const tokenBPool: LiquidityPool | null = await retrieveLiquidityPool(liquidityPool.tokenB);
+
+        if (! tokenAPool || ! tokenBPool || ! tokenAPool.latestState || ! tokenBPool.latestState) {
+            this._liquidityPoolState.tvl = 0;
+
+            return dbService.transaction((manager: EntityManager) => manager.save(this._liquidityPoolState));
+        }
+
+        const tokenADecimals: number = liquidityPool.tokenA?.decimals ?? 0;
+        const tokenBDecimals: number = liquidityPool.tokenB.decimals;
+
+        const poolAPrice: number = tokenAPool.latestState.reserveB !== 0 ? (tokenAPool.latestState.reserveA / 10**6) / (tokenAPool.latestState.reserveB / 10**tokenADecimals) : 0;
+        const poolBPrice: number = tokenBPool.latestState.reserveB !== 0 ? (tokenBPool.latestState.reserveA / 10**6) / (tokenBPool.latestState.reserveB / 10**tokenBDecimals) : 0;
+
+        const reserveAValue: number = (Math.min(this._liquidityPoolState.reserveA, tokenAPool.latestState.reserveB) / 10**tokenADecimals) * poolAPrice;
+        const reserveBValue: number = (Math.min(this._liquidityPoolState.reserveB, tokenBPool.latestState.reserveB) / 10**tokenBDecimals) * poolBPrice;
+
+        this._liquidityPoolState.tvl = Math.floor((reserveAValue + reserveBValue) * 10**6);
+
+        return manager.save(this._liquidityPoolState);
+    }
+
+}
