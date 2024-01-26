@@ -9,6 +9,7 @@ import { lucidUtils, tokenId } from '../utils';
 import { logInfo } from '../logger';
 import { AddressDetails } from 'lucid-cardano';
 import { Asset } from '../db/entities/Asset';
+import { dbApiService } from '../apiServices';
 
 export class UpdateAmountReceived extends BaseJob {
 
@@ -29,7 +30,7 @@ export class UpdateAmountReceived extends BaseJob {
 
         logInfo(`[Queue] UpdateAmountReceived for state ${this._liquidityPoolState.txHash}`);
 
-        let swapOrders: LiquidityPoolSwap[] | null = await dbSource.createQueryBuilder(LiquidityPoolSwap, 'orders')
+        let swapOrders: LiquidityPoolSwap[] | null = await dbService.dbSource.createQueryBuilder(LiquidityPoolSwap, 'orders')
             .leftJoinAndSelect('orders.swapOutToken', 'swapOutToken')
             .where('orders.txHash IN(:...txHashes)', {
                 txHashes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.forTxHash)

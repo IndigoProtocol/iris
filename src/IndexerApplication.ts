@@ -38,6 +38,9 @@ export class IndexerApplication {
     private chainSyncClient: ChainSyncClient | undefined = undefined;
     private stateQueryClient: StateQueryClient | undefined = undefined;
 
+    private readonly _dbMigrations: Function[] = [];
+    private readonly _dbEntities: Function[] = [];
+
     /**
      * Indexers to make aware of new blocks & rollbacks.
      */
@@ -58,10 +61,11 @@ export class IndexerApplication {
 
     /**
      * IndexerApplication constructor.
-     * @param cache - Storage container for application to use.
      */
-    constructor(cache: BaseCacheStorage) {
+    constructor(cache: BaseCacheStorage, dbMigrations: Function[] = [], dbEntities: Function[] = []) {
         this._cache = cache;
+        this._dbMigrations = dbMigrations;
+        this._dbEntities = dbEntities;
     }
 
     /**
@@ -102,16 +106,17 @@ export class IndexerApplication {
     /**
      * Boot all necessary services for application.
      */
-    private bootServices(): Promise<any> {
+    private async bootServices(): Promise<any> {
         logInfo('Booting services...');
 
         const services: BaseService[] = [
             operationWs,
             eventService,
-            dbService,
             metadataService,
             queue,
         ];
+
+        await dbService.boot(this._dbMigrations, this._dbEntities);
 
         return Promise.all(services.map((service: BaseService) => service.boot()))
             .then(() => {

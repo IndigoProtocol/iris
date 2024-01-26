@@ -1,12 +1,13 @@
 import { BaseService } from './BaseService';
-import { EntityManager, QueryRunner } from 'typeorm';
-import { dbSource } from '../db/data-source';
+import { DataSource, EntityManager, QueryRunner } from 'typeorm';
 import { logError, logInfo } from '../logger';
 import CONFIG from '../config';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 import { ApplicationContext } from '../constants';
 
 export class DatabaseService extends BaseService {
+
+    public dbSource: DataSource;
 
     private readonly _context: ApplicationContext;
 
@@ -16,12 +17,37 @@ export class DatabaseService extends BaseService {
         this._context = context;
     }
 
-    public boot(): Promise<any> {
+    public boot(migrations: Function[] = [], entities: Function[] = []): Promise<any> {
         if (! CONFIG.MYSQL_USERNAME || ! CONFIG.MYSQL_DATABASE) {
             return Promise.reject('Database config not set.');
         }
 
-        return dbSource.initialize()
+        this.dbSource = new DataSource({
+            type: 'mysql',
+            host: CONFIG.MYSQL_HOST,
+            port: CONFIG.MYSQL_PORT,
+            username: CONFIG.MYSQL_USERNAME,
+            password: CONFIG.MYSQL_PASSWORD,
+            database: CONFIG.MYSQL_DATABASE,
+            debug: false,
+            logging: ['error'],
+            supportBigNumbers: true,
+            bigNumberStrings: false,
+            synchronize: false,
+            entities: [
+                'dist/**/entities/*.js',
+                ...entities,
+            ],
+            migrations: [
+                'dist/**/migrations/*.js',
+                ...migrations,
+            ],
+            migrationsTableName: 'migrations',
+            migrationsRun: true,
+            poolSize: 100,
+        });
+
+        return this.dbSource.initialize()
             .then(() => {
                 logInfo('Database connected', this._context);
             })
@@ -31,14 +57,14 @@ export class DatabaseService extends BaseService {
     }
 
     get isInitialized(): boolean {
-        return dbSource.isInitialized;
+        return this.dbSource.isInitialized;
     }
 
     /**
      * Sandwich some logic that requires a DB transaction.
      */
     public async transaction(logicFunc: (manager: EntityManager) => any, retryOnDuplicate: boolean = false, isolationLevel: IsolationLevel = 'READ UNCOMMITTED'): Promise<any> {
-        const query: QueryRunner = dbSource.createQueryRunner();
+        const query: QueryRunner = this.dbSource.createQueryRunner();
 
         await query.connect();
         await query.startTransaction(isolationLevel);
@@ -65,7 +91,7 @@ export class DatabaseService extends BaseService {
     }
 
     public async query(logicFunc: (manager: EntityManager) => any): Promise<any> {
-        const query: QueryRunner = dbSource.createQueryRunner();
+        const query: QueryRunner = this.dbSource.createQueryRunner();
 
         await query.connect();
 
