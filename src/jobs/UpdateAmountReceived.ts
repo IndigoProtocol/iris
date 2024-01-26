@@ -3,13 +3,11 @@ import { EntityManager } from 'typeorm';
 import { dbService } from '../indexerServices';
 import { AssetBalance, Utxo } from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
-import { dbSource } from '../db/data-source';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { lucidUtils, tokenId } from '../utils';
 import { logInfo } from '../logger';
 import { AddressDetails } from 'lucid-cardano';
 import { Asset } from '../db/entities/Asset';
-import { dbApiService } from '../apiServices';
 
 export class UpdateAmountReceived extends BaseJob {
 
