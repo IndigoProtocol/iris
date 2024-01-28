@@ -1,6 +1,6 @@
 import { BaseIndexer } from './BaseIndexer';
 import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
-import { AmmDexOperation, OrderBookDexOperation } from '../types';
+import { OrderBookDexOperation } from '../types';
 import { dbService, eventService } from '../indexerServices';
 import { EntityManager, MoreThan } from 'typeorm';
 import { logInfo } from '../logger';
@@ -9,10 +9,7 @@ import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { BaseOrderBookDexAnalyzer } from '../dex/BaseOrderBookDexAnalyzer';
 import { IndexerEventType } from '../constants';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
-import { LiquidityPool } from '../db/entities/LiquidityPool';
 import { OrderBook } from '../db/entities/OrderBook';
-import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
-import { OperationStatus } from '../db/entities/OperationStatus';
 
 export class OrderBookDexTransactionIndexer extends BaseIndexer {
 
@@ -55,7 +52,7 @@ export class OrderBookDexTransactionIndexer extends BaseIndexer {
                                 return operation.identifier === orderIdentifier;
                             });
                         }
-//todo
+
                         if (a instanceof OrderBookMatch && a.referenceOrder && inMatch(a.referenceOrder.identifier)) {
                             return -1;
                         }

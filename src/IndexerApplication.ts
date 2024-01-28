@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { BaseService } from './services/BaseService';
 import { dbService, eventService, metadataService, operationWs, queue } from './indexerServices';
 import {
     createChainSyncClient,
@@ -26,6 +25,7 @@ import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from './constants';
 import { TeddySwapAnalyzer } from './dex/TeddySwapAnalyzer';
 import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
 import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
+import { BaseEventListener } from './listeners/BaseEventListener';
 
 export class IndexerApplication {
 
@@ -34,10 +34,11 @@ export class IndexerApplication {
      */
     private readonly _cache: BaseCacheStorage;
 
-    private latestSlot: number = -1;
+    private latestSlot: number = 0;
     private chainSyncClient: ChainSyncClient | undefined = undefined;
     private stateQueryClient: StateQueryClient | undefined = undefined;
 
+    private readonly _eventListeners: BaseEventListener[] = [];
     private readonly _dbMigrations: Function[] = [];
     private readonly _dbEntities: Function[] = [];
 
@@ -62,8 +63,14 @@ export class IndexerApplication {
     /**
      * IndexerApplication constructor.
      */
-    constructor(cache: BaseCacheStorage, dbMigrations: Function[] = [], dbEntities: Function[] = []) {
+    constructor(
+        cache: BaseCacheStorage,
+        eventListeners: BaseEventListener[] = [],
+        dbMigrations: Function[] = [],
+        dbEntities: Function[] = [],
+    ) {
         this._cache = cache;
+        this._eventListeners = eventListeners;
         this._dbMigrations = dbMigrations;
         this._dbEntities = dbEntities;
     }
@@ -73,24 +80,6 @@ export class IndexerApplication {
      */
     get cache(): BaseCacheStorage {
         return this._cache;
-    }
-
-    public async getLatestSlot(): Promise<number> {
-        if (this.latestSlot !== -1) {
-            return Promise.resolve(this.latestSlot);
-        }
-
-        if (this.stateQueryClient) {
-            const tip: PointOrOrigin = await this.stateQueryClient.chainTip();
-
-            if (tip !== 'origin') {
-                this.latestSlot = tip.slot;
-
-                return Promise.resolve(this.latestSlot);
-            }
-        }
-
-        return Promise.reject('StateQueryClient not initialized');
     }
 
     /**
@@ -109,22 +98,18 @@ export class IndexerApplication {
     private async bootServices(): Promise<any> {
         logInfo('Booting services...');
 
-        const services: BaseService[] = [
-            operationWs,
-            eventService,
-            metadataService,
-            queue,
-        ];
-
-        await dbService.boot(this._dbMigrations, this._dbEntities);
-
-        return Promise.all(services.map((service: BaseService) => service.boot()))
-            .then(() => {
-                logInfo('Services booted');
-            }).catch((reason) => {
-                logError(reason);
-                process.exit(0);
-            });
+        return Promise.all([
+            dbService.boot(this._dbMigrations, this._dbEntities),
+            eventService.boot(this._eventListeners),
+            operationWs.boot(),
+            metadataService.boot(),
+            queue.boot(),
+        ]).then(() => {
+            logInfo('Services booted');
+        }).catch((reason) => {
+            logError(reason);
+            process.exit(0);
+        });
     }
 
     /**

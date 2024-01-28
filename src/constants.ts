@@ -1,5 +1,3 @@
-import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
-
 export enum DatumParameterKey {
     Action = 'Action',
     SenderPubKeyHash = 'SenderPubKeyHash',

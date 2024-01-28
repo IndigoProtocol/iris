@@ -9,8 +9,9 @@ export class EventService extends BaseService {
 
     private _listeners: BaseEventListener[] = [];
 
-    public boot(): Promise<void> {
+    public boot(listeners: BaseEventListener[] = []): Promise<void> {
         this._listeners = [
+            ...listeners,
             new AmmDexOperationListener(),
             new OrderBookDexOperationListener(),
             new PoolStateListener(),

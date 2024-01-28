@@ -3,7 +3,7 @@ import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-o
 import { BaseAmmDexAnalyzer } from '../dex/BaseAmmDexAnalyzer';
 import { AmmDexOperation } from '../types';
 import { IndexerEventType } from '../constants';
-import { dbService, eventService, queue } from '../indexerServices';
+import { dbService, eventService } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { EntityManager, MoreThan } from 'typeorm';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
