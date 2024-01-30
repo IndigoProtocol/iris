@@ -4,11 +4,13 @@ import { logError, logInfo } from '../logger';
 import CONFIG from '../config';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 import { ApplicationContext } from '../constants';
+import { IndexerApplication } from '../IndexerApplication';
 
 export class DatabaseService extends BaseService {
 
     public dbSource: DataSource;
 
+    private app: IndexerApplication;
     private readonly _context: ApplicationContext;
 
     constructor(context: ApplicationContext) {
@@ -17,11 +19,12 @@ export class DatabaseService extends BaseService {
         this._context = context;
     }
 
-    public boot(migrations: Function[] = [], entities: Function[] = []): Promise<any> {
+    public boot(app: IndexerApplication, migrations: Function[] = [], entities: Function[] = []): Promise<any> {
         if (! CONFIG.MYSQL_USERNAME || ! CONFIG.MYSQL_DATABASE) {
             return Promise.reject('Database config not set.');
         }
 
+        this.app = app;
         this.dbSource = new DataSource({
             type: 'mysql',
             host: CONFIG.MYSQL_HOST,

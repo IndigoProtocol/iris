@@ -80,7 +80,7 @@ export class ApiApplication {
             orderLimiterService,
         ];
 
-        return Promise.all(services.map((service: BaseService) => service.boot()))
+        return Promise.all(services.map((service: BaseService) => service.boot(this)))
             .then(() => {
                 logInfo('Services booted');
             }).catch((reason) => {

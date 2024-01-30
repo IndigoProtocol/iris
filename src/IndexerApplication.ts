@@ -99,8 +99,8 @@ export class IndexerApplication {
         logInfo('Booting services...');
 
         return Promise.all([
-            dbService.boot(this._dbMigrations, this._dbEntities),
-            eventService.boot(this._eventListeners),
+            dbService.boot(this, this._dbMigrations, this._dbEntities),
+            eventService.boot(this, this._eventListeners),
             operationWs.boot(),
             metadataService.boot(),
             queue.boot(),
