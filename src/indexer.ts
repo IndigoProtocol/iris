@@ -2,7 +2,7 @@ import { IndexerApplication } from './IndexerApplication';
 import { logError, logInfo } from './logger';
 import { CacheStorage } from './storage/CacheStorage';
 
-export const indexerApp: IndexerApplication = new IndexerApplication(
+const indexerApp: IndexerApplication = new IndexerApplication(
     new CacheStorage()
 );
 

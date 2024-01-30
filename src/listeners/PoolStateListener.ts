@@ -1,7 +1,6 @@
 import { BaseEventListener } from './BaseEventListener';
 import { IndexerEventType } from '../constants';
 import { IndexerEvent } from '../types';
-import { indexerApp } from '../indexer';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 
 export class PoolStateListener extends BaseEventListener {
@@ -16,7 +15,7 @@ export class PoolStateListener extends BaseEventListener {
                 const poolState: LiquidityPoolState = event.data as LiquidityPoolState;
                 const storageKey: string = poolState.liquidityPoolIdentifier;
 
-                return indexerApp.cache.setKey(storageKey, poolState);
+                return this.app.cache.setKey(storageKey, poolState);
             default:
                 return Promise.resolve();
         }

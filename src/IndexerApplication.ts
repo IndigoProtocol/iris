@@ -48,15 +48,15 @@ export class IndexerApplication {
     private _indexers: BaseIndexer[] = [
         new SyncIndexer(),
         new AmmDexTransactionIndexer([
-            new MinswapAnalyzer(),
-            new SundaeSwapAnalyzer(),
-            new WingRidersAnalyzer(),
-            new SpectrumAnalyzer(),
-            new TeddySwapAnalyzer(),
-            // new MuesliSwapAnalyzer(),
+            new MinswapAnalyzer(this),
+            new SundaeSwapAnalyzer(this),
+            new WingRidersAnalyzer(this),
+            new SpectrumAnalyzer(this),
+            new TeddySwapAnalyzer(this),
+            // new MuesliSwapAnalyzer(this),
         ]),
         new OrderBookDexTransactionIndexer([
-            new GeniusYieldAnalyzer(),
+            new GeniusYieldAnalyzer(this),
         ]),
     ];
 

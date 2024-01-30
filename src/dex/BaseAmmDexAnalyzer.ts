@@ -2,7 +2,6 @@ import { AmmDexOperation, Transaction, Utxo } from '../types';
 import { dbService } from '../indexerServices';
 import { EntityManager } from 'typeorm';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
-import { indexerApp } from '../indexer';
 import { scriptHashToAddress } from '../utils';
 import { DexOperationStatus } from '../constants';
 import { OperationStatus } from '../db/entities/OperationStatus';
@@ -11,8 +10,15 @@ import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { IndexerApplication } from '../IndexerApplication';
 
 export abstract class BaseAmmDexAnalyzer {
+
+    public app: IndexerApplication;
+
+    constructor(app: IndexerApplication) {
+        this.app = app;
+    }
 
     public abstract analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]>;
 
@@ -30,7 +36,7 @@ export abstract class BaseAmmDexAnalyzer {
      * Attempts to retrieve a liquidity pool from its identifier.
      */
     protected async liquidityPoolFromIdentifier(identifier: string): Promise<LiquidityPool | undefined> {
-        const cacheInstance: LiquidityPool | undefined = await indexerApp.cache.getKey(identifier);
+        const cacheInstance: LiquidityPool | undefined = await this.app.cache.getKey(identifier);
 
         if (cacheInstance) return cacheInstance;
 
