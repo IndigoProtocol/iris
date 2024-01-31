@@ -39,8 +39,6 @@ export class IndexerApplication {
     private stateQueryClient: StateQueryClient | undefined = undefined;
 
     private readonly _eventListeners: BaseEventListener[] = [];
-    private readonly _dbMigrations: Function[] = [];
-    private readonly _dbEntities: Function[] = [];
 
     /**
      * Indexers to make aware of new blocks & rollbacks.
@@ -66,13 +64,9 @@ export class IndexerApplication {
     constructor(
         cache: BaseCacheStorage,
         eventListeners: BaseEventListener[] = [],
-        dbMigrations: Function[] = [],
-        dbEntities: Function[] = [],
     ) {
         this._cache = cache;
         this._eventListeners = eventListeners;
-        this._dbMigrations = dbMigrations;
-        this._dbEntities = dbEntities;
     }
 
     /**
@@ -99,7 +93,7 @@ export class IndexerApplication {
         logInfo('Booting services...');
 
         return Promise.all([
-            dbService.boot(this, this._dbMigrations, this._dbEntities),
+            dbService.boot(this),
             eventService.boot(this, this._eventListeners),
             operationWs.boot(),
             metadataService.boot(),

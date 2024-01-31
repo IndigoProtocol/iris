@@ -10,6 +10,8 @@ export class PoolStateListener extends BaseEventListener {
     ];
 
     public onEvent(event: IndexerEvent): Promise<any> {
+        if (! this.app) return Promise.resolve();
+
         switch (event.data.constructor) {
             case LiquidityPoolState:
                 const poolState: LiquidityPoolState = event.data as LiquidityPoolState;

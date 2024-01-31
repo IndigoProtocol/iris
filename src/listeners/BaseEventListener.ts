@@ -4,11 +4,11 @@ import { IndexerApplication } from '../IndexerApplication';
 
 export abstract class BaseEventListener {
 
-    public app: IndexerApplication;
+    public app: IndexerApplication | undefined;
 
     public abstract listenFor: IndexerEventType[];
 
-    constructor(app: IndexerApplication) {
+    constructor(app: IndexerApplication | undefined = undefined) {
         this.app = app;
     }
 
