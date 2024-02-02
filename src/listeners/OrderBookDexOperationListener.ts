@@ -1,8 +1,8 @@
 import { BaseEventListener } from './BaseEventListener';
 import { Dex, IndexerEventType } from '../constants';
-import { IndexerEvent,TokenMetadata } from '../types';
+import { IndexerEvent, OrderBookDexOperation, TokenMetadata } from '../types';
 import { logInfo } from '../logger';
-import { dbService, metadataService, operationWs } from '../indexerServices';
+import { dbService, eventService, metadataService, operationWs } from '../indexerServices';
 import { Asset, Token } from '../db/entities/Asset';
 import { BaseEntity, EntityManager, IsNull } from 'typeorm';
 import CONFIG from '../config';
@@ -20,9 +20,9 @@ export class OrderBookDexOperationListener extends BaseEventListener {
     public async onEvent(event: IndexerEvent): Promise<any> {
         if (CONFIG.VERBOSE) {
             if ('dex' in event.data) {
-                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${event.data.txHash}`);
+                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${(event.data as OrderBookDexOperation).txHash}`);
             } else {
-                logInfo(`${event.data.constructor.name} ${event.data.txHash}`);
+                logInfo(`${event.data.constructor.name} ${(event.data as any).txHash}`);
             }
         }
 
@@ -179,7 +179,16 @@ export class OrderBookDexOperationListener extends BaseEventListener {
                 asset.decimals = 0;
             }
 
-            return await manager.save(asset);
+            return await manager.save(asset)
+                .then(() => {
+                    operationWs.broadcast(asset);
+                    eventService.pushEvent({
+                        type: IndexerEventType.Asset,
+                        data: asset,
+                    });
+
+                    return Promise.resolve(asset);
+                });
         };
 
         return await dbService.query(firstOrSaveAsset);
@@ -218,14 +227,23 @@ export class OrderBookDexOperationListener extends BaseEventListener {
         }
 
         return await dbService.transaction(async (manager: EntityManager): Promise<OrderBook> => {
-            return await manager.save(
-                OrderBook.make(
-                    dex,
-                    aToken === 'lovelace' ? undefined : aToken,
-                    bToken,
-                    slot,
-                )
+            const orderBook: OrderBook = OrderBook.make(
+                dex,
+                aToken === 'lovelace' ? undefined : aToken,
+                bToken,
+                slot,
             );
+
+            return await manager.save(orderBook)
+                .then(() => {
+                    operationWs.broadcast(orderBook);
+                    eventService.pushEvent({
+                        type: IndexerEventType.OrderBook,
+                        data: orderBook,
+                    });
+
+                    return Promise.resolve(orderBook);
+                });
         });
     }
 

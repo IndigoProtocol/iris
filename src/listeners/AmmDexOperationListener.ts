@@ -1,8 +1,8 @@
 import { BaseEventListener } from './BaseEventListener';
 import { DexOperationStatus, IndexerEventType } from '../constants';
-import { IndexerEvent, StatusableEntity, TokenMetadata } from '../types';
+import { AmmDexOperation, IndexerEvent, StatusableEntity, TokenMetadata } from '../types';
 import { logInfo } from '../logger';
-import { dbService, metadataService, operationWs, queue } from '../indexerServices';
+import { dbService, eventService, metadataService, operationWs, queue } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
 import { Asset } from '../db/entities/Asset';
@@ -29,9 +29,9 @@ export class AmmDexOperationListener extends BaseEventListener {
     public async onEvent(event: IndexerEvent): Promise<any> {
         if (CONFIG.VERBOSE) {
             if ('dex' in event.data) {
-                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${event.data.txHash}`);
+                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${(event.data as AmmDexOperation).txHash}`);
             } else {
-                logInfo(`${event.data.constructor.name} ${event.data.txHash}`);
+                logInfo(`${event.data.constructor.name} ${(event.data as AmmDexOperation).txHash}`);
             }
         }
 
@@ -86,9 +86,7 @@ export class AmmDexOperationListener extends BaseEventListener {
 
         const liquidityPool: LiquidityPool = await this.retrieveLiquidityPoolFromState(instance);
         instance.liquidityPool = liquidityPool;
-if (!instance.liquidityPool) {
-    console.log(instance)
-}
+
         const updatedState: LiquidityPoolState = await dbService.transaction(async (manager: EntityManager): Promise<LiquidityPoolState> => {
             const newState: LiquidityPoolState = await manager.save(instance);
 
@@ -466,7 +464,16 @@ if (!instance.liquidityPool) {
                 }
             }
 
-            return await manager.save(asset);
+            return await manager.save(asset)
+                .then(() => {
+                    operationWs.broadcast(asset);
+                    eventService.pushEvent({
+                        type: IndexerEventType.Asset,
+                        data: asset,
+                    });
+
+                    return Promise.resolve(asset);
+                });
         };
 
         return await dbService.query(firstOrSaveAsset);
@@ -502,6 +509,10 @@ if (!instance.liquidityPool) {
             return await manager.save(liquidityPool)
                 .then(() => {
                     operationWs.broadcast(liquidityPool);
+                    eventService.pushEvent({
+                        type: IndexerEventType.LiquidityPool,
+                        data: liquidityPool,
+                    });
 
                     return Promise.resolve(liquidityPool);
                 });

@@ -15,6 +15,10 @@ export class CreateOrderBooksTable1703352414322 implements MigrationInterface {
                         generationStrategy: 'increment'
                     },
                     {
+                        name: 'identifier',
+                        type: 'varchar',
+                    },
+                    {
                         name: 'dex',
                         type: 'varchar',
                     },
@@ -55,6 +59,9 @@ export class CreateOrderBooksTable1703352414322 implements MigrationInterface {
         await queryRunner.createIndices('order_books', [
             new TableIndex({
                 columnNames: ['dex', 'tokenAId', 'tokenBId'],
+            }),
+            new TableIndex({
+                columnNames: ['identifier'],
             }),
         ]);
     }

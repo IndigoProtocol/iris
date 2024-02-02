@@ -73,6 +73,9 @@ export enum IndexerEventType {
     AmmDexOperation = 'AmmDexOperation',
     OrderBookDexOperation = 'OrderBookDexOperation',
     Sync = 'Sync',
+    LiquidityPool = 'LiquidityPool',
+    OrderBook = 'OrderBook',
+    Asset = 'Asset',
 }
 
 export enum DexOperationStatus {

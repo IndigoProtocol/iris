@@ -8,6 +8,9 @@ import { LiquidityPoolWithdraw } from './db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from './db/entities/OperationStatus';
 import { OrderBookOrder } from './db/entities/OrderBookOrder';
 import { OrderBookMatch } from './db/entities/OrderBookMatch';
+import { OrderBook } from './db/entities/OrderBook';
+import { LiquidityPool } from '@indigo-labs/dexter';
+import { Sync } from './db/entities/Sync';
 
 export interface Utxo {
     forTxHash: TxHash;
@@ -70,6 +73,11 @@ export type AmmDexOperation = LiquidityPoolState
 export type OrderBookDexOperation = OrderBookOrder
     | OrderBookMatch;
 
+export type CreatedEntity = Sync
+    | OrderBook
+    | LiquidityPool
+    | Asset;
+
 export type StatusableEntity = LiquidityPoolDeposit
     | LiquidityPoolWithdraw
     | LiquidityPoolSwap
@@ -77,7 +85,7 @@ export type StatusableEntity = LiquidityPoolDeposit
 
 export type IndexerEvent = {
     type: IndexerEventType,
-    data: AmmDexOperation | OrderBookDexOperation,
+    data: AmmDexOperation | OrderBookDexOperation | CreatedEntity,
 }
 
 export type TokenMetadata = {
