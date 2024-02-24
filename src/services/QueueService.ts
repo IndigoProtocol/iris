@@ -1,7 +1,6 @@
 import { BaseService } from './BaseService';
 import { BaseJob } from '../jobs/BaseJob';
 import Queue from 'queue-promise';
-import { logInfo } from '../logger';
 
 export class QueueService extends BaseService {
 

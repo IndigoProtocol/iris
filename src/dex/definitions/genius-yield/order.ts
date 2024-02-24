@@ -1,6 +1,9 @@
 import { DatumParameterKey } from '../../../constants';
 import { DatumParameters, DefinitionField } from '../../../types';
 
+/**
+ * https://github.com/geniusyield/dex-contracts-api/blob/8add6b608235095fa019fb6566d8ef1cd81080bf/src/GeniusYield/Scripts/Dex/PartialOrder.hs#L75-L108
+ */
 export default {
   constructor: 0,
   fields: [

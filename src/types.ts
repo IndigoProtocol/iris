@@ -11,6 +11,8 @@ import { OrderBookMatch } from './db/entities/OrderBookMatch';
 import { OrderBook } from './db/entities/OrderBook';
 import { LiquidityPool } from '@indigo-labs/dexter';
 import { Sync } from './db/entities/Sync';
+import { LiquidityPoolTick } from './db/entities/LiquidityPoolTick';
+import { OrderBookTick } from './db/entities/OrderBookTick';
 
 export interface Utxo {
     forTxHash: TxHash;
@@ -70,12 +72,22 @@ export type AmmDexOperation = LiquidityPoolState
     | LiquidityPoolZap
     | OperationStatus;
 
+export type OrderBookOrderCancellation = {
+    type: 'OrderBookOrderCancellation',
+    senderPubKeyHash: string | null,
+    senderStakeKeyHash: string | null,
+    txHash: string,
+}
+
 export type OrderBookDexOperation = OrderBookOrder
-    | OrderBookMatch;
+    | OrderBookMatch
+    | OrderBookOrderCancellation;
 
 export type CreatedEntity = Sync
     | OrderBook
     | LiquidityPool
+    | LiquidityPoolTick
+    | OrderBookTick
     | Asset;
 
 export type StatusableEntity = LiquidityPoolDeposit
@@ -96,40 +108,6 @@ export type TokenMetadata = {
     ticker: string,
     logo: string,
     description: string,
-}
-
-export type OrderRouteBreakdown = {
-    swapInAmount: number,
-    splitPercentage: number,
-    poolFeePercent: number,
-    estimatedReceive: number,
-    priceImpactPercent: number,
-    dexFees: number,
-    liquidityPool: Object,
-}
-
-export type OrderRouteResult = {
-    [dex: string]: OrderRouteBreakdown,
-}
-
-export type OrderRouteResults = {
-    totalSwapInAmount: number,
-    totalEstimatedReceive: number,
-    results: OrderRouteResult,
-}
-
-export type LimiterResultBreakdown = {
-    swapInAmount: number,
-    estimatedReceive: number,
-    percentAllocated: number,
-    dexFees: number,
-    price: number,
-}
-
-export type LimiterResults = {
-    totalSwapInAmount: number,
-    totalEstimatedReceive: number,
-    results: LimiterResultBreakdown[],
 }
 
 export type Datum = string;

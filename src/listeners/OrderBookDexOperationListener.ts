@@ -1,8 +1,8 @@
 import { BaseEventListener } from './BaseEventListener';
 import { Dex, IndexerEventType } from '../constants';
-import { IndexerEvent, OrderBookDexOperation, TokenMetadata } from '../types';
+import { IndexerEvent, OrderBookDexOperation, OrderBookOrderCancellation, TokenMetadata } from '../types';
 import { logInfo } from '../logger';
-import { dbService, eventService, metadataService, operationWs } from '../indexerServices';
+import { dbService, eventService, metadataService, operationWs, queue } from '../indexerServices';
 import { Asset, Token } from '../db/entities/Asset';
 import { BaseEntity, EntityManager, IsNull } from 'typeorm';
 import CONFIG from '../config';
@@ -10,6 +10,7 @@ import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { OrderBook } from '../db/entities/OrderBook';
 import { tokensMatch } from '../utils';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
+import { UpdateOrderBookTicks } from '../jobs/UpdateOrderBookTicks';
 
 export class OrderBookDexOperationListener extends BaseEventListener {
 
@@ -21,6 +22,8 @@ export class OrderBookDexOperationListener extends BaseEventListener {
         if (CONFIG.VERBOSE) {
             if ('dex' in event.data) {
                 logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${(event.data as OrderBookDexOperation).txHash}`);
+            } else if ('type' in event.data && event.data.type === 'OrderBookOrderCancellation') {
+                logInfo(`OrderBookOrderCancellation ${(event.data as any).txHash}`);
             } else {
                 logInfo(`${event.data.constructor.name} ${(event.data as any).txHash}`);
             }
@@ -47,6 +50,10 @@ export class OrderBookDexOperationListener extends BaseEventListener {
             return Promise.resolve(undefined);
         }
 
+        if ('type' in event.data && event.data.type === 'OrderBookOrderCancellation') {
+            return await this.handleCancellation(event.data as OrderBookOrderCancellation);
+        }
+
         switch (event.data.constructor) {
             case OrderBookOrder:
                 return await this.handleOrder(event.data as OrderBookOrder);
@@ -55,6 +62,26 @@ export class OrderBookDexOperationListener extends BaseEventListener {
             default:
                 return Promise.reject('Encountered unknown event type.');
         }
+    }
+
+    private async handleCancellation(cancellation: OrderBookOrderCancellation): Promise<OrderBookOrder> {
+        const existingOrder: OrderBookOrder | undefined = await dbService.query((manager: EntityManager) => {
+            return manager.findOneBy(OrderBookOrder, {
+                txHash: cancellation.txHash,
+                senderPubKeyHash: cancellation.senderPubKeyHash ?? IsNull(),
+                senderStakeKeyHash: cancellation.senderStakeKeyHash ?? IsNull(),
+            }) ?? undefined;
+        });
+
+        if (! existingOrder) {
+            return Promise.reject(`Unable to find cancelled order from ${cancellation.txHash}`);
+        }
+
+        existingOrder.isCancelled = true;
+
+        return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
+            return manager.save(existingOrder);
+        });
     }
 
     /**
@@ -69,13 +96,12 @@ export class OrderBookDexOperationListener extends BaseEventListener {
 
         // Update existing order
         if (existingOrder) {
-            return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
-                await manager.update(OrderBookOrder, { id: order.id }, {
-                    unFilledOfferAmount: order.unFilledOfferAmount,
-                    numPartialFills: order.numPartialFills,
-                });
+            existingOrder.unFilledOfferAmount = order.unFilledOfferAmount;
+            existingOrder.numPartialFills = order.numPartialFills;
+            existingOrder.txHash = order.txHash;
 
-                return order;
+            return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
+                return await manager.save(existingOrder);
             });
         }
 
@@ -131,21 +157,32 @@ export class OrderBookDexOperationListener extends BaseEventListener {
             existingOrder.slot,
         );
 
-        return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookMatch> => {
+        return dbService.transaction(async (manager: EntityManager): Promise<OrderBookMatch> => {
             if (match.consumedTxHash) {
                 match.matchedAmount = existingOrder.unFilledOfferAmount;
 
-                await manager.update(OrderBookOrder, { id: existingOrder.id }, {
-                    unFilledOfferAmount: 0,
-                });
+                existingOrder.unFilledOfferAmount = 0;
             }
             if (match.referenceOrder) {
                 match.matchedAmount = existingOrder.unFilledOfferAmount - match.referenceOrder.unFilledOfferAmount;
+                existingOrder.unFilledOfferAmount -= match.matchedAmount;
             }
+
+            existingOrder.numPartialFills += 1;
 
             match.referenceOrder = existingOrder;
 
-            return await manager.save(match);
+            if (match.txHash === '7b70d2bf13360d4cba98c8adbb9f884b791d6e6678f4a8c30418eb717043ef5f') {
+                console.log(existingOrder)
+            }
+
+            await manager.save(existingOrder)
+            return manager.save(match)
+                .then((match: OrderBookMatch) => {
+                    queue.dispatch(new UpdateOrderBookTicks(match));
+
+                    return match;
+                });
         });
     }
 
@@ -169,11 +206,11 @@ export class OrderBookDexOperationListener extends BaseEventListener {
                 .catch(() => undefined);
 
             if (assetMetadata) {
-                asset.name = assetMetadata.name;
+                asset.name = assetMetadata.name.replace( /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g, '');
                 asset.decimals = assetMetadata.decimals;
                 asset.ticker = assetMetadata.ticker;
                 asset.logo = assetMetadata.logo;
-                asset.description = assetMetadata.description;
+                asset.description = assetMetadata.description.replace( /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g, '');
                 asset.isVerified = true;
             } else {
                 asset.decimals = 0;

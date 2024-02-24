@@ -80,7 +80,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
 
                 return LiquidityPoolSwap.make(
                     Dex.Spectrum,
-                    undefined,
+                    `${datumParameters.TokenPolicyId}${datumParameters.TokenAssetName}`,
                     swapInToken,
                     swapOutToken,
                     Number(swapInAmount),
@@ -143,7 +143,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
                 return LiquidityPoolState.make(
                     Dex.Spectrum,
                     output.toAddress,
-                    lpTokenAssetBalance.asset.identifier(),
+                    poolNft.identifier(),
                     tokenA,
                     tokenB,
                     lpToken,
@@ -188,7 +188,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
 
                 return LiquidityPoolDeposit.make(
                     Dex.Spectrum,
-                    undefined,
+                    `${datumParameters.TokenPolicyId}${datumParameters.TokenAssetName}`,
                     depositAToken,
                     depositBToken,
                     Number(depositAToken === 'lovelace'
@@ -229,7 +229,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
 
                 return LiquidityPoolWithdraw.make(
                     Dex.Spectrum,
-                    undefined,
+                    `${datumParameters.TokenPolicyId}${datumParameters.TokenAssetName}`,
                     output.assetBalances[0].asset,
                     Number(output.assetBalances[0].quantity),
                     undefined,

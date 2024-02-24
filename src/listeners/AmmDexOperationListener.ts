@@ -453,11 +453,11 @@ export class AmmDexOperationListener extends BaseEventListener {
                     .catch(() => undefined);
 
                 if (assetMetadata) {
-                    asset.name = assetMetadata.name;
+                    asset.name = assetMetadata.name.replace( /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g, '');
                     asset.decimals = assetMetadata.decimals;
                     asset.ticker = assetMetadata.ticker;
                     asset.logo = assetMetadata.logo;
-                    asset.description = assetMetadata.description;
+                    asset.description = assetMetadata.description.replace( /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g, '');
                     asset.isVerified = true;
                 } else {
                     asset.decimals = 0;

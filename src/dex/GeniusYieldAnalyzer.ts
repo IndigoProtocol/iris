@@ -4,7 +4,7 @@ import {
     DatumParameters,
     DefinitionConstr,
     DefinitionField,
-    OrderBookDexOperation,
+    OrderBookDexOperation, OrderBookOrderCancellation,
     Transaction,
     Utxo
 } from '../types';
@@ -32,26 +32,18 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
         return Promise.all([
             this.orders(transaction),
             this.matches(transaction),
+            this.cancellations(transaction),
         ]).then((operations: OrderBookDexOperation[][]) => operations.flat());
     }
 
     protected orders(transaction: Transaction): Promise<OrderBookOrder[]> | OrderBookOrder[] {
-        const hasMintedAsset: boolean = transaction.mints.some((mintedAssetBalance: AssetBalance) => {
-            return mintedAssetBalance.asset.policyId === MINT_ASSET_POLICY_ID
-                && mintedAssetBalance.quantity === 1n;
-        });
-
-        // Not a new order
-        if (! hasMintedAsset) {
-            return [];
-        }
-
         return transaction.outputs.map((output: Utxo) => {
-            const hasOrderNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
-                return balance.asset.policyId === MINT_ASSET_POLICY_ID;
+            const hasMintedOrderNft: boolean = transaction.mints.some((balance: AssetBalance) => {
+                return balance.asset.policyId === MINT_ASSET_POLICY_ID
+                    && balance.quantity === 1n;
             });
 
-            if (! output.datum || ! hasOrderNft) {
+            if (! output.datum || ! hasMintedOrderNft) {
                 return undefined;
             }
 
@@ -64,19 +56,18 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
             return mintedAssetBalance.asset.policyId === MINT_ASSET_POLICY_ID
                 && mintedAssetBalance.quantity === -1n;
         });
-        const hasOrderAsset: boolean = transaction.outputs.some((output: Utxo) => {
+        const hasExistingOrderAsset: boolean = transaction.outputs.some((output: Utxo) => {
             return output.assetBalances.some((balance: AssetBalance) => {
                 return balance.asset.policyId === MINT_ASSET_POLICY_ID;
             });
         });
 
         // Not GY related transaction
-        if (! hasBurnedAsset && ! hasOrderAsset) {
+        if (! hasBurnedAsset && ! hasExistingOrderAsset) {
             return [];
         }
 
         const rewardOutput: Utxo | undefined = transaction.outputs.find((output: Utxo) => REWARD_ADDRESSES.includes(output.toAddress));
-        const sorOutputs: Utxo[] | undefined = transaction.outputs.filter((output: Utxo) => ! output.datum);
         const partialFilledOrderOutputs: Utxo[] = transaction.outputs.filter((output: Utxo) => {
             return output.assetBalances.some((balance: AssetBalance) => balance.asset.policyId === MINT_ASSET_POLICY_ID);
         });
@@ -85,45 +76,15 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
             .map((output: Utxo) => this.toOrderBookOrder(transaction, output))
             .filter((order: OrderBookOrder | undefined) => order !== undefined) as (OrderBookOrder)[];
 
-        // No SOR required
-        if (! rewardOutput) {
-            return (transaction.outputs.map((output: Utxo) => {
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
-
-                if (updatedOrders.length === 0) {
-                    return undefined;
-                }
-
-                return OrderBookMatch.make(
-                    Dex.GeniusYield,
-                    undefined,
-                    0,
-                    addressDetails.paymentCredential?.hash ?? '',
-                    addressDetails.stakeCredential?.hash ?? '',
-                    transaction.blockSlot,
-                    transaction.hash,
-                    output.index,
-                    '',
-                    updatedOrders[0].identifier,
-                    updatedOrders[0],
-                );
-            }).filter((order: OrderBookMatch | OrderBookOrder | undefined) => order !== undefined) as (OrderBookMatch | OrderBookOrder)[])
-                .concat(updatedOrders);
-        }
-
-        // Regular match order
         const orderMatches: OrderBookMatch[] = transaction.outputs
             .filter((output: Utxo) => {
                 return ! [
                     rewardOutput?.index,
-                    sorOutputs.map((orderOutput: Utxo) => orderOutput.index),
                     partialFilledOrderOutputs.map((orderOutput: Utxo) => orderOutput.index),
                 ].flat().includes(output.index);
             })
             .map((output: Utxo) => {
-                if (! output.datum) {
-                    return undefined;
-                }
+                if (! output.datum) return undefined;
 
                 try {
                     const definitionField: DefinitionField = toDefinitionDatum(
@@ -148,12 +109,51 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                 } catch (e) {
                     return undefined;
                 }
-            })
-            .flat()
-            .filter((match: OrderBookMatch | undefined) => match !== undefined) as (OrderBookMatch)[];
+            }).filter((order: OrderBookMatch | undefined) => order !== undefined) as (OrderBookMatch)[];
 
         return (orderMatches as (OrderBookMatch | OrderBookOrder)[])
             .concat(updatedOrders);
+    }
+
+    protected cancellations(transaction: Transaction): Promise<OrderBookOrderCancellation[]> | OrderBookOrderCancellation[] {
+        const hasBurnedAsset: boolean = transaction.mints.some((mintedAssetBalance: AssetBalance) => {
+            return mintedAssetBalance.asset.policyId === MINT_ASSET_POLICY_ID
+                && mintedAssetBalance.quantity === -1n;
+        });
+
+        if (! hasBurnedAsset) return [];
+
+        return transaction.outputs
+            .map((output: Utxo) => {
+                if (! output.datum) {
+                    return undefined;
+                }
+
+                try {
+                    const definitionField: DefinitionField = toDefinitionDatum(
+                        Data.from(output.datum)
+                    );
+                    const builder: DefinitionBuilder = new DefinitionBuilder(partialFillDefinition);
+                    const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+
+                    if (Number(datumParameters.Action) !== 0) {
+                        return undefined;
+                    }
+
+                    const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+
+                    return {
+                        type: 'OrderBookOrderCancellation',
+                        txHash: datumParameters.ConsumedTxHash,
+                        senderPubKeyHash: addressDetails.paymentCredential?.hash,
+                        senderStakeKeyHash: addressDetails.stakeCredential?.hash,
+                    } as OrderBookOrderCancellation;
+                } catch (e) {
+                    return undefined;
+                }
+            })
+            .flat()
+            .filter((cancellation: OrderBookOrderCancellation | undefined) => cancellation !== undefined) as (OrderBookOrderCancellation)[];
     }
 
     private toOrderBookOrder(transaction: Transaction, output: Utxo): OrderBookOrder | undefined {
@@ -182,6 +182,7 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                 0,
                 Number(datumParameters.PriceNumerator) / Number(datumParameters.PriceDenominator),
                 Number(datumParameters.PastOrderFills),
+                false,
                 Number(datumParameters.ContainedFee) + Number(datumParameters.ContainedFeePayment),
                 datumParameters.SenderPubKeyHash as string,
                 (datumParameters.SenderStakingKeyHash ?? '') as string,

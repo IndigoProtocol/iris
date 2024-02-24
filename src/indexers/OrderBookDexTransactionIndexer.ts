@@ -84,7 +84,7 @@ export class OrderBookDexTransactionIndexer extends BaseIndexer {
                     createdSlot: MoreThan(slot),
                 }),
             ]).then(() => {
-                logInfo('Removed entities');
+                logInfo('Removed Order Book entities');
             });
         });
     }

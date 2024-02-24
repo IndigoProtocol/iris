@@ -41,6 +41,9 @@ export class OrderBookOrder extends BaseEntity {
     @Column()
     numPartialFills: number;
 
+    @Column()
+    isCancelled: boolean;
+
     @Column({ type: 'bigint', unsigned: true })
     dexFeesPaid: number;
 
@@ -69,6 +72,7 @@ export class OrderBookOrder extends BaseEntity {
         askedAmount: number,
         price: number,
         numPartialFills: number,
+        isCancelled: boolean,
         dexFeesPaid: number,
         senderPubKeyHash: string,
         senderStakeKeyHash: string,
@@ -87,6 +91,7 @@ export class OrderBookOrder extends BaseEntity {
         instance.askedAmount = askedAmount;
         instance.price = price;
         instance.numPartialFills = numPartialFills;
+        instance.isCancelled = isCancelled;
         instance.dexFeesPaid = dexFeesPaid;
         instance.senderPubKeyHash = senderPubKeyHash;
         instance.senderStakeKeyHash = senderStakeKeyHash;

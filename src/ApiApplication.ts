@@ -6,14 +6,14 @@ import { logError, logInfo } from './logger';
 import { BaseApiController } from './api/controllers/BaseApiController';
 import { AssetController } from './api/controllers/AssetController';
 import { BaseService } from './services/BaseService';
-import { dbApiService, orderLimiterService, orderRouteService } from './apiServices';
+import { dbApiService } from './apiServices';
 import { LiquidityPoolController } from './api/controllers/LiquidityPoolController';
 import { SyncController } from './api/controllers/SyncController';
 import { DexController } from './api/controllers/DexController';
 import { ApplicationContext } from './constants';
 import { OrdersController } from './api/controllers/OrdersController';
 import { PingController } from './api/controllers/PingController';
-import { SwapController } from './api/controllers/SwapController';
+import { OrderBookController } from './api/controllers/OrderBookController';
 
 export class ApiApplication {
 
@@ -56,9 +56,9 @@ export class ApiApplication {
             new SyncController('/sync'),
             new AssetController('/assets'),
             new LiquidityPoolController('/liquidity-pools'),
+            new OrderBookController('/order-books'),
             new DexController('/dex'),
             new OrdersController('/orders'),
-            new SwapController('/swap'),
         ];
 
         controllers.forEach((controller: BaseApiController) => {
@@ -76,8 +76,6 @@ export class ApiApplication {
 
         const services: BaseService[] = [
             dbApiService,
-            orderRouteService,
-            orderLimiterService,
         ];
 
         return Promise.all(services.map((service: BaseService) => service.boot(this)))

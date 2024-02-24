@@ -10,4 +10,8 @@ export abstract class BaseEntityResource {
         return entities.map((entity: BaseEntity) => this.toJson(entity));
     }
 
+    public manyToCompressed(entities: BaseEntity[]): Object[] {
+        return entities.map((entity: BaseEntity) => this.toCompressed(entity));
+    }
+
 }

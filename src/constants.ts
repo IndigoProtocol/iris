@@ -1,3 +1,5 @@
+import { LiquidityPoolState } from './db/entities/LiquidityPoolState';
+
 export enum DatumParameterKey {
     Action = 'Action',
     SenderPubKeyHash = 'SenderPubKeyHash',
@@ -74,8 +76,11 @@ export enum IndexerEventType {
     OrderBookDexOperation = 'OrderBookDexOperation',
     Sync = 'Sync',
     LiquidityPool = 'LiquidityPool',
+    LiquidityPoolState = 'LiquidityPoolState',
     OrderBook = 'OrderBook',
     Asset = 'Asset',
+    LiquidityPoolTick = 'LiquidityPoolTick',
+    OrderBookTick = 'OrderBookTick',
 }
 
 export enum DexOperationStatus {

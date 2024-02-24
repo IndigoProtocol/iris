@@ -98,7 +98,7 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
                     createdSlot: MoreThan(slot),
                 }),
             ]).then(() => {
-                logInfo('Removed entities');
+                logInfo('Removed AMM entities');
             });
         });
     }

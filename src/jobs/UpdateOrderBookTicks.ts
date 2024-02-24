@@ -1,26 +1,26 @@
 import { BaseJob } from './BaseJob';
-import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { lucidUtils } from '../utils';
 import { EntityManager } from 'typeorm';
-import { dbService, eventService, operationWs } from '../indexerServices';
-import { LiquidityPoolTick } from '../db/entities/LiquidityPoolTick';
+import { dbService, eventService, operationWs, queue } from '../indexerServices';
 import { IndexerEventType, TickInterval } from '../constants';
 import { logInfo } from '../logger';
+import { OrderBookMatch } from '../db/entities/OrderBookMatch';
+import { OrderBookTick } from '../db/entities/OrderBookTick';
 
-export class UpdateLiquidityPoolTicks extends BaseJob {
+export class UpdateOrderBookTicks extends BaseJob {
 
-    private readonly _liquidityPoolState: LiquidityPoolState;
+    private readonly _match: OrderBookMatch;
 
-    constructor(liquidityPoolState: LiquidityPoolState) {
+    constructor(match: OrderBookMatch) {
         super();
 
-        this._liquidityPoolState = liquidityPoolState;
+        this._match = match;
     }
 
     public async handle(): Promise<any> {
-        logInfo(`[Queue] UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`);
+        logInfo(`[Queue] UpdateOrderBookTicks for ${this._match.txHash}`);
 
-        const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._liquidityPoolState.slot));
+        const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._match.slot));
 
         const startOfMinute: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), slotDate.getUTCMinutes(), 0, 0).getTime() / 1000;
         const startOfHour: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), 0, 0, 0).getTime() / 1000;
@@ -40,36 +40,32 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
     }
 
     private async createOrUpdateTick(manager: EntityManager, startOfTick: number, resolution: TickInterval): Promise<any> {
-        if (! this._liquidityPoolState.liquidityPool) {
-            return Promise.reject('Liquidity Pool not found for liquidity pool state');
+        if (! this._match.orderBook) {
+            return Promise.reject('Order Book not found for match');
+        }
+        if (! this._match.referenceOrder) {
+            return Promise.reject('Order reference not found for match');
         }
 
-        const tokenADecimals: number = ! this._liquidityPoolState.liquidityPool.tokenA ? 6 : this._liquidityPoolState.liquidityPool.tokenA?.decimals ?? 0;
-        const tokenBDecimals: number = this._liquidityPoolState.liquidityPool.tokenB.decimals;
-
-        const price: number = this._liquidityPoolState.reserveB !== 0 ? (this._liquidityPoolState.reserveA / 10**tokenADecimals) / (this._liquidityPoolState.reserveB / 10**tokenBDecimals) : 0;
-        const existingTick: LiquidityPoolTick | undefined = await manager.findOne(LiquidityPoolTick, {
-            relations: ['liquidityPool'],
+        const price: number = this._match.referenceOrder.price;
+        const existingTick: OrderBookTick | undefined = await manager.findOne(OrderBookTick, {
+            relations: ['orderBook'],
             where: {
                 resolution,
                 time: startOfTick,
-                liquidityPool: {
-                    id: this._liquidityPoolState?.liquidityPool?.id,
+                orderBook: {
+                    id: this._match.orderBook.id,
                 },
             },
         }) ?? undefined;
 
         if (! existingTick) {
-            if (! this._liquidityPoolState.liquidityPool) {
-                return Promise.reject('Liquidity Pool not found for liquidity pool state');
-            }
-
-            const lastTick: LiquidityPoolTick | undefined = await manager.findOne(LiquidityPoolTick, {
-                relations: ['liquidityPool'],
+            const lastTick: OrderBookTick | undefined = await manager.findOne(OrderBookTick, {
+                relations: ['orderBook'],
                 where: {
                     resolution,
-                    liquidityPool: {
-                        id: this._liquidityPoolState?.liquidityPool?.id,
+                    orderBook: {
+                        id: this._match.orderBook.id,
                     },
                 },
                 order: {
@@ -80,16 +76,16 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
             const open: number = lastTick ? lastTick.close : price;
 
             return manager.save(
-                LiquidityPoolTick.make(
-                    this._liquidityPoolState.liquidityPool,
+                OrderBookTick.make(
+                    this._match.orderBook,
                     resolution,
                     startOfTick,
                     open,
                     open > price ? open : price,
                     open < price ? open : price,
                     price,
-                    this._liquidityPoolState.tvl,
-                    Math.abs(lastTick ? this._liquidityPoolState.tvl - lastTick.tvl : this._liquidityPoolState.tvl)
+                    0,
+                   0
                 )
             );
         }
@@ -103,11 +99,9 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         }
 
         existingTick.close = price;
-        existingTick.volume += Math.abs(existingTick.tvl - this._liquidityPoolState.tvl)
-        existingTick.tvl = this._liquidityPoolState.tvl;
 
         return manager.save(existingTick)
-            .then((tick: LiquidityPoolTick) => {
+            .then((tick: OrderBookTick) => {
                 operationWs.broadcast(tick);
                 eventService.pushEvent({
                     type: IndexerEventType.LiquidityPoolTick,

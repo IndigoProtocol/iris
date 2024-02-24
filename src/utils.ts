@@ -70,33 +70,6 @@ export function tokenDecimals(token: Token, pool: LiquidityPool): number {
     return pool.tokenB.decimals;
 }
 
-export function swapRequestForPool(pool: LiquidityPool, swapAmount: bigint, swapInToken: Token, isReversed: boolean = false): SwapRequest {
-    const dexter: Dexter = new Dexter();
-
-    const dexterPool: DexterLiquidityPool = new DexterLiquidityPool(
-        pool.dex,
-        (! pool.tokenA ? 'lovelace' : pool.tokenA) as DexterToken,
-        (! pool.tokenB ? 'lovelace' : pool.tokenB) as DexterToken,
-        BigInt(Math.floor(pool.latestState.reserveA)),
-        BigInt(Math.floor(pool.latestState.reserveB)),
-        '',
-    );
-
-    dexterPool.poolFeePercent = pool.latestState.feePercent;
-
-    const swapRequest: SwapRequest = dexter.newSwapRequest()
-        .forLiquidityPool(dexterPool)
-        .withSwapInToken(swapInToken as DexterToken);
-
-    if (isReversed) {
-        swapRequest.withSwapOutAmount(swapAmount);
-    } else {
-        swapRequest.withSwapInAmount(swapAmount);
-    }
-
-    return swapRequest;
-}
-
 export function formatTransaction(block: BlockBabbage | BlockAlonzo, transaction: TxBabbage | TxAlonzo): Transaction {
     return {
         hash: transaction.id,

@@ -59,6 +59,10 @@ export class CreateOrderBookOrdersTable1703352431901 implements MigrationInterfa
                         unsigned: true,
                     },
                     {
+                        name: 'isCancelled',
+                        type: 'int',
+                    },
+                    {
                         name: 'dexFeesPaid',
                         type: 'bigint',
                         unsigned: true,

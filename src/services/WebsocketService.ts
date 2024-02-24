@@ -25,6 +25,8 @@ import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { OrderBookOrderResource } from '../api/resources/OrderBookOrderResource';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { OrderBookMatchResource } from '../api/resources/OrderBookMatchResource';
+import { OrderBookTickResource } from '../api/resources/OrderBookTickResource';
+import { OrderBookTick } from '../db/entities/OrderBookTick';
 
 export class WebsocketService extends BaseService {
 
@@ -68,7 +70,7 @@ export class WebsocketService extends BaseService {
     /**
      * Simplify entity keys for saving on data sent.
      */
-    private compressEntity(entity: BaseEntity): Object {
+    protected compressEntity(entity: BaseEntity): Object {
         try {
             switch (entity.constructor) {
                 case Sync:
@@ -93,6 +95,8 @@ export class WebsocketService extends BaseService {
                     return (new OrderBookOrderResource()).toCompressed(entity as OrderBookOrder);
                 case OrderBookMatch:
                     return (new OrderBookMatchResource()).toCompressed(entity as OrderBookMatch);
+                case OrderBookTick:
+                    return (new OrderBookTickResource()).toCompressed(entity as OrderBookTick);
                 default:
                     return {};
             }

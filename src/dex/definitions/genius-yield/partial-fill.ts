@@ -12,7 +12,7 @@ export default {
       ]
     },
     {
-      int: DatumParameterKey.Unknown
+      int: DatumParameterKey.Action
     }
   ]
 }

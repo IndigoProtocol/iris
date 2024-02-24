@@ -1,7 +1,7 @@
 import { BaseApiController } from './BaseApiController';
 import express from 'express';
 import { dbApiService } from '../../apiServices';
-import { Brackets, EntityManager, In } from 'typeorm';
+import { Brackets, EntityManager } from 'typeorm';
 import { LiquidityPool } from '../../db/entities/LiquidityPool';
 import { LiquidityPoolResource } from '../resources/LiquidityPoolResource';
 import { LiquidityPoolSwap } from '../../db/entities/LiquidityPoolSwap';
@@ -527,6 +527,10 @@ export class LiquidityPoolController extends BaseApiController {
         const {
             identifiers,
         } = request.body;
+
+        if (! identifiers || identifiers.length === 0) {
+             return response.send([]);
+        }
 
         return dbApiService.query((manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPool, 'pools')
