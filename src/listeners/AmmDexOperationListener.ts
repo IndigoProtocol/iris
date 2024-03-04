@@ -101,6 +101,11 @@ export class AmmDexOperationListener extends BaseEventListener {
         return Promise.all(
             instance.possibleOperationInputs.map((status: OperationStatus) => {
                 return this.handleOperationStatus(status)
+                    .then((savedStatus: OperationStatus) => {
+                        operationWs.broadcast(savedStatus);
+
+                        return savedStatus;
+                    })
                     .catch(() => Promise.resolve(undefined));
             })
         ).then((statuses: (OperationStatus | undefined)[]) => {
@@ -161,7 +166,7 @@ export class AmmDexOperationListener extends BaseEventListener {
 
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolSwap) => {
-                        await this.handleOperationStatus(
+                        const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
                                 entity.slot,
@@ -173,6 +178,10 @@ export class AmmDexOperationListener extends BaseEventListener {
                                 entity.constructor.name,
                             )
                         );
+
+                        entity.statuses = [
+                            status,
+                        ];
 
                         queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, order.slot));
 
@@ -232,7 +241,7 @@ export class AmmDexOperationListener extends BaseEventListener {
 
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolZap) => {
-                        await this.handleOperationStatus(
+                        const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
                                 entity.slot,
@@ -244,6 +253,10 @@ export class AmmDexOperationListener extends BaseEventListener {
                                 entity.constructor.name,
                             )
                         );
+
+                        entity.statuses = [
+                            status,
+                        ];
 
                         queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, order.slot));
 
@@ -303,7 +316,7 @@ export class AmmDexOperationListener extends BaseEventListener {
 
                 return await manager.save(deposit)
                     .then(async (entity: LiquidityPoolDeposit) => {
-                        await this.handleOperationStatus(
+                        const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
                                 entity.slot,
@@ -315,6 +328,10 @@ export class AmmDexOperationListener extends BaseEventListener {
                                 entity.constructor.name,
                             )
                         );
+
+                        entity.statuses = [
+                            status,
+                        ];
 
                         queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, deposit.slot));
 
@@ -365,7 +382,7 @@ export class AmmDexOperationListener extends BaseEventListener {
 
                 return await manager.save(withdraw)
                     .then(async (entity: LiquidityPoolWithdraw) => {
-                        await this.handleOperationStatus(
+                        const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
                                 entity.slot,
@@ -377,6 +394,10 @@ export class AmmDexOperationListener extends BaseEventListener {
                                 entity.constructor.name,
                             )
                         );
+
+                        entity.statuses = [
+                            status,
+                        ];
 
                         queue.dispatch(new UpdateTicksTotalTransactions(withdraw.liquidityPool as LiquidityPool, withdraw.slot));
 

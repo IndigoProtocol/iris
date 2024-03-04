@@ -9,6 +9,8 @@ export class OperationStatusResource extends BaseEntityResource {
             slot: Number(entity.slot),
             txHash: entity.txHash,
             outputIndex: Number(entity.outputIndex),
+            operationTxHash: entity.operationTxHash,
+            operationOutputIndex: entity.operationOutputIndex,
         };
     }
 
@@ -19,6 +21,8 @@ export class OperationStatusResource extends BaseEntityResource {
             s: Number(entity.slot),
             tH: entity.txHash,
             oI: Number(entity.outputIndex),
+            oTx: entity.operationTxHash,
+            oOi: entity.operationOutputIndex,
         };
     }
 

@@ -9,6 +9,7 @@ import { OrderBookOrderResource } from '../resources/OrderBookOrderResource';
 import { TickInterval } from '../../constants';
 import { OrderBookTick } from '../../db/entities/OrderBookTick';
 import { OrderBookTickResource } from '../resources/OrderBookTickResource';
+import { OrderBookMatch } from '../../db/entities/OrderBookMatch';
 
 const MAX_PER_PAGE: number = 100;
 
@@ -21,6 +22,8 @@ export class OrderBookController extends BaseApiController {
         this.router.get(`${this.basePath}/:identifier/ticks`, this.ticks);
         this.router.get(`${this.basePath}/:identifier/buy-orders`, this.buyOrders);
         this.router.get(`${this.basePath}/:identifier/sell-orders`, this.sellOrders);
+
+        this.router.post(`${this.basePath}/analytics/prices`, this.orderBookPrices);
     }
 
     private orderBooks(request: express.Request, response: express.Response) {
@@ -127,7 +130,7 @@ export class OrderBookController extends BaseApiController {
                 return manager.createQueryBuilder(OrderBookTick, 'ticks')
                     .where(
                         new Brackets((query) => {
-                            query.where('ticks.liquidityPoolId = :poolId', {
+                            query.where('ticks.orderBookId = :orderBookId', {
                                 orderBookId: book.id,
                             }).andWhere('ticks.resolution = :resolution', {
                                 resolution,
@@ -249,6 +252,70 @@ export class OrderBookController extends BaseApiController {
 
             return response.send(resource.manyToJson(orders));
         }).catch(() => response.send(super.failResponse('Unable to retrieve order book orders')));
+    }
+
+    private orderBookPrices(request: express.Request, response: express.Response) {
+        const {
+            identifiers,
+        } = request.body;
+
+        if (! identifiers || identifiers.length === 0) {
+            return response.send([]);
+        }
+
+        return dbApiService.query((manager: EntityManager) => {
+            return manager.createQueryBuilder(OrderBook, 'books')
+                .leftJoinAndSelect('books.tokenA', 'tokenA')
+                .leftJoinAndSelect('books.tokenB', 'tokenB')
+                .leftJoinAndMapOne(
+                    'books.day_tick',
+                    OrderBookTick,
+                    'day_tick',
+                    'day_tick.orderBookId = books.id AND (day_tick.id = (SELECT id FROM order_book_ticks WHERE orderBookId = books.id AND resolution = :resolution AND time >= (UNIX_TIMESTAMP() - :seconds) ORDER BY time ASC LIMIT 1))',
+                    {
+                        resolution: TickInterval.Hour,
+                        seconds:  60 * 60 * 24,
+                    },
+                )
+                .leftJoinAndMapOne(
+                    'books.hour_tick',
+                    OrderBookTick,
+                    'hour_tick',
+                    'hour_tick.orderBookId = books.id AND (hour_tick.id = (SELECT id FROM order_book_ticks WHERE orderBookId = books.id AND resolution = :hourResolution AND time >= (UNIX_TIMESTAMP() - :hourSeconds) ORDER BY time ASC LIMIT 1))',
+                    {
+                        hourResolution: TickInterval.Hour,
+                        hourSeconds: 60 * 60,
+                    },
+                )
+                .leftJoinAndMapOne(
+                    'books.last_match',
+                    OrderBookMatch,
+                    'last_match',
+                    'last_match.orderBookId = books.id AND (last_match.id = (SELECT MAX(id) FROM order_book_matches WHERE orderBookId = books.id))',
+                )
+                .leftJoinAndSelect('last_match.referenceOrder', 'referenceOrder')
+                .where('books.identifier IN (:identifiers)', {
+                    identifiers,
+                })
+                .getMany();
+        }).then((results: OrderBook[]) => {
+            response.send(
+                results.reduce((prices: Object[], entry: any) => {
+                    const price: number = entry.last_match.referenceOrder.price;
+
+                    prices.push({
+                        identifier: entry.identifier,
+                        price: price,
+                        dayLow: entry.day_tick ? Math.min(entry.day_tick.low, price) : price,
+                        dayHigh: entry.day_tick ? Math.max(entry.day_tick.high, price) : price,
+                        dayChange: ! entry.day_tick ? 0 : (price - entry.day_tick.close) / entry.day_tick.close * 100,
+                        hourChange: ! entry.hour_tick ? 0 : (price - entry.hour_tick.close) / entry.hour_tick.close * 100,
+                    });
+
+                    return prices;
+                }, [])
+            );
+        }).catch(() => response.send(super.failResponse('Unable to retrieve order book prices')));
     }
 
 }

@@ -1,5 +1,5 @@
 import { BaseJob } from './BaseJob';
-import { lucidUtils } from '../utils';
+import { lucidUtils, tokensMatch } from '../utils';
 import { EntityManager } from 'typeorm';
 import { dbService, eventService, operationWs, queue } from '../indexerServices';
 import { IndexerEventType, TickInterval } from '../constants';
@@ -47,7 +47,10 @@ export class UpdateOrderBookTicks extends BaseJob {
             return Promise.reject('Order reference not found for match');
         }
 
-        const price: number = this._match.referenceOrder.price;
+        const price: number = tokensMatch(this._match.orderBook.tokenA ?? 'lovelace', this._match.matchedToken ?? 'lovelace')
+            ? 1 / this._match.referenceOrder.price
+            : this._match.referenceOrder.price;
+
         const existingTick: OrderBookTick | undefined = await manager.findOne(OrderBookTick, {
             relations: ['orderBook'],
             where: {
@@ -87,7 +90,15 @@ export class UpdateOrderBookTicks extends BaseJob {
                     0,
                    0
                 )
-            );
+            ).then((tick: OrderBookTick) => {
+                operationWs.broadcast(tick);
+                eventService.pushEvent({
+                    type: IndexerEventType.LiquidityPoolTick,
+                    data: tick,
+                });
+
+                return Promise.resolve();
+            });
         }
 
         if (price < existingTick.low) {

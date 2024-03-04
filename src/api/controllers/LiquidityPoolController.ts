@@ -581,7 +581,7 @@ export class LiquidityPoolController extends BaseApiController {
                     return prices;
                 }, [])
             );
-        }).catch(() => response.send(super.failResponse('Unable to retrieve liquidity pools')));
+        }).catch(() => response.send(super.failResponse('Unable to retrieve liquidity pool prices')));
     }
 
 }

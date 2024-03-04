@@ -91,7 +91,15 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
                     this._liquidityPoolState.tvl,
                     Math.abs(lastTick ? this._liquidityPoolState.tvl - lastTick.tvl : this._liquidityPoolState.tvl)
                 )
-            );
+            ).then((tick: LiquidityPoolTick) => {
+                operationWs.broadcast(tick);
+                eventService.pushEvent({
+                    type: IndexerEventType.LiquidityPoolTick,
+                    data: tick,
+                });
+
+                return Promise.resolve();
+            });
         }
 
         if (price < existingTick.low) {
