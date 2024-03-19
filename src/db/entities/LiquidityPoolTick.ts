@@ -35,9 +35,6 @@ export class LiquidityPoolTick extends BaseEntity {
     @Column({ type: 'bigint', unsigned: true })
     tvl: number;
 
-    @Column({ type: 'int' })
-    totalTransactions: number;
-
     static make(
         liquidityPool: LiquidityPool,
         resolution: string,
@@ -48,7 +45,6 @@ export class LiquidityPoolTick extends BaseEntity {
         close: number,
         tvl: number = 0,
         volume: number = 0,
-        totalTransactions: number = 0,
     ): LiquidityPoolTick {
         let instance: LiquidityPoolTick = new LiquidityPoolTick();
 
@@ -61,7 +57,6 @@ export class LiquidityPoolTick extends BaseEntity {
         instance.close = close;
         instance.tvl = tvl;
         instance.volume = volume;
-        instance.totalTransactions = totalTransactions;
 
         return instance;
     }

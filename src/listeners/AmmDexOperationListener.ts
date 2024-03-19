@@ -15,7 +15,6 @@ import { stringify } from '../utils';
 import CONFIG from '../config';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { UpdateLiquidityPoolTvlJob } from '../jobs/UpdateLiquidityPoolTvlJob';
-import { UpdateTicksTotalTransactions } from '../jobs/UpdateTicksTotalTransactions';
 import { UpdateAmountReceived } from '../jobs/UpdateAmountReceived';
 
 const MAX_RESOLVE_ATTEMPTS: number = 3;
@@ -183,8 +182,6 @@ export class AmmDexOperationListener extends BaseEventListener {
                             status,
                         ];
 
-                        queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, order.slot));
-
                         return Promise.resolve(entity);
                     });
             }
@@ -257,8 +254,6 @@ export class AmmDexOperationListener extends BaseEventListener {
                         entity.statuses = [
                             status,
                         ];
-
-                        queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, order.slot));
 
                         return Promise.resolve(entity);
                     });
@@ -333,8 +328,6 @@ export class AmmDexOperationListener extends BaseEventListener {
                             status,
                         ];
 
-                        queue.dispatch(new UpdateTicksTotalTransactions(liquidityPool, deposit.slot));
-
                         return Promise.resolve(entity);
                     });
             }
@@ -399,8 +392,6 @@ export class AmmDexOperationListener extends BaseEventListener {
                             status,
                         ];
 
-                        queue.dispatch(new UpdateTicksTotalTransactions(withdraw.liquidityPool as LiquidityPool, withdraw.slot));
-
                         return Promise.resolve(entity);
                     });
             }
@@ -422,6 +413,7 @@ export class AmmDexOperationListener extends BaseEventListener {
                 return Promise.reject(`Unable to find entity with Tx hash ${operationStatus.operationTxHash}#${operationStatus.operationOutputIndex}`);
             }
 
+            operationStatus.operationEntity = entity;
             operationStatus.operationId = entity.id;
             operationStatus.operationType = entity.constructor.name;
         }
@@ -435,18 +427,21 @@ export class AmmDexOperationListener extends BaseEventListener {
      * Search for the DEX operation associated with a Tx#index.
      */
     private async retrieveOperationEntity(txHash: string, outputIndex: number): Promise<StatusableEntity | undefined> {
-        const retrieveEntity = async (manager: EntityManager, entityTarget: EntityTarget<StatusableEntity>): Promise<StatusableEntity | undefined> => {
-            return await manager.findOneBy(entityTarget, {
-                txHash: txHash,
-                outputIndex: outputIndex,
+        const retrieveEntity = async (manager: EntityManager, entityTarget: EntityTarget<StatusableEntity>, relations: string[]): Promise<StatusableEntity | undefined> => {
+            return await manager.findOne(entityTarget, {
+                relations: relations,
+                where: {
+                    txHash: txHash,
+                    outputIndex: outputIndex,
+                },
             }) ?? undefined;
         };
 
         return dbService.query(async (manager: EntityManager): Promise<any> => {
-            return await retrieveEntity(manager, LiquidityPoolSwap)
-                ?? await retrieveEntity(manager, LiquidityPoolDeposit)
-                ?? await retrieveEntity(manager, LiquidityPoolWithdraw)
-                ?? await retrieveEntity(manager, LiquidityPoolZap);
+            return await retrieveEntity(manager, LiquidityPoolSwap, ['liquidityPool', 'swapInToken', 'swapOutToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolDeposit, ['liquidityPool', 'depositAToken', 'depositBToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolWithdraw, ['liquidityPool', 'lpToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolZap, ['liquidityPool', 'swapInToken', 'forToken']);
         });
     }
 

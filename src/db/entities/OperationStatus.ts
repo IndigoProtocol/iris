@@ -5,6 +5,7 @@ import { DexOperationStatus } from '../../constants';
 @Index(['operationId', 'operationType', 'status'], { unique: true })
 export class OperationStatus extends BaseEntity {
 
+    operationEntity: any;
     operationTxHash: string;
     operationOutputIndex: number;
 

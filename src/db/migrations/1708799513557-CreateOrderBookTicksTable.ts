@@ -52,10 +52,6 @@ export class CreateOrderBookTicksTable1708799513557 implements MigrationInterfac
                         isNullable: true,
                         unsigned: true,
                     },
-                    {
-                        name: 'totalTransactions',
-                        type: 'int',
-                    },
                 ],
             }),
             true

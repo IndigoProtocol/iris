@@ -35,9 +35,6 @@ export class OrderBookTick extends BaseEntity {
     @Column({ type: 'bigint', unsigned: true })
     tvl: number;
 
-    @Column({ type: 'int' })
-    totalTransactions: number;
-
     static make(
         orderBook: OrderBook,
         resolution: string,
@@ -48,7 +45,6 @@ export class OrderBookTick extends BaseEntity {
         close: number,
         tvl: number = 0,
         volume: number = 0,
-        totalTransactions: number = 0,
     ): OrderBookTick {
         let instance: OrderBookTick = new OrderBookTick();
 
@@ -61,7 +57,6 @@ export class OrderBookTick extends BaseEntity {
         instance.close = close;
         instance.tvl = tvl;
         instance.volume = volume;
-        instance.totalTransactions = totalTransactions;
 
         return instance;
     }

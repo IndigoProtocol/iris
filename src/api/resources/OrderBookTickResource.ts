@@ -1,10 +1,12 @@
 import { BaseEntityResource } from './BaseEntityResource';
 import { OrderBookTick } from '../../db/entities/OrderBookTick';
+import {OrderBookResource} from './OrderBookResource';
 
 export class OrderBookTickResource extends BaseEntityResource {
 
     toJson(entity: OrderBookTick): Object {
-        return {
+        let response: any = {
+            resolution: entity.resolution,
             open: entity.open,
             high: entity.high,
             low: entity.low,
@@ -12,10 +14,16 @@ export class OrderBookTickResource extends BaseEntityResource {
             volume: entity.volume,
             time: entity.time,
         };
+
+        if (entity.orderBook) {
+            response.orderBook = (new OrderBookResource()).toJson(entity.orderBook);
+        }
+
+        return response;
     }
 
     toCompressed(entity: OrderBookTick): Object {
-        return {
+        let response: any =  {
             t: 'OrderBookTick',
             r: entity.resolution,
             o: entity.open,
@@ -25,6 +33,12 @@ export class OrderBookTickResource extends BaseEntityResource {
             v: entity.volume,
             ti: entity.time,
         };
+
+        if (entity.orderBook) {
+            response.oB = (new OrderBookResource()).toCompressed(entity.orderBook);
+        }
+
+        return response;
     }
 
 }

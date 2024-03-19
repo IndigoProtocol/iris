@@ -25,8 +25,7 @@ export class LiquidityPoolController extends BaseApiController {
         this.router.post(`${this.basePath}`, this.liquidityPools);
         this.router.get(`${this.basePath}/search`, this.search);
 
-        this.router.post(`${this.basePath}/analytics/prices`, this.liquidityPoolPrices);
-        this.router.get(`${this.basePath}/analytics/newest`, this.newest);
+        this.router.post(`${this.basePath}/prices`, this.liquidityPoolPrices);
 
         this.router.get(`${this.basePath}/:identifier`, this.liquidityPool);
         this.router.get(`${this.basePath}/:identifier/ticks`, this.liquidityPoolTicks);
@@ -492,35 +491,6 @@ export class LiquidityPoolController extends BaseApiController {
                 resource.manyToJson(liquidityPools)
             ));
         }).catch(() => response.send(super.failResponse('Unable to search liquidity pools')));
-    }
-
-    private newest(request: express.Request, response: express.Response) {
-        const {
-            page,
-            limit,
-        } = request.query;
-
-        const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
-        const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
-
-        return dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPool, 'pools')
-                .leftJoinAndSelect('pools.tokenA', 'tokenA')
-                .leftJoinAndSelect('pools.tokenB', 'tokenB')
-                .orderBy('createdSlot', 'DESC')
-                .limit(take)
-                .offset(skip)
-                .getManyAndCount();
-        }).then(([liquidityPools, total]) => {
-            const resource: LiquidityPoolResource = new LiquidityPoolResource();
-
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                Math.ceil(total / take),
-                resource.manyToJson(liquidityPools)
-            ));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve newest liquidity pools')));
     }
 
     private liquidityPoolPrices(request: express.Request, response: express.Response) {

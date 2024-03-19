@@ -52,10 +52,6 @@ export class CreateLiquidityPoolTicks1696953524778 implements MigrationInterface
                         isNullable: true,
                         unsigned: true,
                     },
-                    {
-                        name: 'totalTransactions',
-                        type: 'int',
-                    },
                 ],
             }),
             true

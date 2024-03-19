@@ -3,7 +3,6 @@ import { dbService, eventService, metadataService, operationWs, queue } from './
 import {
     createChainSyncClient,
     createInteractionContext,
-    createStateQueryClient,
     InteractionContext
 } from '@cardano-ogmios/client';
 import { Block, TipOrOrigin, Point, PointOrOrigin, BlockAlonzo, BlockBabbage } from '@cardano-ogmios/schema';
@@ -20,7 +19,6 @@ import CONFIG from './config';
 import { SyncIndexer } from './indexers/SyncIndexer';
 import { EntityManager } from 'typeorm';
 import { Sync } from './db/entities/Sync';
-import { StateQueryClient } from '@cardano-ogmios/client/dist/StateQuery';
 import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from './constants';
 import { TeddySwapAnalyzer } from './dex/TeddySwapAnalyzer';
 import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
@@ -29,16 +27,10 @@ import { BaseEventListener } from './listeners/BaseEventListener';
 
 export class IndexerApplication {
 
-    /**
-     * Storage to use for application.
-     */
     private readonly _cache: BaseCacheStorage;
-
-    private latestSlot: number = 0;
-    private chainSyncClient: ChainSyncClient | undefined = undefined;
-    private stateQueryClient: StateQueryClient | undefined = undefined;
-
     private readonly _eventListeners: BaseEventListener[] = [];
+
+    private chainSyncClient: ChainSyncClient | undefined = undefined;
 
     /**
      * Indexers to make aware of new blocks & rollbacks.
@@ -145,7 +137,6 @@ export class IndexerApplication {
                 sequential: true,
             }
         );
-        this.stateQueryClient = await createStateQueryClient(context);
 
         const lastSync: Sync | undefined = await dbService.transaction(async (manager: EntityManager): Promise<Sync | undefined> => {
             return await manager.findOneBy(Sync, {
@@ -183,8 +174,6 @@ export class IndexerApplication {
 
         if (block) {
             logInfo(`=== Analyzing block at slot ${block.header.slot} ===`);
-
-            this.latestSlot = block.header.slot;
 
             await Promise.all(
                 this._indexers.map((indexer: BaseIndexer) => indexer.onRollForward(block as BlockAlonzo | BlockBabbage)),

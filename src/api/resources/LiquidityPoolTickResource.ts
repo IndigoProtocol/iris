@@ -1,10 +1,12 @@
 import { BaseEntityResource } from './BaseEntityResource';
 import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
+import {LiquidityPoolResource} from "./LiquidityPoolResource";
 
 export class LiquidityPoolTickResource extends BaseEntityResource {
 
     toJson(entity: LiquidityPoolTick): Object {
-        return {
+        let response: any =  {
+            resolution: entity.resolution,
             open: entity.open,
             high: entity.high,
             low: entity.low,
@@ -12,10 +14,16 @@ export class LiquidityPoolTickResource extends BaseEntityResource {
             volume: entity.volume,
             time: entity.time,
         };
+
+        if (entity.liquidityPool) {
+            response.liquidityPool = (new LiquidityPoolResource()).toJson(entity.liquidityPool);
+        }
+
+        return response;
     }
 
     toCompressed(entity: LiquidityPoolTick): Object {
-        return {
+        let response: any =  {
             t: 'LiquidityPoolTick',
             r: entity.resolution,
             o: entity.open,
@@ -25,6 +33,12 @@ export class LiquidityPoolTickResource extends BaseEntityResource {
             v: entity.volume,
             ti: entity.time,
         };
+
+        if (entity.liquidityPool) {
+            response.lP = (new LiquidityPoolResource()).toCompressed(entity.liquidityPool);
+        }
+
+        return response;
     }
 
 }
