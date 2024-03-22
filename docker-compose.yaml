@@ -142,8 +142,6 @@ services:
       GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
       RUN_APP: api
     depends_on:
-      ogmios:
-        condition: service_healthy
       mysql:
         condition: service_healthy
     logging:
