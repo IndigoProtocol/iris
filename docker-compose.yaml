@@ -1,0 +1,126 @@
+version: '3.9'
+
+volumes:
+  node-ipc:
+  node-data:
+  mysql-data:
+
+networks:
+  default:
+    name: iris-network
+
+services:
+  watchtower:
+    image: containrrr/watchtower
+    command: --interval 3600 --label-enable --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  cardano-node:
+    container_name: cardano-node
+    image: inputoutput/cardano-node:8.1.1
+    restart: always
+    environment:
+      - NETWORK=mainnet
+    volumes:
+      - node-data:/data
+      - node-ipc:/ipc
+    healthcheck:
+      test: bash -c '[ -S /ipc/node.socket ]'
+      interval: 3m
+      retries: 60
+    logging:
+      options:
+        max-size: 10m
+        max-file: "5"
+  ogmios:
+    container_name: ogmios
+    image: cardanosolutions/ogmios:v5.5.6-mainnet
+    restart: always
+    command:
+      - --node-config
+      - /node-config/mainnet/config.json
+      - --node-socket
+      - /ipc/node.socket
+      - --host
+      - 0.0.0.0
+      - --port
+      - "1337"
+      - --log-level
+      - Info
+    volumes:
+      - ${PWD}/config:/node-config
+      - node-ipc:/ipc
+    depends_on:
+      cardano-node:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: "5"
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+  iris-indexer:
+    container_name: iris-indexer
+    expose:
+      - "8080"
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      LOG_DIR: /usr/src/app/logs/indexer
+      VERBOSE: "true"
+      OGMIOS_HOST: localhost
+      OGMIOS_PORT: 1337
+      OGMIOS_TLS: "false"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      OPERATION_WEBSOCKET_PORT: 8080
+      API_PORT: 3000
+      GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
+      RUN_APP: indexer
+    depends_on:
+      ogmios:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: "5"
+  iris-api:
+    container_name: iris-api
+    expose:
+      - "3000"
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      LOG_DIR: /usr/src/app/logs/api
+      VERBOSE: "true"
+      OGMIOS_HOST: ogmios
+      OGMIOS_PORT: 1337
+      OGMIOS_TLS: "false"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      OPERATION_WEBSOCKET_PORT: 8080
+      API_PORT: 3000
+      GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
+      RUN_APP: api
+    logging:
+      options:
+        max-size: 10m
+        max-file: "5"
