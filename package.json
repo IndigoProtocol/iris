@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "indexer": "NODE_NO_WARNINGS=1 node --es-module-specifier-resolution=node ./dist/indexerLocal.js",
-    "api": "NODE_NO_WARNINGS=1 node --es-module-specifier-resolution=node ./dist/apiLocal.js"
+    "indexer": "NODE_NO_WARNINGS=1 node --es-module-specifier-resolution=node ./dist/indexer.js",
+    "api": "NODE_NO_WARNINGS=1 node --es-module-specifier-resolution=node ./dist/api.js"
   },
   "keywords": [],
   "author": "",
