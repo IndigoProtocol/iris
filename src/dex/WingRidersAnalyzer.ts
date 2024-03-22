@@ -41,7 +41,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
     /**
      * Analyze transaction for possible DEX operations.
      */
-    public analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
+    public async analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
         return Promise.all([
             this.liquidityPoolStates(transaction),
             this.swapOrders(transaction),
@@ -49,10 +49,6 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
             this.withdrawOrders(transaction),
             this.cancelledOperationInputs(transaction, [ORDER_CONTRACT_ADDRESS], CANCEL_ORDER_DATUM),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
-    }
-
-    protected zapOrders(transaction: Transaction): Promise<LiquidityPoolZap[]> {
-        return Promise.resolve([]);
     }
 
     /**
