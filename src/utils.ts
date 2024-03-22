@@ -10,9 +10,6 @@ import {
 import { Lucid, Utils } from 'lucid-cardano';
 import { Asset, Token } from './db/entities/Asset';
 import { LiquidityPool } from './db/entities/LiquidityPool';
-import { Dexter, SwapRequest } from '@indigo-labs/dexter';
-import { LiquidityPool as DexterLiquidityPool } from '@indigo-labs/dexter/build/dex/models/liquidity-pool';
-import { Token as DexterToken } from '@indigo-labs/dexter/build/dex/models/asset';
 import { BlockAlonzo, BlockBabbage, Datum, TxAlonzo, TxBabbage, TxIn, TxOut } from '@cardano-ogmios/schema';
 
 export const lucidUtils: Utils = new Utils(new Lucid());

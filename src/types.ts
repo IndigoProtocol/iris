@@ -9,10 +9,10 @@ import { OperationStatus } from './db/entities/OperationStatus';
 import { OrderBookOrder } from './db/entities/OrderBookOrder';
 import { OrderBookMatch } from './db/entities/OrderBookMatch';
 import { OrderBook } from './db/entities/OrderBook';
-import { LiquidityPool } from '@indigo-labs/dexter';
 import { Sync } from './db/entities/Sync';
 import { LiquidityPoolTick } from './db/entities/LiquidityPoolTick';
 import { OrderBookTick } from './db/entities/OrderBookTick';
+import { LiquidityPool } from './db/entities/LiquidityPool';
 
 export interface Utxo {
     forTxHash: TxHash;
