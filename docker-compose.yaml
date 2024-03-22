@@ -15,6 +15,16 @@ services:
     command: --interval 3600 --label-enable --cleanup
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  init-container:
+    container_name: init
+    build:
+      dockerfile: deploy/init-container/Dockerfile
+      context: .
+    environment:
+      - CARDANO_NODE_DATA_FOLDER=/data
+    volumes:
+      - node-data:/data
+    restart: no
   cardano-node:
     container_name: cardano-node
     image: inputoutput/cardano-node:8.1.1
@@ -24,6 +34,9 @@ services:
     volumes:
       - node-data:/data
       - node-ipc:/ipc
+    depends_on:
+      init-container:
+        condition: service_completed_successfully
     healthcheck:
       test: bash -c '[ -S /ipc/node.socket ]'
       interval: 3m
@@ -48,7 +61,7 @@ services:
       - --log-level
       - Info
     volumes:
-      - ${PWD}/config:/node-config
+      - ${PWD}/deploy/config:/node-config
       - node-ipc:/ipc
     depends_on:
       cardano-node:
