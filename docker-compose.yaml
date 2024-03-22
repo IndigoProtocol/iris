@@ -18,8 +18,8 @@ services:
   init-container:
     container_name: init
     build:
-      dockerfile: deploy/init-container/Dockerfile
-      context: .
+      dockerfile: init-container/Dockerfile
+      context: ./deploy 
     environment:
       - CARDANO_NODE_DATA_FOLDER=/data
     volumes:
@@ -77,6 +77,12 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10      
+    expose:
+      - "3306"
     ports:
       - "3306:3306"
     volumes:
@@ -107,6 +113,8 @@ services:
     depends_on:
       ogmios:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
     logging:
       options:
         max-size: 10m
@@ -133,6 +141,11 @@ services:
       API_PORT: 3000
       GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
       RUN_APP: api
+    depends_on:
+      ogmios:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
     logging:
       options:
         max-size: 10m
