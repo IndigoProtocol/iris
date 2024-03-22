@@ -28,7 +28,7 @@ const REWARD_ADDRESSES: string[] = [
 
 export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
 
-    public analyzeTransaction(transaction: Transaction): Promise<OrderBookDexOperation[]> {
+    public async analyzeTransaction(transaction: Transaction): Promise<OrderBookDexOperation[]> {
         return Promise.all([
             this.orders(transaction),
             this.matches(transaction),

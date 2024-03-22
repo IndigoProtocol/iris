@@ -45,7 +45,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
     /**
      * Analyze transaction for possible DEX operations.
      */
-    public analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
+    public async analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
         return Promise.all([
             this.liquidityPoolStates(transaction),
             this.swapOrders(transaction),

@@ -31,6 +31,7 @@ const ORDER_V1_CONTRACT_ADDRESS: string = 'addr1z8c7eyxnxgy80qs5ehrl4yy93tzkyqjn
 const ORDER_V2_CONTRACT_ADDRESS: string = 'addr1z8l28a6jsx4870ulrfygqvqqdnkdjc5sa8f70ys6dvgvjqc3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqxyrhvq';
 const ORDER_V3_CONTRACT_ADDRESS: string = 'addr1zyq0kyrml023kwjk8zr86d5gaxrt5w8lxnah8r6m6s4jp4g3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqqktyhv';
 const BATCH_ORDER_CONTRACT_ADDRESS: string = 'addr1w9e7m6yn74r7m0f9mf548ldr8j4v6q05gprey2lhch8tj5gsvyte9';
+const POOL_V1_NFT_POLICY_ID: string = '0be55d262b29f564998ff81efe21bdc0022621c12f15af08d0f2ddb1';
 const POOL_NFT_POLICY_ID: string = '909133088303c49f3a30f1cc8ed553a73857a29779f6c6561cd8093f';
 const LP_TOKEN_POLICY_ID: string = 'af3d70acf4bd5b3abb319a7d75c89fb3e56eafcdd46b2e9b57a2557f';
 const CANCEL_ORDER_DATUM: string = 'd87980';
@@ -40,18 +41,18 @@ export class MuesliSwapAnalyzer extends BaseAmmDexAnalyzer {
     /**
      * Analyze transaction for possible DEX operations.
      */
-    public analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
+    public async analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
         return Promise.all([
             this.liquidityPoolStates(transaction),
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, [ORDER_V1_CONTRACT_ADDRESS, ORDER_V2_CONTRACT_ADDRESS, ORDER_V3_CONTRACT_ADDRESS], CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(
+                transaction,
+                [ORDER_V1_CONTRACT_ADDRESS, ORDER_V2_CONTRACT_ADDRESS, ORDER_V3_CONTRACT_ADDRESS],
+                CANCEL_ORDER_DATUM
+            ),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
-    }
-
-    protected zapOrders(transaction: Transaction): Promise<LiquidityPoolZap[]> {
-        return Promise.resolve([]);
     }
 
     /**
@@ -121,7 +122,10 @@ export class MuesliSwapAnalyzer extends BaseAmmDexAnalyzer {
             }
 
             // Check if pool output is valid
-            const hasPoolNft: boolean = output.assetBalances.some((balance: AssetBalance) => balance.asset.assetName === 'MuesliSwap_AMM');
+            const hasPoolNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
+                return balance.asset.assetName === 'MuesliSwap_AMM'
+                    || balance.asset.nameHex === POOL_V1_NFT_POLICY_ID
+            });
             if (! hasPoolNft) {
                 return undefined;
             }

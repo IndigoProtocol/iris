@@ -24,6 +24,7 @@ import { TeddySwapAnalyzer } from './dex/TeddySwapAnalyzer';
 import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
 import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
 import { BaseEventListener } from './listeners/BaseEventListener';
+import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
 
 export class IndexerApplication {
 
@@ -38,16 +39,16 @@ export class IndexerApplication {
     private _indexers: BaseIndexer[] = [
         new SyncIndexer(),
         new AmmDexTransactionIndexer([
-            new MinswapAnalyzer(this),
-            new SundaeSwapAnalyzer(this),
-            new WingRidersAnalyzer(this),
-            new SpectrumAnalyzer(this),
-            new TeddySwapAnalyzer(this),
-            // new MuesliSwapAnalyzer(this),
+            // new MinswapAnalyzer(this),
+            // new SundaeSwapAnalyzer(this),
+            // new WingRidersAnalyzer(this),
+            // new SpectrumAnalyzer(this),
+            // new TeddySwapAnalyzer(this),
+            new MuesliSwapAnalyzer(this),
         ]),
-        new OrderBookDexTransactionIndexer([
-            new GeniusYieldAnalyzer(this),
-        ]),
+        // new OrderBookDexTransactionIndexer([
+        //     new GeniusYieldAnalyzer(this),
+        // ]),
     ];
 
     /**
@@ -145,11 +146,11 @@ export class IndexerApplication {
         });
 
         /**
-         * SundaeSwap  - 50367177, 91c16d5ae92f2eb791c3c2da9b38126b98623b07f611d4a4b913f0ab2af721d2
-         * Minswap     - 56553560, f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
-         * WingRiders  - 57274883, 2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
-         * MuesliSwap  - 65094197, ce75a42b708f47c1ea4ddeb204907e8f3569559c1bb09a05c7b2f4a0c3f84837
-         * Spectrum    - 98301694, d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
+         * SundaeSwap  - 50367177,  91c16d5ae92f2eb791c3c2da9b38126b98623b07f611d4a4b913f0ab2af721d2
+         * Minswap     - 56553560,  f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
+         * WingRiders  - 57274883,  2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
+         * MuesliSwap  - 65094197,  ce75a42b708f47c1ea4ddeb204907e8f3569559c1bb09a05c7b2f4a0c3f84837
+         * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
          * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          */

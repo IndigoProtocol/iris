@@ -30,7 +30,7 @@ export abstract class BaseAmmDexAnalyzer {
 
     protected abstract withdrawOrders(transaction: Transaction): Promise<LiquidityPoolWithdraw[]> | LiquidityPoolWithdraw[];
 
-    protected abstract zapOrders(transaction: Transaction): Promise<LiquidityPoolZap[]> | LiquidityPoolZap[];
+    protected zapOrders?(transaction: Transaction): Promise<LiquidityPoolZap[]> | LiquidityPoolZap[];
 
     /**
      * Attempts to retrieve a liquidity pool from its identifier.
