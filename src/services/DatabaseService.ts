@@ -37,6 +37,7 @@ export class DatabaseService extends BaseService {
             supportBigNumbers: true,
             bigNumberStrings: false,
             synchronize: false,
+            connectorPackage: 'mysql2',
             entities: [
                 'dist/**/entities/*.js',
                 ...entities,

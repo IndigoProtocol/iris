@@ -34,7 +34,6 @@
     "helmet": "^7.0.0",
     "lodash": "^4.17.21",
     "lucid-cardano": "^0.10.7",
-    "mysql": "^2.18.1",
     "mysql2": "^3.6.0",
     "node-cache": "^5.1.2",
     "queue-promise": "^2.2.1",
