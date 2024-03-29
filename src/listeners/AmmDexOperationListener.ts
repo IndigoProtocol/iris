@@ -161,6 +161,10 @@ export class AmmDexOperationListener extends BaseEventListener {
             }) ?? undefined;
 
             if (liquidityPool) {
+                liquidityPool.orderAddress = order.toAddress;
+
+                await manager.save(liquidityPool);
+
                 order.liquidityPool = liquidityPool;
 
                 return await manager.save(order)

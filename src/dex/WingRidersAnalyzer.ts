@@ -22,7 +22,6 @@ import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 
 /**
  * WingRiders constants.
@@ -111,6 +110,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    output.toAddress,
                 );
             } catch (e) {
                 return undefined;

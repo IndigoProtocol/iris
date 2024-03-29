@@ -18,6 +18,9 @@ export class LiquidityPool extends BaseEntity {
     @Column()
     address: string;
 
+    @Column({ nullable: true })
+    orderAddress: string;
+
     @OneToOne(() => Asset, { nullable: true, eager: true })
     @JoinColumn()
     tokenA: Relation<Asset | undefined>;

@@ -109,6 +109,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            output.toAddress,
                         )
                     );
                 } catch (e) {

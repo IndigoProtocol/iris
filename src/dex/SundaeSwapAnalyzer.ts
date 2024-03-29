@@ -105,6 +105,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            output.toAddress,
                         )
                     );
                 } catch (e) {
