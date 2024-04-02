@@ -111,7 +111,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         }
 
         existingTick.close = price;
-        existingTick.volume += Math.abs(existingTick.tvl - this._liquidityPoolState.tvl)
+        existingTick.volume += Math.abs(existingTick.tvl - this._liquidityPoolState.tvl) / 2;
         existingTick.tvl = this._liquidityPoolState.tvl;
 
         return manager.save(existingTick)
