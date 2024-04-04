@@ -20,24 +20,30 @@ export class DatabaseService extends BaseService {
     }
 
     public boot(app: IndexerApplication, migrations: Function[] = [], entities: Function[] = []): Promise<any> {
-        if (! CONFIG.MYSQL_USERNAME || ! CONFIG.MYSQL_DATABASE) {
+        if (! CONFIG.DATABASE_USERNAME || ! CONFIG.DATABASE) {
             return Promise.reject('Database config not set.');
         }
 
         this.app = app;
+
+        const databaseConnector: string | undefined = this.databaseConnectorFromType(CONFIG.DATABASE_TYPE);
+        if (! databaseConnector) {
+            return Promise.reject(`Unable to find database connector for '${CONFIG.DATABASE_TYPE}'.`);
+        }
+
         this.dbSource = new DataSource({
-            type: 'mysql',
-            host: CONFIG.MYSQL_HOST,
-            port: CONFIG.MYSQL_PORT,
-            username: CONFIG.MYSQL_USERNAME,
-            password: CONFIG.MYSQL_PASSWORD,
-            database: CONFIG.MYSQL_DATABASE,
+            type: CONFIG.DATABASE_TYPE as any,
+            host: CONFIG.DATABASE_HOST,
+            port: CONFIG.DATABASE_PORT,
+            username: CONFIG.DATABASE_USERNAME,
+            password: CONFIG.DATABASE_PASSWORD,
+            database: CONFIG.DATABASE,
             debug: false,
             logging: ['error'],
             supportBigNumbers: true,
             bigNumberStrings: false,
             synchronize: false,
-            connectorPackage: 'mysql2',
+            connectorPackage: databaseConnector as any,
             entities: [
                 'dist/**/entities/*.js',
                 ...entities,
@@ -112,6 +118,13 @@ export class DatabaseService extends BaseService {
 
             return Promise.reject(error);
         }
+    }
+
+    private databaseConnectorFromType(type: string): string | undefined {
+        return ({
+            'mysql': 'mysql2',
+            'postgres': 'postgres',
+        } as any)[type] ?? undefined;
     }
 
 }

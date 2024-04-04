@@ -145,6 +145,7 @@ export class LiquidityPoolController extends BaseApiController {
             resolution,
             fromTime,
             toTime,
+            orderBy,
         } = request.query;
 
         if (! identifier) {
@@ -152,6 +153,9 @@ export class LiquidityPoolController extends BaseApiController {
         }
         if (! (Object.values(TickInterval) as string[]).includes(resolution as string)) {
             return response.send(super.failResponse(`Must supply 'resolution' as ${Object.values(TickInterval).join(',')}`));
+        }
+        if (orderBy && ! ['ASC', 'DESC'].includes(orderBy as string)) {
+            return response.send(super.failResponse("orderBy must be 'ASC' or 'DESC'"));
         }
 
         const fetchTicks: any = (manager: EntityManager) => {
@@ -178,7 +182,7 @@ export class LiquidityPoolController extends BaseApiController {
                             }
 
                             if (toTime && ! isNaN(parseInt(toTime as string))) {
-                                query.andWhere('ticks.time < :toTime', {
+                                query.andWhere('ticks.time <= :toTime', {
                                     toTime,
                                 });
                             }
@@ -186,7 +190,7 @@ export class LiquidityPoolController extends BaseApiController {
                             return query;
                         }),
                     )
-                    .orderBy('time', 'ASC')
+                    .orderBy('time', orderBy ? (orderBy as 'ASC' | 'DESC') : 'ASC')
                     .getMany();
             });
         };

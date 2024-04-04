@@ -25,6 +25,7 @@ import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransacti
 import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
 import { BaseEventListener } from './listeners/BaseEventListener';
 import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
+import { CacheStorage } from './storage/CacheStorage';
 
 export class IndexerApplication {
 
@@ -55,10 +56,10 @@ export class IndexerApplication {
      * IndexerApplication constructor.
      */
     constructor(
-        cache: BaseCacheStorage,
+        cache?: BaseCacheStorage,
         eventListeners: BaseEventListener[] = [],
     ) {
-        this._cache = cache;
+        this._cache = cache ?? new CacheStorage();
         this._eventListeners = eventListeners;
     }
 

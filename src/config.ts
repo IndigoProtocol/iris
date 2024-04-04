@@ -10,11 +10,12 @@ type Config = {
     OGMIOS_PORT: number,
     OGMIOS_TLS: boolean,
 
-    MYSQL_HOST: string,
-    MYSQL_PORT: number,
-    MYSQL_USERNAME: string,
-    MYSQL_PASSWORD: string,
-    MYSQL_DATABASE: string,
+    DATABASE_HOST: string,
+    DATABASE_PORT: number,
+    DATABASE_USERNAME: string,
+    DATABASE_PASSWORD: string,
+    DATABASE: string,
+    DATABASE_TYPE: string,
 
     OPERATION_WEBSOCKET_PORT: number,
 
@@ -31,11 +32,12 @@ const CONFIG: Config = {
     OGMIOS_PORT: Number(process.env.OGMIOS_PORT) || 1337,
     OGMIOS_TLS: process.env.OGMIOS_TLS === 'true',
 
-    MYSQL_HOST: process.env.MYSQL_HOST || 'localhost',
-    MYSQL_PORT: Number(process.env.MYSQL_PORT) || 3306,
-    MYSQL_USERNAME: process.env.MYSQL_USERNAME || '',
-    MYSQL_PASSWORD: process.env.MYSQL_PASSWORD || '',
-    MYSQL_DATABASE: process.env.MYSQL_DATABASE || '',
+    DATABASE_HOST: process.env.DATABASE_HOST || 'localhost',
+    DATABASE_PORT: Number(process.env.DATABASE_PORT) || 3306,
+    DATABASE_USERNAME: process.env.DATABASE_USERNAME || '',
+    DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || '',
+    DATABASE: process.env.DATABASE || '',
+    DATABASE_TYPE: process.env.DATABASE_TYPE || 'mysql',
 
     OPERATION_WEBSOCKET_PORT: Number(process.env.OPERATION_WEBSOCKET_PORT) || 8080,
 
