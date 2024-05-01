@@ -3,6 +3,7 @@ import { LiquidityPool } from './LiquidityPool';
 import { Asset, Token } from './Asset';
 import { Dex, SwapOrderType } from '../../constants';
 import { OperationStatus } from './OperationStatus';
+import { Transaction } from '../../types';
 
 @Entity({ name: 'liquidity_pool_swaps' })
 export class LiquidityPoolSwap extends BaseEntity {
@@ -10,6 +11,7 @@ export class LiquidityPoolSwap extends BaseEntity {
     dex: Dex;
     liquidityPoolIdentifier: string | undefined;
     toAddress: string;
+    transaction: Transaction | undefined;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -56,6 +58,9 @@ export class LiquidityPoolSwap extends BaseEntity {
     @Column()
     outputIndex: number;
 
+    @Column({ nullable: true })
+    meta: string;
+
     @OneToMany(() => OperationStatus, (status: OperationStatus) => status.operationId)
     @JoinColumn()
     statuses: Relation<OperationStatus[]>;
@@ -75,6 +80,7 @@ export class LiquidityPoolSwap extends BaseEntity {
         outputIndex: number,
         toAddress: string,
         type: SwapOrderType = SwapOrderType.Instant,
+        transaction?: Transaction,
     ): LiquidityPoolSwap {
         let instance: LiquidityPoolSwap = new LiquidityPoolSwap();
 
@@ -92,6 +98,7 @@ export class LiquidityPoolSwap extends BaseEntity {
         instance.txHash = txHash;
         instance.outputIndex = outputIndex;
         instance.toAddress = toAddress;
+        instance.transaction = transaction;
 
         return instance;
     }

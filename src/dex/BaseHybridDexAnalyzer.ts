@@ -1,7 +1,4 @@
-import { AmmDexOperation, Transaction, Utxo } from '../types';
-import { dbService } from '../indexerServices';
-import { EntityManager } from 'typeorm';
-import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { AmmDexOperation, HybridOperation, OrderBookDexOperation, Transaction, Utxo } from '../types';
 import { scriptHashToAddress } from '../utils';
 import { DexOperationStatus } from '../constants';
 import { OperationStatus } from '../db/entities/OperationStatus';
@@ -11,8 +8,10 @@ import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { IndexerApplication } from '../IndexerApplication';
+import { OrderBookMatch } from '../db/entities/OrderBookMatch';
+import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 
-export abstract class BaseAmmDexAnalyzer {
+export abstract class BaseHybridDexAnalyzer {
 
     public app: IndexerApplication;
 
@@ -22,32 +21,21 @@ export abstract class BaseAmmDexAnalyzer {
         this.app = app;
     }
 
-    public abstract analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]>;
+    public abstract analyzeTransaction(transaction: Transaction): Promise<HybridOperation[]>;
 
-    protected abstract liquidityPoolStates(transaction: Transaction): Promise<LiquidityPoolState[]> | LiquidityPoolState[];
+    protected liquidityPoolStates?(transaction: Transaction): Promise<LiquidityPoolState[]> | LiquidityPoolState[];
 
-    protected abstract swapOrders(transaction: Transaction): Promise<LiquidityPoolSwap[]> | LiquidityPoolSwap[];
+    protected swapOrders?(transaction: Transaction): Promise<LiquidityPoolSwap[]> | LiquidityPoolSwap[];
 
-    protected abstract depositOrders(transaction: Transaction): Promise<LiquidityPoolDeposit[]> | LiquidityPoolDeposit[];
+    protected depositOrders?(transaction: Transaction): Promise<LiquidityPoolDeposit[]> | LiquidityPoolDeposit[];
 
-    protected abstract withdrawOrders(transaction: Transaction): Promise<LiquidityPoolWithdraw[]> | LiquidityPoolWithdraw[];
+    protected withdrawOrders?(transaction: Transaction): Promise<LiquidityPoolWithdraw[]> | LiquidityPoolWithdraw[];
+
+    protected orders?(transaction: Transaction): Promise<OrderBookOrder[]> | OrderBookOrder[];
+
+    protected matches?(transaction: Transaction): Promise<(OrderBookMatch | OrderBookOrder)[]> | (OrderBookMatch | OrderBookOrder)[];
 
     protected zapOrders?(transaction: Transaction): Promise<LiquidityPoolZap[]> | LiquidityPoolZap[];
-
-    /**
-     * Attempts to retrieve a liquidity pool from its identifier.
-     */
-    protected async liquidityPoolFromIdentifier(identifier: string): Promise<LiquidityPool | undefined> {
-        const cacheInstance: LiquidityPool | undefined = await this.app.cache.getKey(identifier);
-
-        if (cacheInstance) return cacheInstance;
-
-        return await dbService.transaction(async (manager: EntityManager) => {
-            return await manager.findOneBy(LiquidityPool, {
-                identifier: identifier,
-            }) ?? undefined;
-        });
-    }
 
     /**
      * Retrieve the corresponding spent operations for a transaction.

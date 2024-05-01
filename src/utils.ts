@@ -94,7 +94,8 @@ export function formatTransaction(block: BlockBabbage | BlockAlonzo, transaction
                             quantity: BigInt(output.value.assets ? output.value.assets[unit] : 0),
                         } as AssetBalance;
                     })
-                    : []
+                    : [],
+                script: output.script,
             } as Utxo;
         }) as Utxo[],
         fee: transaction.body.fee,

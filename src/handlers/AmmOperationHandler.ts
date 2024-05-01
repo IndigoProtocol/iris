@@ -1,6 +1,5 @@
-import { BaseEventListener } from './BaseEventListener';
-import { DexOperationStatus, IndexerEventType } from '../constants';
-import { AmmDexOperation, IndexerEvent, StatusableEntity, TokenMetadata } from '../types';
+import { DexOperationStatus } from '../constants';
+import { AmmDexOperation, StatusableEntity, TokenMetadata } from '../types';
 import { logInfo } from '../logger';
 import { dbService, eventService, metadataService, operationWs, queue } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
@@ -16,26 +15,23 @@ import CONFIG from '../config';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { UpdateLiquidityPoolTvlJob } from '../jobs/UpdateLiquidityPoolTvlJob';
 import { UpdateAmountReceived } from '../jobs/UpdateAmountReceived';
+import { LiquidityPoolUpdated } from '../events.types';
 
 const MAX_RESOLVE_ATTEMPTS: number = 3;
 
-export class AmmDexOperationListener extends BaseEventListener {
+export class AmmOperationHandler {
 
-    public listenFor: IndexerEventType[] = [
-        IndexerEventType.AmmDexOperation,
-    ];
-
-    public async onEvent(event: IndexerEvent): Promise<any> {
+    public async handle(operation: AmmDexOperation): Promise<any> {
         if (CONFIG.VERBOSE) {
-            if ('dex' in event.data) {
-                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${(event.data as AmmDexOperation).txHash}`);
+            if ('dex' in operation) {
+                logInfo(`[${operation.dex}] ${operation.constructor.name} ${(operation as AmmDexOperation).txHash}`);
             } else {
-                logInfo(`${event.data.constructor.name} ${(event.data as AmmDexOperation).txHash}`);
+                logInfo(`${operation.constructor.name} ${(operation as AmmDexOperation).txHash}`);
             }
         }
 
         // Errors are handled within
-        return this.eventHandler(event)
+        return this.handleOperation(operation)
             .then((savedEntity: BaseEntity | undefined) => {
 
                 if (savedEntity) {
@@ -50,24 +46,24 @@ export class AmmDexOperationListener extends BaseEventListener {
     /**
      * Store necessary data into the DB.
      */
-    private async eventHandler(event: IndexerEvent): Promise<BaseEntity | undefined> {
+    private async handleOperation(operation: AmmDexOperation): Promise<BaseEntity | undefined> {
         if (! dbService.isInitialized) {
             return Promise.resolve(undefined);
         }
 
-        switch (event.data.constructor) {
+        switch (operation.constructor) {
             case LiquidityPoolState:
-                return await this.handleUpdatedPoolState(event.data as LiquidityPoolState);
+                return await this.handleUpdatedPoolState(operation as LiquidityPoolState);
             case LiquidityPoolSwap:
-                return await this.handleSwapOrder(event.data as LiquidityPoolSwap);
+                return await this.handleSwapOrder(operation as LiquidityPoolSwap);
             case LiquidityPoolZap:
-                return await this.handleZapOrder(event.data as LiquidityPoolZap);
+                return await this.handleZapOrder(operation as LiquidityPoolZap);
             case LiquidityPoolDeposit:
-                return await this.handlePoolDeposit(event.data as LiquidityPoolDeposit);
+                return await this.handlePoolDeposit(operation as LiquidityPoolDeposit);
             case LiquidityPoolWithdraw:
-                return await this.handlePoolWithdraw(event.data as LiquidityPoolWithdraw);
+                return await this.handlePoolWithdraw(operation as LiquidityPoolWithdraw);
             case OperationStatus:
-                return await this.handleOperationStatus(event.data as OperationStatus);
+                return await this.handleOperationStatus(operation as OperationStatus);
             default:
                 return Promise.reject('Encountered unknown event type.');
         }
@@ -93,6 +89,11 @@ export class AmmDexOperationListener extends BaseEventListener {
 
             return manager.save(liquidityPool)
                 .then(() => newState);
+        });
+
+        eventService.pushEvent({
+            type: 'LiquidityPoolStateCreated',
+            data: updatedState,
         });
 
         queue.dispatch(new UpdateLiquidityPoolTvlJob(updatedState));
@@ -167,6 +168,15 @@ export class AmmDexOperationListener extends BaseEventListener {
 
                 order.liquidityPool = liquidityPool;
 
+                eventService.pushEvent({
+                    type: 'LiquidityPoolUpdated',
+                    data: liquidityPool,
+                });
+                eventService.pushEvent({
+                    type: 'LiquidityPoolSwapCreated',
+                    data: order,
+                });
+
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolSwap) => {
                         const status: OperationStatus = await this.handleOperationStatus(
@@ -185,6 +195,8 @@ export class AmmDexOperationListener extends BaseEventListener {
                         entity.statuses = [
                             status,
                         ];
+
+                        entity.transaction = order.transaction;
 
                         return Promise.resolve(entity);
                     });
@@ -240,6 +252,11 @@ export class AmmDexOperationListener extends BaseEventListener {
             if (liquidityPool) {
                 order.liquidityPool = liquidityPool;
 
+                eventService.pushEvent({
+                    type: 'LiquidityPoolZapCreated',
+                    data: order,
+                });
+
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolZap) => {
                         const status: OperationStatus = await this.handleOperationStatus(
@@ -258,6 +275,8 @@ export class AmmDexOperationListener extends BaseEventListener {
                         entity.statuses = [
                             status,
                         ];
+
+                        entity.transaction = order.transaction;
 
                         return Promise.resolve(entity);
                     });
@@ -313,6 +332,11 @@ export class AmmDexOperationListener extends BaseEventListener {
             if (liquidityPool) {
                 deposit.liquidityPool = liquidityPool;
 
+                eventService.pushEvent({
+                    type: 'LiquidityPoolDepositCreated',
+                    data: deposit,
+                });
+
                 return await manager.save(deposit)
                     .then(async (entity: LiquidityPoolDeposit) => {
                         const status: OperationStatus = await this.handleOperationStatus(
@@ -331,6 +355,8 @@ export class AmmDexOperationListener extends BaseEventListener {
                         entity.statuses = [
                             status,
                         ];
+
+                        entity.transaction = deposit.transaction;
 
                         return Promise.resolve(entity);
                     });
@@ -377,6 +403,11 @@ export class AmmDexOperationListener extends BaseEventListener {
             if (liquidityPoolState) {
                 withdraw.liquidityPool = liquidityPoolState.liquidityPool;
 
+                eventService.pushEvent({
+                    type: 'LiquidityPoolWithdrawCreated',
+                    data: withdraw,
+                });
+
                 return await manager.save(withdraw)
                     .then(async (entity: LiquidityPoolWithdraw) => {
                         const status: OperationStatus = await this.handleOperationStatus(
@@ -395,6 +426,8 @@ export class AmmDexOperationListener extends BaseEventListener {
                         entity.statuses = [
                             status,
                         ];
+
+                        entity.transaction = withdraw.transaction;
 
                         return Promise.resolve(entity);
                     });
@@ -421,6 +454,11 @@ export class AmmDexOperationListener extends BaseEventListener {
             operationStatus.operationId = entity.id;
             operationStatus.operationType = entity.constructor.name;
         }
+
+        eventService.pushEvent({
+            type: 'OperationStatusCreated',
+            data: operationStatus,
+        });
 
         return await dbService.transaction(async (manager: EntityManager): Promise<OperationStatus> => {
             return await manager.save(operationStatus);
@@ -484,13 +522,14 @@ export class AmmDexOperationListener extends BaseEventListener {
                 }
             }
 
+            eventService.pushEvent({
+                type: 'AssetCreated',
+                data: asset,
+            });
+
             return await manager.save(asset)
                 .then(() => {
                     operationWs.broadcast(asset);
-                    eventService.pushEvent({
-                        type: IndexerEventType.Asset,
-                        data: asset,
-                    });
 
                     return Promise.resolve(asset);
                 });
@@ -514,6 +553,11 @@ export class AmmDexOperationListener extends BaseEventListener {
             if (existingPool) {
                 existingPool.address = state.address;
 
+                eventService.pushEvent({
+                    type: 'LiquidityPoolUpdated',
+                    data: existingPool,
+                });
+
                 return await manager.save(existingPool);
             }
 
@@ -526,13 +570,14 @@ export class AmmDexOperationListener extends BaseEventListener {
                 state.slot,
             );
 
+            eventService.pushEvent({
+                type: 'LiquidityPoolCreated',
+                data: liquidityPool,
+            });
+
             return await manager.save(liquidityPool)
                 .then(() => {
                     operationWs.broadcast(liquidityPool);
-                    eventService.pushEvent({
-                        type: IndexerEventType.LiquidityPool,
-                        data: liquidityPool,
-                    });
 
                     return Promise.resolve(liquidityPool);
                 });

@@ -1,4 +1,4 @@
-import { DatumParameterKey, IndexerEventType } from './constants';
+import { DatumParameterKey } from './constants';
 import { Asset } from './db/entities/Asset';
 import { LiquidityPoolSwap } from './db/entities/LiquidityPoolSwap';
 import { LiquidityPoolZap } from './db/entities/LiquidityPoolZap';
@@ -8,11 +8,7 @@ import { LiquidityPoolWithdraw } from './db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from './db/entities/OperationStatus';
 import { OrderBookOrder } from './db/entities/OrderBookOrder';
 import { OrderBookMatch } from './db/entities/OrderBookMatch';
-import { OrderBook } from './db/entities/OrderBook';
-import { Sync } from './db/entities/Sync';
-import { LiquidityPoolTick } from './db/entities/LiquidityPoolTick';
-import { OrderBookTick } from './db/entities/OrderBookTick';
-import { LiquidityPool } from './db/entities/LiquidityPool';
+import { Script } from '@cardano-ogmios/schema';
 
 export interface Utxo {
     forTxHash: TxHash;
@@ -21,6 +17,7 @@ export interface Utxo {
     index: number;
     lovelaceBalance: bigint;
     assetBalances: AssetBalance[];
+    script?: Script;
 }
 
 export interface Transaction {
@@ -83,22 +80,10 @@ export type OrderBookDexOperation = OrderBookOrder
     | OrderBookMatch
     | OrderBookOrderCancellation;
 
-export type CreatedEntity = Sync
-    | OrderBook
-    | LiquidityPool
-    | LiquidityPoolTick
-    | OrderBookTick
-    | Asset;
-
 export type StatusableEntity = LiquidityPoolDeposit
     | LiquidityPoolWithdraw
     | LiquidityPoolSwap
     | LiquidityPoolZap;
-
-export type IndexerEvent = {
-    type: IndexerEventType,
-    data: AmmDexOperation | OrderBookDexOperation | CreatedEntity,
-}
 
 export type TokenMetadata = {
     policyId: string,
@@ -113,4 +98,4 @@ export type TokenMetadata = {
 export type Datum = string;
 export type TxHash = string;
 export type DefinitionField = DefinitionConstr | DefinitionBytes | DefinitionInt | Function | DefinitionField[];
-export type BroadcastableEvent = IndexerEvent;
+export type HybridOperation = AmmDexOperation | OrderBookDexOperation;

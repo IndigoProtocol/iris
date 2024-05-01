@@ -40,7 +40,7 @@ export class DefinitionBuilder {
                 return this.extractParameters(fieldParameter, templateDefinition[index], foundParameters);
             }).forEach((parameters: DatumParameters) => {
                 foundParameters = {...foundParameters, ...parameters};
-            })
+            });
         }
 
         if ('fields' in definedDefinition) {

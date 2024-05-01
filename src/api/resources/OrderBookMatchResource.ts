@@ -3,6 +3,7 @@ import { OrderBookMatch } from '../../db/entities/OrderBookMatch';
 import { AssetResource } from './AssetResource';
 import { OrderBookResource } from './OrderBookResource';
 import { OrderBookOrderResource } from './OrderBookOrderResource';
+import { stringify } from '../../utils';
 
 export class OrderBookMatchResource extends BaseEntityResource {
 
@@ -28,6 +29,7 @@ export class OrderBookMatchResource extends BaseEntityResource {
             slot: Number(entity.slot),
             txHash: entity.txHash,
             outputIndex: Number(entity.slot),
+            meta: stringify(entity.meta),
         };
 
         if (entity.orderBook) {
@@ -48,10 +50,15 @@ export class OrderBookMatchResource extends BaseEntityResource {
             s: Number(entity.slot),
             tH: entity.txHash,
             oI: Number(entity.outputIndex),
+            m: stringify(entity.meta),
         };
 
         if (entity.orderBook) {
             response.oB = this._orderBookResource.toCompressed(entity.orderBook);
+        }
+
+        if (entity.transaction) {
+            response.tr = stringify(entity.transaction);
         }
 
         return response;

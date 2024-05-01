@@ -1,29 +1,29 @@
 import { BaseIndexer } from './BaseIndexer';
 import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
-import { BaseAmmDexAnalyzer } from '../dex/BaseAmmDexAnalyzer';
-import { AmmDexOperation, Transaction } from '../types';
-import { dbService } from '../indexerServices';
+import { HybridOperation, Transaction } from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { logInfo } from '../logger';
 import { formatTransaction } from '../utils';
-import { AmmOperationHandler } from '../handlers/AmmOperationHandler';
+import { BaseHybridDexAnalyzer } from '../dex/BaseHybridDexAnalyzer';
+import { HybridOperationHandler } from '../handlers/HybridOperationHandler';
+import { OrderBookOrder } from '../db/entities/OrderBookOrder';
+import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 
-export class AmmDexTransactionIndexer extends BaseIndexer {
+export class HybridDexTransactionIndexer extends BaseIndexer {
 
-    private _analyzers: BaseAmmDexAnalyzer[];
-    private _handler: AmmOperationHandler;
+    private _analyzers: BaseHybridDexAnalyzer[];
+    private _handler: HybridOperationHandler;
 
-    constructor(analyzers: BaseAmmDexAnalyzer[]) {
+    constructor(analyzers: BaseHybridDexAnalyzer[]) {
         super();
 
         this._analyzers = analyzers;
-        this._handler = new AmmOperationHandler();
+        this._handler = new HybridOperationHandler();
     }
 
     async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
-        const operationPromises: Promise<AmmDexOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
-            return this._analyzers.map((analyzer: BaseAmmDexAnalyzer) => {
+        const operationPromises: Promise<HybridOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
+            return this._analyzers.map((analyzer: BaseHybridDexAnalyzer) => {
                 const tx: Transaction = formatTransaction(block, transaction);
 
                 if (analyzer.startSlot > tx.blockSlot) return [];
@@ -33,11 +33,11 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
         }).flat(2);
 
         return await Promise.all(operationPromises)
-            .then(async (operationsUnSorted: AmmDexOperation[][]) => {
-                const operations: AmmDexOperation[] = operationsUnSorted.flat();
+            .then(async (operationsUnSorted: HybridOperation[][]) => {
+                const operations: HybridOperation[] = operationsUnSorted.flat();
 
-                const sortedOperations: AmmDexOperation[] = operations
-                    .sort((a: AmmDexOperation, b: AmmDexOperation) => {
+                const sortedOperations: HybridOperation[] = operations
+                    .sort((a: HybridOperation, b: HybridOperation) => {
                         // Prioritize new LP states before other operations
                         if (a instanceof LiquidityPoolState) {
                             return -1;
@@ -47,10 +47,10 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
                         }
                         return 0;
                     })
-                    .sort((a: AmmDexOperation, b: AmmDexOperation) => {
+                    .sort((a: HybridOperation, b: HybridOperation) => {
                         // Prioritize orders if in same block as corresponding state
                         const inLpState = (txHash: string): boolean => {
-                            return operations.some((operation: AmmDexOperation) => {
+                            return operations.some((operation: HybridOperation) => {
                                 if (! (operation instanceof LiquidityPoolState)) return false;
 
                                 const operationTxHashes: string[] = operation.possibleOperationInputs
@@ -59,11 +59,24 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
                                 return operationTxHashes.includes(txHash);
                             });
                         }
+                        const inMatch = (orderIdentifier: string): boolean => {
+                            return operations.some((operation: HybridOperation) => {
+                                if (! (operation instanceof OrderBookOrder)) return false;
 
-                        if (inLpState(a.txHash)) {
+                                return operation.identifier === orderIdentifier;
+                            });
+                        }
+
+                        if (
+                            inLpState(a.txHash)
+                            || (a instanceof OrderBookMatch && a.referenceOrder && inMatch(a.referenceOrder.identifier))
+                        ) {
                             return -1;
                         }
-                        if (inLpState(b.txHash)) {
+                        if (
+                            inLpState(b.txHash)
+                            || (b instanceof OrderBookMatch && b.referenceOrder && inMatch(b.referenceOrder.identifier))
+                        ) {
                             return 1;
                         }
                         return 0;
@@ -77,17 +90,7 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
     }
 
     async onRollBackward(blockHash: string, slot: Slot): Promise<any> {
-        // Raw delete with for better performance
-        await dbService.dbSource.query("DELETE FROM operation_statuses WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_states WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_deposits WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_withdraws WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_swaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pools WHERE createdSlot > ?", [slot])
-
-        logInfo('Removed AMM entities');
+       return Promise.resolve();
     }
 
 }

@@ -26,7 +26,7 @@ export class UpdateAmountReceived extends BaseJob {
     public async handle(): Promise<any> {
         if (! this._liquidityPoolState.liquidityPool) return Promise.reject('Liquidity pool not provided');
 
-        logInfo(`[Queue] UpdateAmountReceived for state ${this._liquidityPoolState.txHash}`);
+        logInfo(`[Queue] \t UpdateAmountReceived for state ${this._liquidityPoolState.txHash}`);
 
         let swapOrders: LiquidityPoolSwap[] | null = await dbService.dbSource.createQueryBuilder(LiquidityPoolSwap, 'orders')
             .leftJoinAndSelect('orders.swapOutToken', 'swapOutToken')
@@ -58,7 +58,7 @@ export class UpdateAmountReceived extends BaseJob {
 
             swapOrder.actualReceive = Number(amountToAddress);
 
-            logInfo(`[Queue]\t Updating receive for swap order ${swapOrder.txHash}`);
+            logInfo(`[Queue] \t\t Updating receive for swap order ${swapOrder.txHash}`);
 
             return swapOrder;
         }).filter((order: LiquidityPoolSwap | undefined) => order !== undefined) as LiquidityPoolSwap[];

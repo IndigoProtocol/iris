@@ -129,6 +129,7 @@ export class LiquidityPoolController extends BaseApiController {
                 .where('pools.identifier = :identifier', {
                     identifier,
                 })
+                .limit(1)
                 .getOne();
         }).then((liquidityPool: LiquidityPool) => {
             const resource: LiquidityPoolResource = new LiquidityPoolResource();
@@ -177,13 +178,13 @@ export class LiquidityPoolController extends BaseApiController {
 
                             if (fromTime && ! isNaN(parseInt(fromTime as string))) {
                                 query.andWhere('ticks.time >= :fromTime', {
-                                    fromTime,
+                                    fromTime: parseInt(fromTime as string),
                                 });
                             }
 
                             if (toTime && ! isNaN(parseInt(toTime as string))) {
                                 query.andWhere('ticks.time <= :toTime', {
-                                    toTime,
+                                    toTime: parseInt(toTime as string),
                                 });
                             }
 

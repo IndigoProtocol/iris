@@ -64,7 +64,7 @@ export default {
       fields: []
     },
     {
-      constructor: 0,
+      constructor: DatumParameterKey.Unknown,
       fields: [
         {
           constructor: DatumParameterKey.Action,

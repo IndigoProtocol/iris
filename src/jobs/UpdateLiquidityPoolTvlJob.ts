@@ -3,7 +3,7 @@ import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { dbService, queue } from '../indexerServices';
 import { EntityManager } from 'typeorm';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
-import { logError } from '../logger';
+import { logInfo } from '../logger';
 import { Asset } from '../db/entities/Asset';
 import { UpdateLiquidityPoolTicks } from './UpdateLiquidityPoolTicks';
 
@@ -18,24 +18,24 @@ export class UpdateLiquidityPoolTvlJob extends BaseJob {
     }
 
     public async handle(): Promise<any> {
-        return dbService.transaction((manager: EntityManager) => {
-            if (! this._liquidityPoolState.liquidityPool) {
-                return Promise.reject('Liquidity Pool not found for liquidity pool state');
-            }
+        logInfo(`[Queue] \t UpdateLiquidityPoolTvlJob for state ${this._liquidityPoolState.txHash}`);
 
-            return (
-                ! this._liquidityPoolState.liquidityPool.tokenA
-                    ? this.updateAdaPoolTvl(manager, this._liquidityPoolState.liquidityPool)
-                    : this.updateNonAdaPoolTvl(manager, this._liquidityPoolState.liquidityPool)
-            )
-        }).then(() => {
+        if (! this._liquidityPoolState.liquidityPool) {
+            return Promise.reject('Liquidity Pool not found for liquidity pool state');
+        }
+
+        return (
+            this._liquidityPoolState.liquidityPool.tokenA
+                ? this.updateNonAdaPoolTvl(this._liquidityPoolState.liquidityPool)
+                : this.updateAdaPoolTvl(this._liquidityPoolState.liquidityPool)
+        ).then(() => {
             if (this._liquidityPoolState.tvl !== 0) {
                 queue.dispatch(new UpdateLiquidityPoolTicks(this._liquidityPoolState));
             }
-        }).catch((e) => logError(e));
+        })
     }
 
-    private updateAdaPoolTvl(manager: EntityManager, liquidityPool: LiquidityPool): Promise<any> {
+    private updateAdaPoolTvl(liquidityPool: LiquidityPool): Promise<any> {
         const tokenADecimals: number = 6;
         const tokenBDecimals: number = liquidityPool.tokenB.decimals ?? 0;
 
@@ -45,24 +45,29 @@ export class UpdateLiquidityPoolTvlJob extends BaseJob {
 
         this._liquidityPoolState.tvl = Math.floor((reserveAValue + reserveBValue) * 10**6);
 
-        return manager.save(this._liquidityPoolState);
+        return dbService.transaction((manager: EntityManager) => {
+            return manager.save(this._liquidityPoolState);
+        });
     }
 
-    private async updateNonAdaPoolTvl(manager: EntityManager, liquidityPool: LiquidityPool): Promise<any> {
-        const retrieveLiquidityPool: any = (tokenB: Asset) => {
-            return manager.createQueryBuilder(LiquidityPool, 'pools')
-               .leftJoinAndSelect('pools.tokenA', 'tokenA')
-               .leftJoinAndSelect('pools.tokenB', 'tokenB')
-               .leftJoinAndSelect('pools.latestState', 'latestState')
-               .where("pools.dex = :dex", {
-                   dex: liquidityPool.dex,
-               })
-               .andWhere('pools.tokenA IS NULL')
-               .andWhere("pools.tokenB.id = :tokenBId", {
-                   tokenBId: tokenB.id,
-               })
-               .orderBy('pools.createdSlot', 'DESC')
-               .getOne();
+    private async updateNonAdaPoolTvl(liquidityPool: LiquidityPool): Promise<any> {
+        const retrieveLiquidityPool: any = (token: Asset) => {
+            return dbService.query((manager: EntityManager) => {
+                return manager.createQueryBuilder(LiquidityPool, 'pools')
+                    .leftJoinAndSelect('pools.tokenA', 'tokenA')
+                    .leftJoinAndSelect('pools.tokenB', 'tokenB')
+                    .leftJoinAndSelect('pools.latestState', 'latestState')
+                    .where("pools.dex = :dex", {
+                        dex: liquidityPool.dex,
+                    })
+                    .andWhere('pools.tokenA IS NULL')
+                    .andWhere("pools.tokenB.id = :tokenBId", {
+                        tokenBId: token.id,
+                    })
+                    .orderBy('pools.createdSlot', 'DESC')
+                    .limit(1)
+                    .getOne();
+            });
         };
 
         const tokenAPool: LiquidityPool | null = await retrieveLiquidityPool(liquidityPool.tokenA);
@@ -85,7 +90,9 @@ export class UpdateLiquidityPoolTvlJob extends BaseJob {
 
         this._liquidityPoolState.tvl = Math.floor((reserveAValue + reserveBValue) * 10**6);
 
-        return manager.save(this._liquidityPoolState);
+        return dbService.transaction((manager: EntityManager) => {
+            return manager.save(this._liquidityPoolState);
+        });
     }
 
 }

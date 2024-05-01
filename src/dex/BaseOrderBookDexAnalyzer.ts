@@ -7,6 +7,8 @@ export abstract class BaseOrderBookDexAnalyzer {
 
     public app: IndexerApplication;
 
+    public abstract startSlot: number;
+
     constructor(app: IndexerApplication) {
         this.app = app;
     }

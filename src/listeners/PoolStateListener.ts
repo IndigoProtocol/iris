@@ -1,23 +1,21 @@
 import { BaseEventListener } from './BaseEventListener';
-import { IndexerEventType } from '../constants';
-import { IndexerEvent } from '../types';
-import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { IrisEventType } from '../constants';
+import { IrisEvent } from '../events.types';
 
 export class PoolStateListener extends BaseEventListener {
 
-    public listenFor: IndexerEventType[] = [
-        IndexerEventType.AmmDexOperation,
+    public listenFor: IrisEventType[] = [
+        IrisEventType.LiquidityPoolCreated,
     ];
 
-    public onEvent(event: IndexerEvent): Promise<any> {
+    public onEvent(event: IrisEvent): Promise<any> {
         if (! this.app) return Promise.resolve();
 
-        switch (event.data.constructor) {
-            case LiquidityPoolState:
-                const poolState: LiquidityPoolState = event.data as LiquidityPoolState;
-                const storageKey: string = poolState.liquidityPoolIdentifier;
+        switch (event.type) {
+            case IrisEventType.LiquidityPoolCreated:
+                const storageKey: string = event.data.identifier;
 
-                return this.app.cache.setKey(storageKey, poolState);
+                return this.app.cache.setKey(storageKey, event.data);
             default:
                 return Promise.resolve();
         }

@@ -11,7 +11,7 @@ import {
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { toDefinitionDatum } from '../utils';
 import { Data } from 'lucid-cardano';
-import { Dex } from '../constants';
+import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/spectrum/swap';
 import poolDefinition from './definitions/spectrum/pool';
 import poolDepositDefinition from './definitions/spectrum/pool-deposit';
@@ -35,6 +35,8 @@ const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const CANCEL_ORDER_DATUM: string = 'd8799f00000001ff';
 
 export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
+
+    public startSlot: number = 98301694;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -89,6 +91,8 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.hash,
                     output.index,
                     output.toAddress,
+                    SwapOrderType.Instant,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -200,6 +204,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -236,6 +241,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;

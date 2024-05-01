@@ -1,10 +1,8 @@
 import { BaseService } from './BaseService';
-import { BroadcastableEvent } from '../types';
 import { BaseEventListener } from '../listeners/BaseEventListener';
-import { AmmDexOperationListener } from '../listeners/AmmDexOperationListener';
 import { PoolStateListener } from '../listeners/PoolStateListener';
-import { OrderBookDexOperationListener } from '../listeners/OrderBookDexOperationListener';
 import { IndexerApplication } from '../IndexerApplication';
+import { IrisEvent } from '../events.types';
 
 export class EventService extends BaseService {
 
@@ -13,18 +11,16 @@ export class EventService extends BaseService {
     public boot(app: IndexerApplication, listeners: BaseEventListener[] = []): Promise<void> {
         this._listeners = [
             ...listeners,
-            new AmmDexOperationListener(app),
-            new OrderBookDexOperationListener(app),
             new PoolStateListener(app),
         ];
 
         return Promise.resolve();
     }
 
-    public pushEvent(event: BroadcastableEvent): Promise<any> {
+    public pushEvent(event: IrisEvent): Promise<any> {
         return Promise.all(
             this._listeners.map((listener: BaseEventListener) => {
-                if (listener.listenFor.includes(event.type)) {
+                if (listener.listenFor.includes(event.type as any)) {
                     return listener.onEvent(event)
                 }
                 return;
