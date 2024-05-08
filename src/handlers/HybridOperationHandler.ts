@@ -12,6 +12,7 @@ import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { dbService } from '../indexerServices';
 import { EntityManager, IsNull } from 'typeorm';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { lucidUtils } from '../utils';
 
 export class HybridOperationHandler {
 
@@ -91,19 +92,24 @@ export class HybridOperationHandler {
 
     private async handleMatch(match: OrderBookMatch): Promise<any> {
         const existingSwap: LiquidityPoolSwap | undefined = await dbService.query((manager: EntityManager) => {
-            return manager.findOne(LiquidityPoolSwap, {
-                relations: ['swapInToken', 'swapOutToken'],
-                where: [
-                    {
-                        liquidityPool: {
-                            dex: match.dex,
-                        },
-                    },
-                    {
-                        txHash: match.consumedTxHash,
-                    },
-                ]
-            }) ?? undefined;
+            return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
+                .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
+                .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
+                .leftJoin('swaps.liquidityPool', 'liquidityPool')
+                .addSelect('liquidityPool.dex', 'dex')
+                .where('dex = :dex', {
+                    dex: match.dex,
+                })
+                .andWhere('swaps.senderPubKeyHash = :receiverPubKeyHash', {
+                    receiverPubKeyHash: match.receiverPubKeyHash,
+                })
+                .andWhere('swaps.senderStakeKeyHash = :receiverStakeKeyHash', {
+                    receiverStakeKeyHash: match.receiverStakeKeyHash,
+                })
+                .orWhere('swaps.txHash = :txHash', {
+                    txHash: match.consumedTxHash,
+                })
+                .getOne() ?? undefined;
         });
 
         // Matched with pool order. Convert to order book order

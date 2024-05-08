@@ -3,15 +3,23 @@
 </div>
 
 ## Setup
-####
+Build the project.
+```
+npm run build
+```
 
-### Running
-#### Indexer
-`npm run indexer`
+## Running
+### Indexer
+Run just the Iris indexer. 
+```
+npm run indexer
+```
 
-#### API
-`npm run api`
+### API
+Run just the Iris API.
+```
+npm run api
+```
 
-### Dev Resources
-#### Indexer Event flow
-![Alt text](./docs/img/diagram.png?raw=true)
+## Components
+### Analyzers

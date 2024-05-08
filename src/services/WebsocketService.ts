@@ -101,7 +101,7 @@ export class WebsocketService extends BaseService {
                     return {};
             }
         } catch (e: any) {
-            logError(e.message);
+            logError(`Websocket ${e.message}`);
 
             return {};
         }

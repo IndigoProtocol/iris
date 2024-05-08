@@ -1,6 +1,7 @@
 import { BaseEntityResource } from './BaseEntityResource';
 import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
 import {LiquidityPoolResource} from "./LiquidityPoolResource";
+import * as process from 'process';
 
 export class LiquidityPoolTickResource extends BaseEntityResource {
 

@@ -44,6 +44,9 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         const price: number = this._liquidityPoolState.reserveB !== 0 ? (this._liquidityPoolState.reserveA / 10**tokenADecimals) / (this._liquidityPoolState.reserveB / 10**tokenBDecimals) : 0;
         const existingTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
+                .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
+                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
                 .where('resolution = :resolution', { resolution })
                 .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
                     liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id

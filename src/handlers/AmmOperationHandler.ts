@@ -137,6 +137,7 @@ export class AmmOperationHandler {
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
+                relations: ['tokenA', 'tokenB'],
                 where: order.liquidityPoolIdentifier
                     ? [{
                         dex: order.dex,
@@ -225,6 +226,7 @@ export class AmmOperationHandler {
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
+                relations: ['tokenA', 'tokenB'],
                 where: order.liquidityPoolIdentifier
                     ? [{
                         dex: order.dex,
@@ -305,6 +307,7 @@ export class AmmOperationHandler {
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
+                relations: ['tokenA', 'tokenB'],
                 where: deposit.liquidityPoolIdentifier
                     ? [{
                         dex: deposit.dex,
@@ -382,6 +385,8 @@ export class AmmOperationHandler {
             const liquidityPoolState: LiquidityPoolState | undefined = await manager.findOne(LiquidityPoolState, {
                 relations: [
                   'liquidityPool',
+                  'liquidityPool.tokenA',
+                  'liquidityPool.tokenB',
                   'tokenLp',
                 ],
                 where: [
@@ -480,10 +485,10 @@ export class AmmOperationHandler {
         };
 
         return dbService.query(async (manager: EntityManager): Promise<any> => {
-            return await retrieveEntity(manager, LiquidityPoolSwap, ['liquidityPool', 'swapInToken', 'swapOutToken'])
-                ?? await retrieveEntity(manager, LiquidityPoolDeposit, ['liquidityPool', 'depositAToken', 'depositBToken'])
-                ?? await retrieveEntity(manager, LiquidityPoolWithdraw, ['liquidityPool', 'lpToken'])
-                ?? await retrieveEntity(manager, LiquidityPoolZap, ['liquidityPool', 'swapInToken', 'forToken']);
+            return await retrieveEntity(manager, LiquidityPoolSwap, ['liquidityPool', 'liquidityPool.tokenA', 'liquidityPool.tokenB', 'swapInToken', 'swapOutToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolDeposit, ['liquidityPool', 'liquidityPool.tokenA', 'liquidityPool.tokenB', 'depositAToken', 'depositBToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolWithdraw, ['liquidityPool', 'liquidityPool.tokenA', 'liquidityPool.tokenB', 'lpToken'])
+                ?? await retrieveEntity(manager, LiquidityPoolZap, ['liquidityPool', 'liquidityPool.tokenA', 'liquidityPool.tokenB', 'swapInToken', 'forToken']);
         });
     }
 
@@ -547,9 +552,12 @@ export class AmmOperationHandler {
     private async retrieveLiquidityPoolFromState(state: LiquidityPoolState): Promise<LiquidityPool> {
         const firstOrSavePool: any = async (manager: EntityManager) => {
             let existingPool: LiquidityPool | undefined = await manager
-                .findOneBy(LiquidityPool, {
-                    dex: state.dex,
-                    identifier: state.liquidityPoolIdentifier,
+                .findOne(LiquidityPool, {
+                    relations: ['tokenA', 'tokenB'],
+                    where: {
+                        dex: state.dex,
+                        identifier: state.liquidityPoolIdentifier,
+                    },
                 }) ?? undefined;
 
             if (existingPool) {
