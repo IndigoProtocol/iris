@@ -15,6 +15,8 @@ import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
 import { LiquidityPoolTickResource } from '../resources/LiquidityPoolTickResource';
 import { TickInterval } from '../../constants';
 import { lucidUtils } from '../../utils';
+import { LiquidityPoolState } from '../../db/entities/LiquidityPoolState';
+import { LiquidityPoolStateResource } from '../resources/LiquidityPoolStateResource';
 
 const MAX_PER_PAGE: number = 100;
 
@@ -26,6 +28,10 @@ export class LiquidityPoolController extends BaseApiController {
         this.router.get(`${this.basePath}/search`, this.search);
 
         this.router.post(`${this.basePath}/prices`, this.liquidityPoolPrices);
+        this.router.get(`${this.basePath}/swaps/historic`, this.swapsHistoric);
+        this.router.get(`${this.basePath}/deposits/historic`, this.depositsHistoric);
+        this.router.get(`${this.basePath}/withdraws/historic`, this.withdrawsHistoric);
+        this.router.get(`${this.basePath}/states/historic`, this.liquidityPoolStatesHistoric);
 
         this.router.get(`${this.basePath}/:identifier`, this.liquidityPool);
         this.router.get(`${this.basePath}/:identifier/ticks`, this.liquidityPoolTicks);
@@ -34,20 +40,182 @@ export class LiquidityPoolController extends BaseApiController {
         this.router.get(`${this.basePath}/:identifier/withdraws`, this.liquidityPoolWithdraws);
     }
 
+    private swapsHistoric(request: express.Request, response: express.Response) {
+        const {
+            fromTimestamp,
+            toTimestamp,
+        } = request.query;
+
+        const fetchOrders: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
+                .leftJoin('swaps.swapInToken', 'swapInToken')
+                .leftJoin('swaps.swapOutToken', 'swapOutToken')
+                .addSelect([
+                    'swapInToken.policyId',
+                    'swapInToken.nameHex',
+                    'swapInToken.decimals',
+                    'swapOutToken.policyId',
+                    'swapOutToken.nameHex',
+                    'swapOutToken.decimals',
+                ])
+                .leftJoinAndMapMany(
+                    'swaps.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = swaps.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolSwap.name,
+                    }
+                )
+                .andWhere('swaps.slot >= :fromSlot', {
+                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                })
+                .andWhere('swaps.slot < :toSlot', {
+                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                })
+                .getMany();
+        };
+
+        return dbApiService.query(fetchOrders)
+            .then((orders) => {
+                const resource: LiquidityPoolSwapResource = new LiquidityPoolSwapResource();
+
+                return response.send(resource.manyToJson(orders));
+            }).catch((e) => response.send(super.failResponse(e)));
+    }
+
+    private liquidityPoolStatesHistoric(request: express.Request, response: express.Response) {
+        const {
+            fromTimestamp,
+            toTimestamp,
+        } = request.query;
+
+        const fetchStates: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolState, 'states')
+                .leftJoinAndSelect('states.liquidityPool', 'liquidityPool')
+                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+                .andWhere('states.slot >= :fromSlot', {
+                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                })
+                .andWhere('states.slot < :toSlot', {
+                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                })
+                .getMany();
+        };
+
+        return dbApiService.query(fetchStates)
+            .then((states) => {
+                const resource: LiquidityPoolStateResource = new LiquidityPoolStateResource();
+
+                return response.send(resource.manyToJson(states));
+            }).catch((e) => response.send(super.failResponse(e)));
+    }
+
+    private depositsHistoric(request: express.Request, response: express.Response) {
+        const {
+            fromTimestamp,
+            toTimestamp,
+        } = request.query;
+
+        const fetchOrders: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolDeposit, 'deposits')
+                .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
+                .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
+                .addSelect([
+                    'depositAToken.policyId',
+                    'depositAToken.nameHex',
+                    'depositAToken.decimals',
+                    'depositBToken.policyId',
+                    'depositBToken.nameHex',
+                    'depositBToken.decimals',
+                ])
+                .leftJoinAndMapMany(
+                    'deposits.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = deposits.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolDeposit.name,
+                    }
+                )
+                .andWhere('deposits.slot >= :fromSlot', {
+                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                })
+                .andWhere('deposits.slot < :toSlot', {
+                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                })
+                .getMany();
+        };
+
+        return dbApiService.query(fetchOrders)
+            .then((orders) => {
+                const resource: LiquidityPoolDepositResource = new LiquidityPoolDepositResource();
+
+                return response.send(resource.manyToJson(orders));
+            }).catch((e) => response.send(super.failResponse(e)));
+    }
+
+    private withdrawsHistoric(request: express.Request, response: express.Response) {
+        const {
+            fromTimestamp,
+            toTimestamp,
+        } = request.query;
+
+        const fetchOrders: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
+                .leftJoinAndSelect('withdraws.lpToken', 'lpToken')
+                .addSelect([
+                    'lpToken.policyId',
+                    'lpToken.nameHex',
+                    'lpToken.isLpToken',
+                ])
+                .leftJoinAndMapMany(
+                    'withdraws.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = withdraws.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolWithdraw.name,
+                    }
+                )
+                .andWhere('withdraws.slot >= :fromSlot', {
+                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                })
+                .andWhere('withdraws.slot < :toSlot', {
+                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                })
+                .getMany();
+        };
+
+        return dbApiService.query(fetchOrders)
+            .then((orders) => {
+                const resource: LiquidityPoolWithdrawResource = new LiquidityPoolWithdrawResource();
+
+                return response.send(resource.manyToJson(orders));
+            }).catch((e) => response.send(super.failResponse(e)));
+    }
+
     private liquidityPools(request: express.Request, response: express.Response) {
         const {
             identifier,
             dex,
             tokenA,
             tokenB,
+            fromTimestamp,
+            toTimestamp,
         } = request.body;
         const {
             page,
             limit,
         } = request.query;
 
-        const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
-        const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+        const take: number | undefined = fromTimestamp || toTimestamp
+            ? undefined
+            : Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
+        const skip: number | undefined = take
+            ? (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take
+            : undefined;
 
         const [tokenAPolicyId, tokenANameHex] = tokenA && tokenA !== 'lovelace'
             ? (tokenA as string).split('.')
@@ -93,6 +261,18 @@ export class LiquidityPoolController extends BaseApiController {
                             });
                         }
 
+                        if (fromTimestamp) {
+                            query.andWhere('pools.createdSlot >= :fromSlot', {
+                                fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                            });
+                        }
+
+                        if (toTimestamp) {
+                            query.andWhere('pools.createdSlot < :toSlot', {
+                                toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                            });
+                        }
+
                         return query;
                     }),
                 )
@@ -106,10 +286,13 @@ export class LiquidityPoolController extends BaseApiController {
             response.send(super.formatPaginatedResponse(
                 Number(page ?? 1),
                 Number(limit ?? MAX_PER_PAGE),
-                Math.ceil(total / take),
+                Math.ceil(total / (take ?? 1)),
                 resource.manyToJson(liquidityPools)
             ));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve liquidity pools')));
+        }).catch((e: any) => {
+            console.error(e)
+            response.send(super.failResponse('Unable to retrieve liquidity pools'))
+        });
     }
 
     private liquidityPool(request: express.Request, response: express.Response) {

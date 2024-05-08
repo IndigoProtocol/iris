@@ -238,9 +238,11 @@ export class OrderBookOperationHandler {
     private async retrieveAsset(asset: Asset): Promise<Asset> {
         const firstOrSaveAsset: any = async (manager: EntityManager) => {
             const existingAsset: Asset | undefined = await manager
-                .findOneBy(Asset, {
-                    policyId: asset.policyId,
-                    nameHex: asset.nameHex,
+                .findOne(Asset, {
+                    where: {
+                        policyId: asset.policyId,
+                        nameHex: asset.nameHex,
+                    },
                 }) ?? undefined;
 
             if (existingAsset) {

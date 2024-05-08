@@ -55,7 +55,6 @@ export class DatabaseService extends BaseService {
             migrationsTableName: 'migrations',
             migrationsRun: true,
             poolSize: 100,
-            // relationLoadStrategy: 'query',
         });
 
         return this.dbSource.initialize()

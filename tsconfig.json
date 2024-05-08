@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "es2022",
     "module": "esnext",
     "moduleResolution": "node",
@@ -25,5 +26,5 @@
     "experimentalDecorators": true
   },
   "include": ["./src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "tests"]
 }

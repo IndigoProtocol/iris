@@ -82,7 +82,7 @@ export class HybridOperationHandler {
             }) ?? undefined;
         });
 
-        if (liquidityPool) {
+        if (liquidityPool !== undefined) {
             return this._ammHandler.handle(order);
         }
 
@@ -131,7 +131,7 @@ export class HybridOperationHandler {
             order.swapInAmount,
             order.swapInAmount,
             order.minReceive ?? 0,
-            Number(order.swapInAmount) / Number(order.minReceive),
+            (order.minReceive ?? 0) > 0 ? Number(order.swapInAmount) / Number(order.minReceive) : 0,
             0,
             false,
             order.dexFeesPaid,
