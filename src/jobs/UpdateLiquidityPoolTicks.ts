@@ -45,6 +45,8 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         const existingTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
                 .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
+                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
                 .where('resolution = :resolution', { resolution })
                 .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
                     liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id

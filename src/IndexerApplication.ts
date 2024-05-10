@@ -62,11 +62,9 @@ export class IndexerApplication {
      */
     constructor(
         cache?: BaseCacheStorage,
-        eventListeners: BaseEventListener[] = [],
         indexers: BaseIndexer[] = [],
     ) {
         this._cache = cache ?? new CacheStorage();
-        this._eventListeners = eventListeners;
         this._indexers = [...this._indexers, ...indexers];
     }
 

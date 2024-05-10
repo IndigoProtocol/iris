@@ -62,6 +62,11 @@ export class DefinitionBuilder {
         }
 
         if ('int' in definedDefinition) {
+            if (templateDefinition instanceof Function) {
+                (templateDefinition as Function)(definedDefinition, foundParameters);
+
+                return foundParameters;
+            }
             if (! ('int' in templateDefinition)) {
                 throw new Error("Template definition does not match with 'int'");
             }
@@ -72,6 +77,11 @@ export class DefinitionBuilder {
         }
 
         if ('bytes' in definedDefinition) {
+            if (templateDefinition instanceof Function) {
+                (templateDefinition as Function)(definedDefinition, foundParameters);
+
+                return foundParameters;
+            }
             if (! ('bytes' in templateDefinition)) {
                 throw new Error("Template definition does not match with 'bytes'");
             }

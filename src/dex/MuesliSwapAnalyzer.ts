@@ -36,7 +36,10 @@ const ORDER_ADDRESSES: string[] = [
     'addr1zyq0kyrml023kwjk8zr86d5gaxrt5w8lxnah8r6m6s4jp4g3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqqktyhv',
 ];
 const BATCH_ORDER_CONTRACT_ADDRESS: string = 'addr1w9e7m6yn74r7m0f9mf548ldr8j4v6q05gprey2lhch8tj5gsvyte9';
-const POOL_NFT_POLICY_ID: string = '909133088303c49f3a30f1cc8ed553a73857a29779f6c6561cd8093f';
+const POOL_NFT_POLICY_IDS: string[] = [
+    '909133088303c49f3a30f1cc8ed553a73857a29779f6c6561cd8093f',
+    '7a8041a0693e6605d010d5185b034d55c79eaf7ef878aae3bdcdbf67',
+];
 const LP_TOKEN_POLICY_ID: string = 'af3d70acf4bd5b3abb319a7d75c89fb3e56eafcdd46b2e9b57a2557f';
 const CANCEL_ORDER_DATUM: string = 'd87980';
 const MUESLISWAP_HEX: string = '4d7565736c6953776170';
@@ -169,6 +172,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             const hasPoolNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
                 return ['MuesliSwap_cLP', 'MuesliSwap_AMM'].includes(balance.asset.assetName);
             });
+
             if (! hasPoolNft) {
                 return undefined;
             }
@@ -187,7 +191,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
                     ? 'lovelace'
                     : new Asset(datumParameters.PoolAssetBPolicyId as string, datumParameters.PoolAssetBAssetName as string);
                 const poolNft: Asset | undefined = output.assetBalances.find((balance: AssetBalance) => {
-                    return balance.asset.policyId === POOL_NFT_POLICY_ID;
+                    return POOL_NFT_POLICY_IDS.includes(balance.asset.policyId);
                 })?.asset;
 
                 if (! poolNft) return undefined;
