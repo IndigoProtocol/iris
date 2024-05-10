@@ -110,5 +110,13 @@ await app.start()
         logError(`Indexer failed to start : ${reason}`);
     });
 ```
+Iris also supports you supplying your own API controllers :
+```js
+const app: ApiApplication = new ApiApplication(
+    [
+        new CustomController('/custom'),
+    ]
+);
+```
 
 Iris also has a [TypeScript SDK](https://github.com/IndigoProtocol/iris-sdk), which you can install & easily interact with the Iris API or websocket.
