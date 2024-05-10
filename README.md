@@ -81,6 +81,9 @@ and handle linking the operation to a liquidity pool or order book. Then, the fu
 #### API (/src/api/)
 Iris contains many API controllers & endpoint resources to handle REST API calls. Each entity type has its own resource file to correctly
 format the entity for JSON and websocket responses. To mitigate the data sent over the websocket feed, the attributes for the entities use a shorthand name. You dont have to worry about this using the [SDK](https://github.com/IndigoProtocol/iris-sdk) as the entities are rebuilt client side.
+<br>
+<br>
+You can find API endpoint documentation in the `openapi.yaml` file here `docs/openapi.yaml` or by visiting the [OpenAPI](https://app.swaggerhub.com/apis/zsluder/Iris/1.0.0) spec.
 
 ## Expanding Iris
 After each operation creation or update, an event is pushed out to all event listeners supplied to Iris at boot time.
