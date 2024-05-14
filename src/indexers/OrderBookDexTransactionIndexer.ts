@@ -1,32 +1,36 @@
 import { BaseIndexer } from './BaseIndexer';
 import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
-import { OrderBookDexOperation } from '../types';
-import { dbService, eventService } from '../indexerServices';
+import { OrderBookDexOperation, Transaction } from '../types';
+import { dbService } from '../indexerServices';
 import { EntityManager, MoreThan } from 'typeorm';
 import { logInfo } from '../logger';
 import { formatTransaction } from '../utils';
 import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { BaseOrderBookDexAnalyzer } from '../dex/BaseOrderBookDexAnalyzer';
-import { IndexerEventType } from '../constants';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { OrderBook } from '../db/entities/OrderBook';
+import { OrderBookOperationHandler } from '../handlers/OrderBookOperationHandler';
 
 export class OrderBookDexTransactionIndexer extends BaseIndexer {
 
     private _analyzers: BaseOrderBookDexAnalyzer[];
+    private _handler: OrderBookOperationHandler;
 
     constructor(analyzers: BaseOrderBookDexAnalyzer[]) {
         super();
 
         this._analyzers = analyzers;
+        this._handler = new OrderBookOperationHandler();
     }
 
     async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
         const operationPromises: Promise<OrderBookDexOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
             return this._analyzers.map((analyzer: BaseOrderBookDexAnalyzer) => {
-                return analyzer.analyzeTransaction(
-                    formatTransaction(block, transaction)
-                );
+                const tx: Transaction = formatTransaction(block, transaction);
+
+                if (analyzer.startSlot > tx.blockSlot) return [];
+
+                return analyzer.analyzeTransaction(tx);
             });
         }).flat(2);
 
@@ -63,10 +67,7 @@ export class OrderBookDexTransactionIndexer extends BaseIndexer {
                     });
 
                 for (const operation of sortedOperations) {
-                    await eventService.pushEvent({
-                        type: IndexerEventType.OrderBookDexOperation,
-                        data: operation,
-                    });
+                    await this._handler.handle(operation);
                 }
             });
     }

@@ -28,6 +28,8 @@ const REWARD_ADDRESSES: string[] = [
 
 export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
 
+    public startSlot: number = 110315300;
+
     public async analyzeTransaction(transaction: Transaction): Promise<OrderBookDexOperation[]> {
         return Promise.all([
             this.orders(transaction),
@@ -105,6 +107,9 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                         transaction.hash,
                         output.index,
                         datumParameters.ConsumedTxHash as string,
+                        '',
+                        undefined,
+                        transaction,
                     );
                 } catch (e) {
                     return undefined;
@@ -189,6 +194,7 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                 transaction.blockSlot,
                 transaction.hash,
                 output.index,
+                transaction,
             );
         } catch (e) {
             return undefined;

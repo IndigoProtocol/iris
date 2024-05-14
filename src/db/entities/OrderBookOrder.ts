@@ -2,11 +2,13 @@ import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColum
 import { Asset, Token } from './Asset';
 import { OrderBook } from './OrderBook';
 import { Dex } from '../../constants';
+import { Transaction } from '../../types';
 
 @Entity({ name: 'order_book_orders' })
 export class OrderBookOrder extends BaseEntity {
 
     dex: Dex;
+    transaction: Transaction | undefined;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -62,6 +64,9 @@ export class OrderBookOrder extends BaseEntity {
     @Column()
     outputIndex: number;
 
+    @Column({ nullable: true })
+    meta: string;
+
     static make(
         dex: Dex,
         fromToken: Token,
@@ -79,6 +84,7 @@ export class OrderBookOrder extends BaseEntity {
         slot: number,
         txHash: string,
         outputIndex: number,
+        transaction?: Transaction,
     ): OrderBookOrder {
         let instance: OrderBookOrder = new OrderBookOrder();
 
@@ -98,6 +104,7 @@ export class OrderBookOrder extends BaseEntity {
         instance.slot = slot;
         instance.txHash = txHash;
         instance.outputIndex = outputIndex;
+        instance.transaction = transaction;
 
         return instance;
     }

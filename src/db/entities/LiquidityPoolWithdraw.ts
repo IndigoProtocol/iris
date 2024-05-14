@@ -3,12 +3,14 @@ import { LiquidityPool } from './LiquidityPool';
 import { Asset } from './Asset';
 import { Dex } from '../../constants';
 import { OperationStatus } from './OperationStatus';
+import { Transaction } from '../../types';
 
 @Entity({ name: 'liquidity_pool_withdraws' })
 export class LiquidityPoolWithdraw extends BaseEntity {
 
     dex: Dex;
     liquidityPoolIdentifier: string | undefined;
+    transaction: Transaction | undefined;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -48,6 +50,9 @@ export class LiquidityPoolWithdraw extends BaseEntity {
     @Column()
     outputIndex: number;
 
+    @Column({ nullable: true })
+    meta: string;
+
     @OneToMany(() => OperationStatus, (status: OperationStatus) => status.operationId)
     @JoinColumn()
     statuses: OperationStatus[];
@@ -65,6 +70,7 @@ export class LiquidityPoolWithdraw extends BaseEntity {
         slot: number,
         txHash: string,
         outputIndex: number,
+        transaction?: Transaction,
     ): LiquidityPoolWithdraw {
         let instance: LiquidityPoolWithdraw = new LiquidityPoolWithdraw();
 
@@ -80,6 +86,7 @@ export class LiquidityPoolWithdraw extends BaseEntity {
         instance.slot = slot;
         instance.txHash = txHash;
         instance.outputIndex = outputIndex;
+        instance.transaction = transaction;
 
         return instance;
     }

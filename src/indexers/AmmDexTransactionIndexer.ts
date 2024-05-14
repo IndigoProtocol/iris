@@ -1,39 +1,34 @@
 import { BaseIndexer } from './BaseIndexer';
 import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
 import { BaseAmmDexAnalyzer } from '../dex/BaseAmmDexAnalyzer';
-import { AmmDexOperation } from '../types';
-import { IndexerEventType } from '../constants';
-import { dbService, eventService } from '../indexerServices';
+import { AmmDexOperation, Transaction } from '../types';
+import { dbService } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
-import { EntityManager, EntityTarget, MoreThan, ObjectLiteral } from 'typeorm';
-import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
-import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
-import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
-import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { logInfo } from '../logger';
-import { LiquidityPool } from '../db/entities/LiquidityPool';
 import { formatTransaction } from '../utils';
-import { OrderBookOrder } from '../db/entities/OrderBookOrder';
-import { OrderBookMatch } from '../db/entities/OrderBookMatch';
-import { OrderBook } from '../db/entities/OrderBook';
+import { AmmOperationHandler } from '../handlers/AmmOperationHandler';
 
 export class AmmDexTransactionIndexer extends BaseIndexer {
 
     private _analyzers: BaseAmmDexAnalyzer[];
+    private _handler: AmmOperationHandler;
 
     constructor(analyzers: BaseAmmDexAnalyzer[]) {
         super();
 
         this._analyzers = analyzers;
+        this._handler = new AmmOperationHandler();
     }
 
     async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
         const operationPromises: Promise<AmmDexOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
             return this._analyzers.map((analyzer: BaseAmmDexAnalyzer) => {
-                return analyzer.analyzeTransaction(
-                    formatTransaction(block, transaction)
-                );
+                const tx: Transaction = formatTransaction(block, transaction);
+
+                if (analyzer.startSlot > tx.blockSlot) return [];
+
+                return analyzer.analyzeTransaction(tx);
             });
         }).flat(2);
 
@@ -76,33 +71,23 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
 
                 // Synchronize updates. 'forEach' is not sequential
                 for (const operation of sortedOperations) {
-                    await eventService.pushEvent({
-                        type: IndexerEventType.AmmDexOperation,
-                        data: operation,
-                    });
+                    await this._handler.handle(operation);
                 }
             });
     }
 
     async onRollBackward(blockHash: string, slot: Slot): Promise<any> {
-        const manager: EntityManager = dbService.dbSource.createEntityManager();
-        const whereSlotClause = {
-            slot: MoreThan(slot),
-        };
+        // Raw delete with for better performance
+        await dbService.dbSource.query("DELETE FROM operation_statuses WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_states WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_deposits WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_withdraws WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_swaps WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM liquidity_pools WHERE createdSlot > ?", [slot])
 
-        return Promise.all([
-            manager.delete(OperationStatus, whereSlotClause),
-            manager.delete(LiquidityPoolState, whereSlotClause),
-            manager.delete(LiquidityPoolDeposit, whereSlotClause),
-            manager.delete(LiquidityPoolWithdraw, whereSlotClause),
-            manager.delete(LiquidityPoolSwap, whereSlotClause),
-            manager.delete(LiquidityPoolZap, whereSlotClause),
-            manager.delete(LiquidityPool, {
-                createdSlot: MoreThan(slot),
-            }),
-        ]).then(() => {
-            logInfo('Removed AMM entities');
-        });
+        logInfo('Removed AMM entities');
     }
 
 }

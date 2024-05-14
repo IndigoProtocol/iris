@@ -20,8 +20,9 @@ export class LiquidityPoolResource extends BaseEntityResource {
             dex: entity.dex,
             identifier: entity.identifier,
             address: entity.address,
+            orderAddress: entity.orderAddress,
             tokenA: entity.tokenA ? this._assetResource.toJson(entity.tokenA) : null,
-            tokenB: this._assetResource.toJson(entity.tokenB),
+            tokenB: entity.tokenB ? this._assetResource.toJson(entity.tokenB) : null,
             createdSlot: entity.createdSlot,
             state: entity.latestState ? this._stateResource.toJson(entity.latestState) : null
         };
@@ -33,8 +34,9 @@ export class LiquidityPoolResource extends BaseEntityResource {
             d: entity.dex,
             i: entity.identifier,
             a: entity.address,
+            oA: entity.orderAddress,
             tA: entity.tokenA ? this._assetResource.toCompressed(entity.tokenA) : null,
-            tB: this._assetResource.toCompressed(entity.tokenB),
+            tB: entity.tokenB ? this._assetResource.toCompressed(entity.tokenB) : null,
             cS: entity.createdSlot,
             s: entity.latestState ? this._stateResource.toCompressed(entity.latestState) : null
         };

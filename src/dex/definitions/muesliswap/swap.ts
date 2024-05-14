@@ -53,14 +53,32 @@ export default {
         {
           int: DatumParameterKey.MinReceive
         },
-        {
-          constructor: DatumParameterKey.AllowPartialFill,
-          fields: []
+        (field: DefinitionField, foundParameters: DatumParameters) => {
+          if ('fields' in field) {
+            foundParameters[DatumParameterKey.AllowPartialFill] = field.constructor;
+            return;
+          }
+
+          if ('int' in field) {
+            foundParameters[DatumParameterKey.TotalFees] = field['int'];
+            return;
+          }
+
+          throw new Error("Template definition does not match with 'bytes'");
         },
-        {
-          // matchMakerFee + deposit
-          int: DatumParameterKey.TotalFees
-        }
+        (field: DefinitionField, foundParameters: DatumParameters) => {
+          if ('fields' in field) {
+            foundParameters[DatumParameterKey.AllowPartialFill] = field.constructor;
+            return;
+          }
+
+          if ('int' in field) {
+            foundParameters[DatumParameterKey.TotalFees] = field['int'];
+            return;
+          }
+
+          throw new Error("Template definition does not match with 'bytes'");
+        },
       ]
     }
   ]

@@ -1,5 +1,3 @@
-import { LiquidityPoolState } from './db/entities/LiquidityPoolState';
-
 export enum DatumParameterKey {
     Action = 'Action',
     SenderPubKeyHash = 'SenderPubKeyHash',
@@ -69,18 +67,35 @@ export enum Dex {
     Spectrum = 'Spectrum',
     TeddySwap = 'TeddySwap',
     GeniusYield = 'GeniusYield',
+    Axo = 'Axo',
 }
 
-export enum IndexerEventType {
-    AmmDexOperation = 'AmmDexOperation',
-    OrderBookDexOperation = 'OrderBookDexOperation',
-    Sync = 'Sync',
-    LiquidityPool = 'LiquidityPool',
-    LiquidityPoolState = 'LiquidityPoolState',
-    OrderBook = 'OrderBook',
-    Asset = 'Asset',
-    LiquidityPoolTick = 'LiquidityPoolTick',
-    OrderBookTick = 'OrderBookTick',
+export enum IrisEventType {
+    SyncUpdated = 'SyncUpdated',
+    AssetCreated = 'AssetCreated',
+    AssetUpdated = 'AssetUpdated',
+    LiquidityPoolCreated = 'LiquidityPoolCreated',
+    LiquidityPoolUpdated = 'LiquidityPoolUpdated',
+    LiquidityPoolStateCreated = 'LiquidityPoolStateCreated',
+    LiquidityPoolStateUpdated = 'LiquidityPoolStateUpdated',
+    LiquidityPoolSwapCreated = 'LiquidityPoolSwapCreated',
+    LiquidityPoolSwapUpdated = 'LiquidityPoolSwapUpdated',
+    LiquidityPoolZapCreated = 'LiquidityPoolZapCreated',
+    LiquidityPoolZapUpdated = 'LiquidityPoolZapUpdated',
+    LiquidityPoolDepositCreated = 'LiquidityPoolDepositCreated',
+    LiquidityPoolDepositUpdated = 'LiquidityPoolDepositUpdated',
+    LiquidityPoolWithdrawCreated = 'LiquidityPoolWithdrawCreated',
+    LiquidityPoolWithdrawUpdated = 'LiquidityPoolWithdrawUpdated',
+    LiquidityPoolTickCreated = 'LiquidityPoolTickCreated',
+    LiquidityPoolTickUpdated = 'LiquidityPoolTickUpdated',
+    OperationStatusCreated = 'OperationStatusCreated',
+    OrderBookCreated = 'OrderBookCreated',
+    OrderBookUpdated = 'OrderBookUpdated',
+    OrderBookOrderCreated = 'OrderBookOrderCreated',
+    OrderBookOrderUpdated = 'OrderBookOrderUpdated',
+    OrderBookMatchCreated = 'OrderBookMatchCreated',
+    OrderBookTickCreated = 'OrderBookTickCreated',
+    OrderBookTickUpdated = 'OrderBookTickUpdated',
 }
 
 export enum DexOperationStatus {

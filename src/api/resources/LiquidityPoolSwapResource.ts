@@ -4,6 +4,7 @@ import { LiquidityPoolSwap } from '../../db/entities/LiquidityPoolSwap';
 import { LiquidityPoolResource } from './LiquidityPoolResource';
 import { OperationStatusResource } from './OperationStatusResource';
 import { OperationStatus } from '../../db/entities/OperationStatus';
+import { stringify } from '../../utils';
 
 export class LiquidityPoolSwapResource extends BaseEntityResource {
 
@@ -33,6 +34,7 @@ export class LiquidityPoolSwapResource extends BaseEntityResource {
             slot: Number(entity.slot),
             txHash: entity.txHash,
             outputIndex: Number(entity.outputIndex),
+            meta: stringify(entity.meta),
         };
 
         if (entity.liquidityPool) {
@@ -61,6 +63,7 @@ export class LiquidityPoolSwapResource extends BaseEntityResource {
             s: Number(entity.slot),
             tH: entity.txHash,
             oI: Number(entity.outputIndex),
+            m: stringify(entity.meta),
         };
 
         if (entity.liquidityPool) {
@@ -69,6 +72,10 @@ export class LiquidityPoolSwapResource extends BaseEntityResource {
 
         if (entity.statuses?.length > 0) {
             response.st = entity.statuses.map((status: OperationStatus) => this._operationResource.toCompressed(status));
+        }
+
+        if (entity.transaction) {
+            response.tr = stringify(entity.transaction);
         }
 
         return response;

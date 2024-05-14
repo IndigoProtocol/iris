@@ -3,6 +3,7 @@ import { Asset, Token } from './Asset';
 import { OrderBook } from './OrderBook';
 import { Dex } from '../../constants';
 import { OrderBookOrder } from './OrderBookOrder';
+import { Transaction } from '../../types';
 
 @Entity({ name: 'order_book_matches' })
 export class OrderBookMatch extends BaseEntity {
@@ -10,6 +11,8 @@ export class OrderBookMatch extends BaseEntity {
     dex: Dex;
     consumedTxHash: string;
     partialFillOrderIdentifier: string;
+    transaction: Transaction | undefined;
+    unFilledAmount: number;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -44,6 +47,9 @@ export class OrderBookMatch extends BaseEntity {
     @Column()
     outputIndex: number;
 
+    @Column({ nullable: true })
+    meta: string;
+
     static make(
         dex: Dex,
         matchedToken: Token | undefined,
@@ -56,6 +62,8 @@ export class OrderBookMatch extends BaseEntity {
         consumedTxHash: string,
         partialFillOrderIdentifier: string = '',
         referenceOrder: OrderBookOrder | undefined = undefined,
+        transaction?: Transaction,
+        unFilledAmount: number = 0,
     ): OrderBookMatch {
         let instance: OrderBookMatch = new OrderBookMatch();
 
@@ -69,6 +77,8 @@ export class OrderBookMatch extends BaseEntity {
         instance.outputIndex = outputIndex;
         instance.consumedTxHash = consumedTxHash;
         instance.partialFillOrderIdentifier = partialFillOrderIdentifier;
+        instance.transaction = transaction;
+        instance.unFilledAmount = unFilledAmount;
 
         if (referenceOrder) {
             instance.referenceOrder = referenceOrder;

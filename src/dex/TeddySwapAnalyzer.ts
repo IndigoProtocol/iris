@@ -11,7 +11,7 @@ import {
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { lucidUtils, toDefinitionDatum } from '../utils';
 import { AddressDetails, Data } from 'lucid-cardano';
-import { Dex } from '../constants';
+import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/teddyswap/swap';
 import poolDefinition from './definitions/teddyswap/pool';
 import poolDepositDefinition from './definitions/teddyswap/pool-deposit';
@@ -22,7 +22,6 @@ import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 
 /**
  * TeddySwap constants.
@@ -35,6 +34,8 @@ const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const CANCEL_ORDER_DATUM: string = 'd8799f00000001ff';
 
 export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
+
+    public startSlot: number = 109078697;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -88,6 +89,9 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    output.toAddress,
+                    SwapOrderType.Instant,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -201,6 +205,7 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -237,6 +242,7 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;

@@ -1,10 +1,10 @@
 import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
 import {
+    AmmDexOperation,
     AssetBalance,
     DatumParameters,
     DefinitionConstr,
     DefinitionField,
-    AmmDexOperation,
     Transaction,
     Utxo,
 } from '../types';
@@ -13,7 +13,7 @@ import poolDefinition from './definitions/sundaeswap/pool';
 import poolDepositDefinition from './definitions/sundaeswap/pool-deposit';
 import poolWithdrawDefinition from './definitions/sundaeswap/pool-withdraw';
 import zapDefinition from './definitions/sundaeswap/zap';
-import { Dex } from '../constants';
+import { Dex, SwapOrderType } from '../constants';
 import { toDefinitionDatum, tokensMatch } from '../utils';
 import { Data } from 'lucid-cardano';
 import { DefinitionBuilder } from '../DefinitionBuilder';
@@ -36,6 +36,8 @@ const CANCEL_ORDER_DATUM: string = 'd87a80';
 const DEPOSIT_FEE: bigint = 2_000000n;
 
 export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
+
+    public startSlot: number = 50367177;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -105,6 +107,9 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            output.toAddress,
+                            SwapOrderType.Instant,
+                            transaction,
                         )
                     );
                 } catch (e) {
@@ -171,6 +176,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            transaction,
                         )
                     );
                 } catch (e) {
@@ -290,6 +296,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -326,6 +333,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;

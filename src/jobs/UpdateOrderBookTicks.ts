@@ -2,7 +2,7 @@ import { BaseJob } from './BaseJob';
 import { lucidUtils, tokensMatch } from '../utils';
 import { EntityManager } from 'typeorm';
 import { dbService, eventService, operationWs, queue } from '../indexerServices';
-import { IndexerEventType, TickInterval } from '../constants';
+import { TickInterval } from '../constants';
 import { logInfo } from '../logger';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { OrderBookTick } from '../db/entities/OrderBookTick';
@@ -18,7 +18,7 @@ export class UpdateOrderBookTicks extends BaseJob {
     }
 
     public async handle(): Promise<any> {
-        logInfo(`[Queue] UpdateOrderBookTicks for ${this._match.txHash}`);
+        logInfo(`[Queue] \t UpdateOrderBookTicks for ${this._match.txHash}`);
 
         const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._match.slot));
 
@@ -26,20 +26,14 @@ export class UpdateOrderBookTicks extends BaseJob {
         const startOfHour: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), 0, 0, 0).getTime() / 1000;
         const startOfDay: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), 0, 0, 0, 0).getTime() / 1000;
 
-        await dbService.transaction((manager: EntityManager) => {
-            return this.createOrUpdateTick(manager, startOfMinute, TickInterval.Minute);
-        });
-        await dbService.transaction((manager: EntityManager) => {
-            return this.createOrUpdateTick(manager, startOfHour, TickInterval.Hour);
-        });
-        await dbService.transaction((manager: EntityManager) => {
-            return this.createOrUpdateTick(manager, startOfDay, TickInterval.Day);
-        });
-
-        return Promise.resolve();
+        return Promise.all([
+            this.createOrUpdateTick(startOfMinute, TickInterval.Minute),
+            this.createOrUpdateTick(startOfHour, TickInterval.Hour),
+            this.createOrUpdateTick(startOfDay, TickInterval.Day)
+        ]);
     }
 
-    private async createOrUpdateTick(manager: EntityManager, startOfTick: number, resolution: TickInterval): Promise<any> {
+    private async createOrUpdateTick(startOfTick: number, resolution: TickInterval): Promise<any> {
         if (! this._match.orderBook) {
             return Promise.reject('Order Book not found for match');
         }
@@ -51,53 +45,61 @@ export class UpdateOrderBookTicks extends BaseJob {
             ? 1 / this._match.referenceOrder.price
             : this._match.referenceOrder.price;
 
-        const existingTick: OrderBookTick | undefined = await manager.findOne(OrderBookTick, {
-            relations: ['orderBook'],
-            where: {
-                resolution,
-                time: startOfTick,
-                orderBook: {
-                    id: this._match.orderBook.id,
-                },
-            },
-        }) ?? undefined;
+        const existingTick: OrderBookTick | undefined = await dbService.query((manager: EntityManager) => {
+            return manager.createQueryBuilder(OrderBookTick, 'ticks')
+                .where('resolution = :resolution', { resolution })
+                .andWhere('ticks.orderBookId = :orderBookId', {
+                    orderBookId: this._match.orderBook?.id
+                })
+                .andWhere('ticks.time = :time', {
+                    time: startOfTick
+                })
+                .orderBy('ticks.time', 'DESC')
+                .limit(1)
+                .getOne() ?? undefined;
+        });
 
         if (! existingTick) {
-            const lastTick: OrderBookTick | undefined = await manager.findOne(OrderBookTick, {
-                relations: ['orderBook'],
-                where: {
-                    resolution,
-                    orderBook: {
-                        id: this._match.orderBook.id,
-                    },
-                },
-                order: {
-                    time: 'DESC',
-                }
-            }) ?? undefined;
+            const lastTick: OrderBookTick | undefined = await dbService.query((manager: EntityManager) => {
+                return manager.createQueryBuilder(OrderBookTick, 'ticks')
+                    .where('resolution = :resolution', { resolution })
+                    .andWhere('ticks.orderBookId = :orderBookId', {
+                        orderBookId: this._match.orderBook?.id
+                    })
+                    .orderBy('ticks.time', 'DESC')
+                    .limit(1)
+                    .getOne() ?? undefined;
+            });
 
             const open: number = lastTick ? lastTick.close : price;
 
-            return manager.save(
-                OrderBookTick.make(
-                    this._match.orderBook,
-                    resolution,
-                    startOfTick,
-                    open,
-                    open > price ? open : price,
-                    open < price ? open : price,
-                    price,
-                    0,
-                   0
-                )
-            ).then((tick: OrderBookTick) => {
-                operationWs.broadcast(tick);
-                eventService.pushEvent({
-                    type: IndexerEventType.LiquidityPoolTick,
-                    data: tick,
-                });
+            return dbService.transaction((manager: EntityManager) => {
+                if (! this._match.orderBook) {
+                    return Promise.resolve();
+                }
 
-                return Promise.resolve();
+                return manager.save(
+                    OrderBookTick.make(
+                        this._match.orderBook,
+                        resolution,
+                        startOfTick,
+                        open,
+                        open > price ? open : price,
+                        open < price ? open : price,
+                        price,
+                        0,
+                        0
+                    )
+                ).then((tick: OrderBookTick) => {
+                    operationWs.broadcast(tick);
+
+                    eventService.pushEvent({
+                        type: 'OrderBookTickCreated',
+                        data: tick,
+                    });
+
+                    return Promise.resolve();
+                }).catch(() => this.createOrUpdateTick(startOfTick, resolution));
             });
         }
 
@@ -111,16 +113,19 @@ export class UpdateOrderBookTicks extends BaseJob {
 
         existingTick.close = price;
 
-        return manager.save(existingTick)
-            .then((tick: OrderBookTick) => {
-                operationWs.broadcast(tick);
-                eventService.pushEvent({
-                    type: IndexerEventType.LiquidityPoolTick,
-                    data: tick,
-                });
+        return dbService.transaction((manager: EntityManager) => {
+            return manager.save(existingTick)
+                .then((tick: OrderBookTick) => {
+                    operationWs.broadcast(tick);
 
-                return Promise.resolve();
-            });
+                    eventService.pushEvent({
+                        type: 'OrderBookTickUpdated',
+                        data: tick,
+                    });
+
+                    return Promise.resolve();
+                });
+        });
     }
 
 }

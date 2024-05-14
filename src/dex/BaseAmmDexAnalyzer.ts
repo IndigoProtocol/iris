@@ -16,6 +16,8 @@ export abstract class BaseAmmDexAnalyzer {
 
     public app: IndexerApplication;
 
+    public abstract startSlot: number;
+
     constructor(app: IndexerApplication) {
         this.app = app;
     }

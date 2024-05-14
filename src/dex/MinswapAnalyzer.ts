@@ -11,7 +11,7 @@ import {
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { toDefinitionDatum, tokenId } from '../utils';
 import { Data } from 'lucid-cardano';
-import { Dex } from '../constants';
+import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/minswap/swap';
 import zapDefinition from './definitions/minswap/zap';
 import poolDefinition from './definitions/minswap/pool';
@@ -41,6 +41,8 @@ const LP_TOKEN_V2_POLICY_ID: string = 'e4214b7cce62ac6fbba385d164df48e157eae5863
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 
 export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
+
+    public startSlot: number = 56553560;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -109,6 +111,9 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            output.toAddress,
+                            SwapOrderType.Instant,
+                            transaction,
                         )
                     );
                 } catch (e) {
@@ -165,6 +170,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
+                            transaction,
                         )
                     );
                 } catch (e) {
@@ -291,6 +297,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -335,6 +342,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;

@@ -11,7 +11,7 @@ import {
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { toDefinitionDatum, tokensMatch } from '../utils';
 import { Data } from 'lucid-cardano';
-import { Dex } from '../constants';
+import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/wingriders/swap';
 import poolDefinition from './definitions/wingriders/pool';
 import poolDepositDefinition from './definitions/wingriders/pool-deposit';
@@ -22,7 +22,6 @@ import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
 
 /**
  * WingRiders constants.
@@ -37,6 +36,8 @@ const FEE_PERCENT: number = 0.35;
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 
 export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
+
+    public startSlot: number = 57274883;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -111,6 +112,9 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    output.toAddress,
+                    SwapOrderType.Instant,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -254,6 +258,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;
@@ -294,6 +299,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
+                    transaction,
                 );
             } catch (e) {
                 return undefined;

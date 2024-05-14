@@ -1,38 +1,33 @@
-import { BaseEventListener } from './BaseEventListener';
-import { Dex, IndexerEventType } from '../constants';
-import { IndexerEvent, OrderBookDexOperation, OrderBookOrderCancellation, TokenMetadata } from '../types';
+import { Dex } from '../constants';
+import { OrderBookDexOperation, OrderBookOrderCancellation, TokenMetadata, Utxo } from '../types';
 import { logInfo } from '../logger';
 import { dbService, eventService, metadataService, operationWs, queue } from '../indexerServices';
 import { Asset, Token } from '../db/entities/Asset';
-import { BaseEntity, EntityManager, IsNull } from 'typeorm';
+import { BaseEntity, EntityManager, In, IsNull, Not } from 'typeorm';
 import CONFIG from '../config';
 import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { OrderBook } from '../db/entities/OrderBook';
 import { tokensMatch } from '../utils';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { UpdateOrderBookTicks } from '../jobs/UpdateOrderBookTicks';
+import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 
-export class OrderBookDexOperationListener extends BaseEventListener {
+export class OrderBookOperationHandler {
 
-    public listenFor: IndexerEventType[] = [
-        IndexerEventType.OrderBookDexOperation,
-    ];
-
-    public async onEvent(event: IndexerEvent): Promise<any> {
+    public async handle(operation: OrderBookDexOperation): Promise<any> {
         if (CONFIG.VERBOSE) {
-            if ('dex' in event.data) {
-                logInfo(`[${event.data.dex}] ${event.data.constructor.name} ${(event.data as OrderBookDexOperation).txHash}`);
-            } else if ('type' in event.data && event.data.type === 'OrderBookOrderCancellation') {
-                logInfo(`OrderBookOrderCancellation ${(event.data as any).txHash}`);
+            if ('dex' in operation) {
+                logInfo(`[${operation.dex}] ${operation.constructor.name} ${(operation as OrderBookDexOperation).txHash}`);
+            } else if ('type' in operation && operation.type === 'OrderBookOrderCancellation') {
+                logInfo(`OrderBookOrderCancellation ${(operation as any).txHash}`);
             } else {
-                logInfo(`${event.data.constructor.name} ${(event.data as any).txHash}`);
+                logInfo(`${operation.constructor.name} ${(operation as any).txHash}`);
             }
         }
 
         // Errors are handled within
-        return this.eventHandler(event)
+        return this.handleOperation(operation)
             .then((savedEntity: BaseEntity | undefined) => {
-
                 if (savedEntity) {
                     operationWs.broadcast(savedEntity);
                 }
@@ -45,20 +40,20 @@ export class OrderBookDexOperationListener extends BaseEventListener {
     /**
      * Store necessary data into the DB.
      */
-    private async eventHandler(event: IndexerEvent): Promise<BaseEntity | undefined> {
+    private async handleOperation(operation: OrderBookDexOperation): Promise<BaseEntity | undefined> {
         if (! dbService.isInitialized) {
             return Promise.resolve(undefined);
         }
 
-        if ('type' in event.data && event.data.type === 'OrderBookOrderCancellation') {
-            return await this.handleCancellation(event.data as OrderBookOrderCancellation);
+        if ('type' in operation && operation.type === 'OrderBookOrderCancellation') {
+            return await this.handleCancellation(operation as OrderBookOrderCancellation);
         }
 
-        switch (event.data.constructor) {
+        switch (operation.constructor) {
             case OrderBookOrder:
-                return await this.handleOrder(event.data as OrderBookOrder);
+                return await this.handleOrder(operation as OrderBookOrder);
             case OrderBookMatch:
-                return await this.handleMatch(event.data as OrderBookMatch);
+                return await this.handleMatch(operation as OrderBookMatch);
             default:
                 return Promise.reject('Encountered unknown event type.');
         }
@@ -79,6 +74,11 @@ export class OrderBookDexOperationListener extends BaseEventListener {
 
         existingOrder.isCancelled = true;
 
+        eventService.pushEvent({
+            type: 'OrderBookOrderUpdated',
+            data: existingOrder,
+        });
+
         return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
             return manager.save(existingOrder);
         });
@@ -88,17 +88,35 @@ export class OrderBookDexOperationListener extends BaseEventListener {
      * Handle an update liquidity pool state event.
      */
     private async handleOrder(order: OrderBookOrder): Promise<OrderBookOrder> {
-        const existingOrder: OrderBookOrder | undefined = await dbService.query((manager: EntityManager) => {
-            return manager.findOneBy(OrderBookOrder, {
+        const existingOrderConditions: FindOptionsWhere<OrderBookOrder>[] = [
+            {
+                txHash: In(order.transaction?.inputs.map((input: Utxo) => input.forTxHash) ?? []),
+                senderPubKeyHash: order.senderPubKeyHash,
+                senderStakeKeyHash: order.senderStakeKeyHash,
+            },
+        ];
+
+        if (order.identifier) {
+            existingOrderConditions.push({
                 identifier: order.identifier,
-            }) ?? undefined;
+            });
+        }
+
+        const existingOrder: OrderBookOrder | undefined = await dbService.query((manager: EntityManager) => {
+            return manager.findOneBy(OrderBookOrder, existingOrderConditions) ?? undefined;
         });
 
         // Update existing order
         if (existingOrder) {
+            existingOrder.askedAmount = order.askedAmount;
             existingOrder.unFilledOfferAmount = order.unFilledOfferAmount;
-            existingOrder.numPartialFills = order.numPartialFills;
+            existingOrder.numPartialFills = order.numPartialFills + 1;
             existingOrder.txHash = order.txHash;
+
+            eventService.pushEvent({
+                type: 'OrderBookOrderUpdated',
+                data: existingOrder,
+            });
 
             return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
                 return await manager.save(existingOrder);
@@ -122,6 +140,11 @@ export class OrderBookDexOperationListener extends BaseEventListener {
             order.askedAmount = Math.floor(order.originalOfferAmount / order.price);
         }
 
+        eventService.pushEvent({
+            type: 'OrderBookOrderCreated',
+            data: order,
+        });
+
         return await dbService.transaction(async (manager: EntityManager): Promise<OrderBookOrder> => {
             return await manager.save(order);
         });
@@ -131,52 +154,74 @@ export class OrderBookDexOperationListener extends BaseEventListener {
      * Handle a match from orders.
      */
     private async handleMatch(match: OrderBookMatch): Promise<OrderBookMatch> {
-        const existingOrder: OrderBookOrder | undefined = await dbService.query((manager: EntityManager) => {
-            return manager.findOne(OrderBookOrder, {
-                relations: ['toToken'],
-                where: [
-                    {
-                        identifier: match.partialFillOrderIdentifier,
-                    },
-                    {
-                        txHash: match.consumedTxHash,
-                    },
-                ]
+        const existingOrderConditions: FindOptionsWhere<OrderBookOrder>[] = [
+            {
+                txHash: In(match.transaction?.inputs.map((input: Utxo) => input.forTxHash) ?? []),
+                senderPubKeyHash: Not(match.receiverPubKeyHash),
+                senderStakeKeyHash: Not(match.receiverStakeKeyHash),
+            },
+        ];
+
+        if (match.partialFillOrderIdentifier) {
+            existingOrderConditions.push({
+                identifier:  match.partialFillOrderIdentifier,
+            });
+        }
+
+        if (match.consumedTxHash) {
+            existingOrderConditions.push({
+                txHash:  match.consumedTxHash,
+            });
+        }
+
+        const existingOrders: OrderBookOrder[] | undefined = await dbService.query((manager: EntityManager) => {
+            return manager.find(OrderBookOrder, {
+                relations: ['fromToken', 'toToken'],
+                where: existingOrderConditions,
             }) ?? undefined;
         });
 
-        if (! existingOrder) {
+        if (! existingOrders || existingOrders.length === 0) {
             return Promise.reject(`Unable to find fromOrder from match in ${match.txHash}`);
         }
 
-        match.matchedToken = existingOrder.toToken;
+        match.matchedToken = existingOrders[0].toToken;
         match.orderBook = await this.retrieveOrderBook(
             match.dex,
-            existingOrder.fromToken ?? 'lovelace',
-            existingOrder.toToken ?? 'lovelace',
-            existingOrder.slot,
+            existingOrders[0].fromToken ?? 'lovelace',
+            existingOrders[0].toToken ?? 'lovelace',
+            existingOrders[0].slot,
         );
 
+        if (match.consumedTxHash) {
+            match.matchedAmount = existingOrders.reduce((total: number, order: OrderBookOrder) => total + order.unFilledOfferAmount, 0);
+            existingOrders.forEach((order: OrderBookOrder) => order.unFilledOfferAmount = 0);
+
+        } else if (match.unFilledAmount) {
+            match.matchedAmount =  existingOrders.reduce((total: number, order: OrderBookOrder) => total + order.askedAmount, 0) - match.unFilledAmount;
+            existingOrders.forEach((order: OrderBookOrder) => order.unFilledOfferAmount = match.unFilledAmount);
+
+        } else if (match.referenceOrder) {
+            match.matchedAmount = existingOrders.reduce((total: number, order: OrderBookOrder) => total + order.askedAmount, 0) - match.referenceOrder.unFilledOfferAmount;
+            existingOrders.forEach((order: OrderBookOrder) => order.unFilledOfferAmount -= match.unFilledAmount);
+        }
+
+        existingOrders.forEach((order: OrderBookOrder) => order.numPartialFills += 1);
+
+        match.referenceOrder = existingOrders[0];
+
         return dbService.transaction(async (manager: EntityManager): Promise<OrderBookMatch> => {
-            if (match.consumedTxHash) {
-                match.matchedAmount = existingOrder.unFilledOfferAmount;
+            await manager.save(existingOrders)
 
-                existingOrder.unFilledOfferAmount = 0;
-            }
-            if (match.referenceOrder) {
-                match.matchedAmount = existingOrder.unFilledOfferAmount - match.referenceOrder.unFilledOfferAmount;
-                existingOrder.unFilledOfferAmount -= match.matchedAmount;
-            }
+            existingOrders.forEach((order: OrderBookOrder) => eventService.pushEvent({
+                type: 'OrderBookOrderUpdated',
+                data: order,
+            }));
+            eventService.pushEvent({
+                type: 'OrderBookMatchCreated',
+                data: match,
+            });
 
-            existingOrder.numPartialFills += 1;
-
-            match.referenceOrder = existingOrder;
-
-            if (match.txHash === '7b70d2bf13360d4cba98c8adbb9f884b791d6e6678f4a8c30418eb717043ef5f') {
-                console.log(existingOrder)
-            }
-
-            await manager.save(existingOrder)
             return manager.save(match)
                 .then((match: OrderBookMatch) => {
                     queue.dispatch(new UpdateOrderBookTicks(match));
@@ -193,9 +238,11 @@ export class OrderBookDexOperationListener extends BaseEventListener {
     private async retrieveAsset(asset: Asset): Promise<Asset> {
         const firstOrSaveAsset: any = async (manager: EntityManager) => {
             const existingAsset: Asset | undefined = await manager
-                .findOneBy(Asset, {
-                    policyId: asset.policyId,
-                    nameHex: asset.nameHex,
+                .findOne(Asset, {
+                    where: {
+                        policyId: asset.policyId,
+                        nameHex: asset.nameHex,
+                    },
                 }) ?? undefined;
 
             if (existingAsset) {
@@ -204,6 +251,8 @@ export class OrderBookDexOperationListener extends BaseEventListener {
 
             const assetMetadata: TokenMetadata | undefined = await metadataService.fetchAsset(asset.policyId, asset.nameHex)
                 .catch(() => undefined);
+
+            asset.isLpToken = asset.isLpToken ?? false;
 
             if (assetMetadata) {
                 asset.name = assetMetadata.name.replace( /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g, '');
@@ -216,13 +265,14 @@ export class OrderBookDexOperationListener extends BaseEventListener {
                 asset.decimals = 0;
             }
 
+            eventService.pushEvent({
+                type: 'AssetCreated',
+                data: asset,
+            });
+
             return await manager.save(asset)
                 .then(() => {
                     operationWs.broadcast(asset);
-                    eventService.pushEvent({
-                        type: IndexerEventType.Asset,
-                        data: asset,
-                    });
 
                     return Promise.resolve(asset);
                 });
@@ -271,13 +321,14 @@ export class OrderBookDexOperationListener extends BaseEventListener {
                 slot,
             );
 
+            eventService.pushEvent({
+                type: 'OrderBookCreated',
+                data: orderBook,
+            });
+
             return await manager.save(orderBook)
                 .then(() => {
                     operationWs.broadcast(orderBook);
-                    eventService.pushEvent({
-                        type: IndexerEventType.OrderBook,
-                        data: orderBook,
-                    });
 
                     return Promise.resolve(orderBook);
                 });

@@ -27,6 +27,7 @@ export class LiquidityPoolStateResource extends BaseEntityResource {
             lpTokens: Number(entity.lpTokens),
             tvl: Number(entity.tvl),
             feePercent: Number(entity.feePercent),
+            slot: Number(entity.slot),
         };
 
         if (this._includePool && this._poolResource) {
@@ -48,6 +49,7 @@ export class LiquidityPoolStateResource extends BaseEntityResource {
             lpTs: Number(entity.lpTokens),
             tvl: Number(entity.tvl),
             f: Number(entity.feePercent),
+            s: Number(entity.slot),
         };
 
         if (this._includePool && this._poolResource) {

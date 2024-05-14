@@ -1,6 +1,6 @@
 import { BaseIndexer } from './BaseIndexer';
 import { BlockAlonzo, BlockBabbage, Slot } from '@cardano-ogmios/schema';
-import { dbService, operationWs } from '../indexerServices';
+import { dbService, eventService, operationWs } from '../indexerServices';
 import { EntityManager } from 'typeorm';
 import { Sync } from '../db/entities/Sync';
 
@@ -9,11 +9,18 @@ export class SyncIndexer extends BaseIndexer {
     async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
         if (block.header) {
             await dbService.transaction(async (manager: EntityManager): Promise<void> => {
+                const updatedSync: Sync = Sync.make(block.headerHash, block.header.slot);
+
                 await manager.upsert(
                     Sync,
-                    Sync.make(block.headerHash, block.header.slot),
+                    updatedSync,
                     ['id']
                 );
+
+                eventService.pushEvent({
+                    type: 'SyncUpdated',
+                    data: updatedSync,
+                });
             });
 
             operationWs.broadcast(Sync.make(block.headerHash, block.header.slot));

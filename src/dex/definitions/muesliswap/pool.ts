@@ -1,4 +1,5 @@
 import { DatumParameterKey } from '../../../constants';
+import { DatumParameters, DefinitionField } from '../../../types';
 
 /**
  * https://github.com/MuesliSwapTeam/muesliswap-cardano-pool-contracts/blob/main/dex/src/MuesliSwapPools/ConstantProductPool/OnChain.hs
@@ -33,6 +34,18 @@ export default {
     },
     {
       int: DatumParameterKey.LpFee
-    }
+    },
+    (field: DefinitionField, foundParameters: DatumParameters) => {
+      return; // Concentrated LPs
+    },
+    (field: DefinitionField, foundParameters: DatumParameters) => {
+      return; // Concentrated LPs
+    },
+    (field: DefinitionField, foundParameters: DatumParameters) => {
+      return; // Concentrated LPs
+    },
+    (field: DefinitionField, foundParameters: DatumParameters) => {
+      return; // Concentrated LPs
+    },
   ]
 }

@@ -25,12 +25,15 @@ import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransacti
 import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
 import { BaseEventListener } from './listeners/BaseEventListener';
 import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
+import { CacheStorage } from './storage/CacheStorage';
+import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionIndexer';
+import { AxoAnalyzer } from './dex/AxoAnalyzer';
 
 export class IndexerApplication {
 
     private readonly _cache: BaseCacheStorage;
-    private readonly _eventListeners: BaseEventListener[] = [];
 
+    private _eventListeners: BaseEventListener[] = [];
     private chainSyncClient: ChainSyncClient | undefined = undefined;
 
     /**
@@ -39,27 +42,30 @@ export class IndexerApplication {
     private _indexers: BaseIndexer[] = [
         new SyncIndexer(),
         new AmmDexTransactionIndexer([
-            // new MinswapAnalyzer(this),
-            // new SundaeSwapAnalyzer(this),
-            // new WingRidersAnalyzer(this),
-            // new SpectrumAnalyzer(this),
-            // new TeddySwapAnalyzer(this),
+            new MinswapAnalyzer(this),
+            new SundaeSwapAnalyzer(this),
+            new WingRidersAnalyzer(this),
+            new SpectrumAnalyzer(this),
+            new TeddySwapAnalyzer(this),
+        ]),
+        new OrderBookDexTransactionIndexer([
+            new GeniusYieldAnalyzer(this),
+            new AxoAnalyzer(this),
+        ]),
+        new HybridDexTransactionIndexer([
             new MuesliSwapAnalyzer(this),
         ]),
-        // new OrderBookDexTransactionIndexer([
-        //     new GeniusYieldAnalyzer(this),
-        // ]),
     ];
 
     /**
      * IndexerApplication constructor.
      */
     constructor(
-        cache: BaseCacheStorage,
-        eventListeners: BaseEventListener[] = [],
+        cache?: BaseCacheStorage,
+        indexers: BaseIndexer[] = [],
     ) {
-        this._cache = cache;
-        this._eventListeners = eventListeners;
+        this._cache = cache ?? new CacheStorage();
+        this._indexers = [...this._indexers, ...indexers];
     }
 
     /**
@@ -67,6 +73,18 @@ export class IndexerApplication {
      */
     get cache(): BaseCacheStorage {
         return this._cache;
+    }
+
+    public withEventListeners(eventListeners: BaseEventListener[]): IndexerApplication {
+        this._eventListeners = eventListeners;
+
+        return this;
+    }
+
+    public withIndexers(indexers: BaseIndexer[]): IndexerApplication {
+        this._indexers = [...this._indexers, ...indexers];
+
+        return this;
     }
 
     /**
@@ -149,11 +167,12 @@ export class IndexerApplication {
          * SundaeSwap  - 50367177,  91c16d5ae92f2eb791c3c2da9b38126b98623b07f611d4a4b913f0ab2af721d2
          * Minswap     - 56553560,  f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
          * WingRiders  - 57274883,  2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
-         * MuesliSwap  - 65094197,  ce75a42b708f47c1ea4ddeb204907e8f3569559c1bb09a05c7b2f4a0c3f84837
+         * MuesliSwap  - 64985346,  8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca
          * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
          * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          */
+        // return this.chainSyncClient.startSync([{ slot: 64985346, hash: '8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca' }]);
         return lastSync
             ? this.chainSyncClient.startSync([{ slot: lastSync.slot, hash: lastSync.blockHash }])
             : this.chainSyncClient.startSync([{ slot: FIRST_SYNC_SLOT, hash: FIRST_SYNC_BLOCK_HASH }]);
@@ -174,19 +193,19 @@ export class IndexerApplication {
         }
 
         if (block) {
-            logInfo(`=== Analyzing block at slot ${block.header.slot} ===`);
+            logInfo(`====== Analyzing block at slot ${block.header.slot} ======`);
 
             await Promise.all(
                 this._indexers.map((indexer: BaseIndexer) => indexer.onRollForward(block as BlockAlonzo | BlockBabbage)),
             );
 
             if (queue.size > 0) {
-                logInfo(`[Queue] Running ${queue.size} jobs`);
+                logInfo(`[Queue] Running jobs`);
                 await queue.settle();
-                logInfo('[Queue] Finished');
+                logInfo('[Queue] Finished jobs');
             }
 
-            logInfo(`=== Finished with block at slot ${block.header.slot} ===`);
+            logInfo(`====== Finished with block at slot ${block.header.slot} ======`);
         }
 
         requestNext();
