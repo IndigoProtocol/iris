@@ -14,4 +14,4 @@ export MYSQL_DATABASE=iris
 ## GitHub Access Token
 export GITHUB_ACCESS_TOKEN=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
 
-docker compose up
+docker compose up --no-deps --build

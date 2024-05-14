@@ -1,5 +1,7 @@
 #!/bin/bash
 
+env
+
 # Check the value of the RUN_APP environment variable
 if [ "$RUN_APP" == "indexer" ]; then
   npm run indexer
