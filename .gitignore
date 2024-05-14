@@ -8,3 +8,4 @@ dist
 .idea
 .DS_Store
 .env
+docker-compose.override.yml
