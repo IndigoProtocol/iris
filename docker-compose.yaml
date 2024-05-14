@@ -32,6 +32,8 @@ services:
     container_name: iris-indexer
     expose:
       - "8080"
+    ports:
+      - "8080:8080"
     build:
       dockerfile: Dockerfile
       context: .
@@ -53,6 +55,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      iris-api:
+        condition: service_healthy
     logging:
       options:
         max-size: 10m
@@ -60,6 +64,8 @@ services:
   iris-api:
     container_name: iris-api
     expose:
+      - "3000:3000"
+    ports:
       - "3000:3000"
     build:
       dockerfile: Dockerfile
@@ -79,6 +85,10 @@ services:
       API_PORT: 3000
       GITHUB_ACCESS_TOKEN: ${GITHUB_ACCESS_TOKEN}
       RUN_APP: api
+    healthcheck:
+      test: curl -f http://iris-api:3000/api/ping
+      timeout: 20s
+      retries: 10      
     depends_on:
       mysql:
         condition: service_healthy
