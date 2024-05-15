@@ -24,10 +24,10 @@ export class LiquidityPoolStateResource extends BaseEntityResource {
         let response: any = {
             reserveA: Number(entity.reserveA),
             reserveB: Number(entity.reserveB),
-            lpTokens: Number(entity.lpTokens),
-            tvl: Number(entity.tvl),
-            feePercent: Number(entity.feePercent),
-            slot: Number(entity.slot),
+            lpTokens: Number(entity.lpTokens ?? 0),
+            tvl: Number(entity.tvl ?? 0),
+            feePercent: Number(entity.feePercent ?? 0),
+            slot: Number(entity.slot ?? 0),
         };
 
         if (this._includePool && this._poolResource) {

@@ -34,6 +34,9 @@ export class Asset extends BaseEntity {
     @Column({ nullable: true, default: null })
     description: string;
 
+    @Column({ nullable: true })
+    meta: string;
+
     /**
      * Asset constructor.
      */

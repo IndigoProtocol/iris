@@ -9,6 +9,7 @@ export class AssetResource extends BaseEntityResource {
             nameHex: entity.nameHex,
             decimals: entity.decimals,
             isLpToken: Boolean(entity.isLpToken),
+            meta: entity.meta,
         };
 
         if (! entity.isLpToken) {
