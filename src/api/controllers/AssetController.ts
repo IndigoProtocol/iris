@@ -90,6 +90,8 @@ export class AssetController extends BaseApiController {
                             query: searchQuery,
                         }).orWhere("LOWER(asset.ticker) LIKE :query", {
                             query: searchQuery,
+                        }).orWhere("CAST(unhex(asset.nameHex) AS CHAR(100)) LIKE :query", {
+                            query: searchQuery,
                         });
                     }),
                 )

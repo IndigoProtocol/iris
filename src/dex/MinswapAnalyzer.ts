@@ -61,71 +61,62 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
     /**
      * Check for swap orders in transaction.
      */
-    protected swapOrders(transaction: Transaction): Promise<LiquidityPoolSwap[]> {
-        const promises: Promise<LiquidityPoolSwap | undefined>[] = transaction.outputs.map((output: Utxo) => {
-            return new Promise(async (resolve) => {
-                if (! [ORDER_V1_CONTRACT_ADDRESS, ORDER_V2_CONTRACT_ADDRESS, ORDER_V3_CONTRACT_ADDRESS].includes(output.toAddress) || ! output.datum) {
-                    return resolve(undefined);
-                }
+    protected swapOrders(transaction: Transaction): LiquidityPoolSwap[] {
+        return transaction.outputs.map((output: Utxo) => {
+            if (! [ORDER_V1_CONTRACT_ADDRESS, ORDER_V2_CONTRACT_ADDRESS, ORDER_V3_CONTRACT_ADDRESS].includes(output.toAddress) || ! output.datum) {
+                return undefined;
+            }
 
-                try {
-                    const definitionField: DefinitionField = toDefinitionDatum(
-                        Data.from(output.datum)
-                    );
-                    const builder: DefinitionBuilder = new DefinitionBuilder(swapDefinition);
-                    const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+            try {
+                const definitionField: DefinitionField = toDefinitionDatum(
+                    Data.from(output.datum)
+                );
+                const builder: DefinitionBuilder = new DefinitionBuilder(swapDefinition);
+                const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
 
-                    let swapInToken: Token | undefined;
-                    let swapOutToken: Token | undefined;
-                    let swapInAmount: bigint;
+                let swapInToken: Token | undefined;
+                let swapOutToken: Token | undefined;
+                let swapInAmount: bigint;
 
-                    if (datumParameters.SwapOutTokenPolicyId === '') { // X -> ADA
+                if (datumParameters.SwapOutTokenPolicyId === '') { // X -> ADA
+                    swapInToken = output.assetBalances[0].asset;
+                    swapOutToken = 'lovelace';
+                    swapInAmount = output.assetBalances[0].quantity;
+                } else { // ADA/Y -> X
+                    swapOutToken = new Asset(datumParameters.SwapOutTokenPolicyId as string, datumParameters.SwapOutTokenAssetName as string);
+
+                    if (output.assetBalances.length > 0) { // Y -> X
                         swapInToken = output.assetBalances[0].asset;
-                        swapOutToken = 'lovelace';
                         swapInAmount = output.assetBalances[0].quantity;
-                    } else { // ADA/Y -> X
-                        swapOutToken = new Asset(datumParameters.SwapOutTokenPolicyId as string, datumParameters.SwapOutTokenAssetName as string);
-
-                        if (output.assetBalances.length > 0) { // Y -> X
-                            swapInToken = output.assetBalances[0].asset;
-                            swapInAmount = output.assetBalances[0].quantity;
-                        } else { // ADA -> X
-                            swapInToken = 'lovelace';
-                            swapInAmount = output.lovelaceBalance
-                                - BigInt(datumParameters.BatcherFee as number)
-                                - BigInt(datumParameters.DepositFee as number);
-                        }
+                    } else { // ADA -> X
+                        swapInToken = 'lovelace';
+                        swapInAmount = output.lovelaceBalance
+                            - BigInt(datumParameters.BatcherFee as number)
+                            - BigInt(datumParameters.DepositFee as number);
                     }
-
-                    return resolve(
-                        LiquidityPoolSwap.make(
-                            Dex.Minswap,
-                            undefined,
-                            swapInToken,
-                            swapOutToken,
-                            Number(swapInAmount),
-                            Number(datumParameters.MinReceive),
-                            Number(datumParameters.BatcherFee),
-                            datumParameters.ReceiverPubKeyHash as string,
-                            (datumParameters.ReceiverStakingKeyHash ?? '') as string,
-                            transaction.blockSlot,
-                            transaction.hash,
-                            output.index,
-                            output.toAddress,
-                            SwapOrderType.Instant,
-                            transaction,
-                        )
-                    );
-                } catch (e) {
-                    return resolve(undefined);
                 }
-            });
-        });
 
-        return Promise.all(promises)
-            .then((swapOrders: (LiquidityPoolSwap | undefined)[]) => {
-                return swapOrders.filter((operation: LiquidityPoolSwap | undefined) => operation !== undefined) as LiquidityPoolSwap[]
-            });
+                return LiquidityPoolSwap.make(
+                    Dex.Minswap,
+                    undefined,
+                    swapInToken,
+                    swapOutToken,
+                    Number(swapInAmount),
+                    Number(datumParameters.MinReceive),
+                    Number(datumParameters.BatcherFee),
+                    datumParameters.ReceiverPubKeyHash as string,
+                    (datumParameters.ReceiverStakingKeyHash ?? '') as string,
+                    transaction.blockSlot,
+                    transaction.hash,
+                    output.index,
+                    output.toAddress,
+                    SwapOrderType.Instant,
+                    transaction,
+                );
+            } catch (e) {
+                return undefined;
+            }
+        }).filter((operation: LiquidityPoolSwap | undefined) => operation !== undefined) as LiquidityPoolSwap[];
     }
 
     /**

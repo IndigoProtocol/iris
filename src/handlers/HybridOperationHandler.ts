@@ -12,7 +12,6 @@ import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { dbService } from '../indexerServices';
 import { EntityManager, IsNull } from 'typeorm';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
-import { lucidUtils } from '../utils';
 
 export class HybridOperationHandler {
 
@@ -58,6 +57,7 @@ export class HybridOperationHandler {
     private async handleSwapOrder(order: LiquidityPoolSwap): Promise<any> {
         const liquidityPool: LiquidityPool | undefined = await dbService.query((manager: EntityManager) => {
             return manager.findOne(LiquidityPool, {
+                relations: ['tokenA', 'tokenB'],
                 where: order.liquidityPoolIdentifier
                     ? [{
                         dex: order.dex,
@@ -66,24 +66,28 @@ export class HybridOperationHandler {
                     : [{
                         dex: order.dex,
                         tokenA: {
-                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                            policyId: order.swapInToken ? order.swapInToken.policyId : IsNull(),
+                            nameHex: order.swapInToken ? order.swapInToken.nameHex : IsNull(),
                         },
                         tokenB: {
-                            id: order.swapOutToken ? order.swapOutToken.id : IsNull(),
+                            policyId: order.swapOutToken ? order.swapOutToken.policyId : IsNull(),
+                            nameHex: order.swapOutToken ? order.swapOutToken.nameHex : IsNull(),
                         },
                     }, {
                         dex: order.dex,
                         tokenA: {
-                            id: order.swapOutToken ? order.swapOutToken.id : IsNull(),
+                            policyId: order.swapOutToken ? order.swapOutToken.policyId : IsNull(),
+                            nameHex: order.swapOutToken ? order.swapOutToken.nameHex : IsNull(),
                         },
                         tokenB: {
-                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                            policyId: order.swapInToken ? order.swapInToken.policyId : IsNull(),
+                            nameHex: order.swapInToken ? order.swapInToken.nameHex : IsNull(),
                         },
                     }],
             }) ?? undefined;
         });
 
-        if (liquidityPool !== undefined) {
+        if (liquidityPool) {
             return this._ammHandler.handle(order);
         }
 

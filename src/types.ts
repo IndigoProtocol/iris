@@ -1,5 +1,5 @@
 import { DatumParameterKey } from './constants';
-import { Asset } from './db/entities/Asset';
+import { Asset, Token } from './db/entities/Asset';
 import { LiquidityPoolSwap } from './db/entities/LiquidityPoolSwap';
 import { LiquidityPoolZap } from './db/entities/LiquidityPoolZap';
 import { LiquidityPoolState } from './db/entities/LiquidityPoolState';
@@ -62,6 +62,16 @@ export type DefinitionConstr = {
     fields: DefinitionField[],
 }
 
+export type AddressMapping = {
+    tokenA: Token,
+    tokenB: Asset,
+    lpToken: Asset,
+    poolAddress: string,
+    orderAddress: string,
+    nftPolicyId: string,
+    feePercent: number,
+}
+
 export type AmmDexOperation = LiquidityPoolState
     | LiquidityPoolDeposit
     | LiquidityPoolWithdraw
@@ -97,5 +107,5 @@ export type TokenMetadata = {
 
 export type Datum = string;
 export type TxHash = string;
-export type DefinitionField = DefinitionConstr | DefinitionBytes | DefinitionInt | Function | DefinitionField[];
+export type DefinitionField = DefinitionConstr | DefinitionBytes | DefinitionInt | Function  | DefinitionField[];
 export type HybridOperation = AmmDexOperation | OrderBookDexOperation;

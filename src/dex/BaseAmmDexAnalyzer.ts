@@ -43,8 +43,11 @@ export abstract class BaseAmmDexAnalyzer {
         if (cacheInstance) return cacheInstance;
 
         return await dbService.transaction(async (manager: EntityManager) => {
-            return await manager.findOneBy(LiquidityPool, {
-                identifier: identifier,
+            return await manager.findOne(LiquidityPool, {
+                relations: ['tokenA', 'tokenB'],
+                where: {
+                    identifier: identifier,
+                },
             }) ?? undefined;
         });
     }

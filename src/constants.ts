@@ -4,6 +4,7 @@ export enum DatumParameterKey {
     SenderStakingKeyHash = 'SenderStakingKeyHash',
     ReceiverPubKeyHash = 'ReceiverPubKeyHash',
     ReceiverStakingKeyHash = 'ReceiverStakingKeyHash',
+    SenderKeyHashes = 'SenderKeyHashes',
     SwapInAmount = 'SwapInAmount',
     MinReceive = 'MinReceive',
     MinReceiveA = 'MinReceiveA',
@@ -30,6 +31,11 @@ export enum DatumParameterKey {
     LpFee = 'LpFee',
     LpFeeNumerator = 'LpFeeNumerator',
     LpFeeDenominator = 'LpFeeDenominator',
+    PoolAssetABarFee = 'PoolAssetABarFee',
+    PoolAssetBBarFee = 'PoolAssetBBarFee',
+    OpeningFee = 'OpeningFee',
+    FinalFee = 'FinalFee',
+    ProtocolFee = 'ProtocolFee',
 
     TokenPolicyId = 'TokenPolicyId',
     TokenAssetName = 'TokenAssetName',
@@ -56,17 +62,20 @@ export enum DatumParameterKey {
     PriceDenominator = 'PriceDenominator',
     PastOrderFills = 'PastOrderFills',
     ConsumedTxHash = 'ConsumedTxHash',
+    CancelDatum = 'CancelDatum',
     Unknown = 'Unknown',
 }
 
 export enum Dex {
     Minswap = 'Minswap',
     SundaeSwap = 'SundaeSwap',
+    SundaeSwapV3 = 'SundaeSwapV3',
     WingRiders = 'WingRiders',
     MuesliSwap = 'MuesliSwap',
     Spectrum = 'Spectrum',
     TeddySwap = 'TeddySwap',
     GeniusYield = 'GeniusYield',
+    VyFinance = 'VyFinance',
     Axo = 'Axo',
 }
 

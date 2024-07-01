@@ -17,6 +17,7 @@ import { TickInterval } from '../../constants';
 import { lucidUtils } from '../../utils';
 import { LiquidityPoolState } from '../../db/entities/LiquidityPoolState';
 import { LiquidityPoolStateResource } from '../resources/LiquidityPoolStateResource';
+import { Asset } from '../../db/entities/Asset';
 
 const MAX_PER_PAGE: number = 100;
 
@@ -28,10 +29,10 @@ export class LiquidityPoolController extends BaseApiController {
         this.router.get(`${this.basePath}/search`, this.search);
 
         this.router.post(`${this.basePath}/prices`, this.liquidityPoolPrices);
-        this.router.get(`${this.basePath}/swaps/historic`, this.swapsHistoric);
-        this.router.get(`${this.basePath}/deposits/historic`, this.depositsHistoric);
-        this.router.get(`${this.basePath}/withdraws/historic`, this.withdrawsHistoric);
-        this.router.get(`${this.basePath}/states/historic`, this.liquidityPoolStatesHistoric);
+        this.router.post(`${this.basePath}/swaps/historic`, this.swapsHistoric);
+        this.router.post(`${this.basePath}/deposits/historic`, this.depositsHistoric);
+        this.router.post(`${this.basePath}/withdraws/historic`, this.withdrawsHistoric);
+        this.router.post(`${this.basePath}/states/historic`, this.liquidityPoolStatesHistoric);
 
         this.router.get(`${this.basePath}/:identifier`, this.liquidityPool);
         this.router.get(`${this.basePath}/:identifier/ticks`, this.liquidityPoolTicks);
@@ -44,20 +45,21 @@ export class LiquidityPoolController extends BaseApiController {
         const {
             fromTimestamp,
             toTimestamp,
-        } = request.query;
+            forAssets,
+        } = request.body;
+
+        if (forAssets && ! (forAssets instanceof Array)) {
+            return response.send(super.failResponse('Assets must be an array'));
+        }
+
+        const assets: Asset[] = ((forAssets ?? []) as string[]).map((identifier: string) => Asset.fromId(identifier));
+        const policyIds: string[] = assets.map((asset: Asset) => asset.policyId);
+        const nameHexs: string[] = assets.map((asset: Asset) => asset.nameHex);
 
         const fetchOrders: any = (manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
-                .leftJoin('swaps.swapInToken', 'swapInToken')
-                .leftJoin('swaps.swapOutToken', 'swapOutToken')
-                .addSelect([
-                    'swapInToken.policyId',
-                    'swapInToken.nameHex',
-                    'swapInToken.decimals',
-                    'swapOutToken.policyId',
-                    'swapOutToken.nameHex',
-                    'swapOutToken.decimals',
-                ])
+                .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
+                .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
                 .leftJoinAndMapMany(
                     'swaps.statuses',
                     OperationStatus,
@@ -66,6 +68,16 @@ export class LiquidityPoolController extends BaseApiController {
                     {
                         operationType: LiquidityPoolSwap.name,
                     }
+                )
+                .andWhere(
+                    new Brackets((query) => {
+                        if (assets.length > 0) {
+                            query.andWhere('(swapInToken.policyId IN(:policyIds) AND swapInToken.nameHex IN(:nameHexs)) OR (swapOutToken.policyId IN(:policyIds) AND swapOutToken.nameHex IN(:nameHexs))', {
+                                policyIds,
+                                nameHexs,
+                            });
+                        }
+                    })
                 )
                 .andWhere('swaps.slot >= :fromSlot', {
                     fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
@@ -88,13 +100,32 @@ export class LiquidityPoolController extends BaseApiController {
         const {
             fromTimestamp,
             toTimestamp,
-        } = request.query;
+            forAssets,
+        } = request.body;
+
+        if (forAssets && ! (forAssets instanceof Array)) {
+            return response.send(super.failResponse('Assets must be an array'));
+        }
+
+        const assets: Asset[] = ((forAssets ?? []) as string[]).map((identifier: string) => Asset.fromId(identifier));
+        const policyIds: string[] = assets.map((asset: Asset) => asset.policyId);
+        const nameHexs: string[] = assets.map((asset: Asset) => asset.nameHex);
 
         const fetchStates: any = (manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolState, 'states')
                 .leftJoinAndSelect('states.liquidityPool', 'liquidityPool')
                 .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
                 .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+                .andWhere(
+                    new Brackets((query) => {
+                        if (assets.length > 0) {
+                            query.andWhere('(tokenA.policyId IN(:policyIds) AND tokenA.nameHex IN(:nameHexs)) OR (tokenB.policyId IN(:policyIds) AND tokenB.nameHex IN(:nameHexs))', {
+                                policyIds,
+                                nameHexs,
+                            });
+                        }
+                    })
+                )
                 .andWhere('states.slot >= :fromSlot', {
                     fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
                 })
@@ -116,7 +147,16 @@ export class LiquidityPoolController extends BaseApiController {
         const {
             fromTimestamp,
             toTimestamp,
-        } = request.query;
+            forAssets,
+        } = request.body;
+
+        if (forAssets && ! (forAssets instanceof Array)) {
+            return response.send(super.failResponse('Assets must be an array'));
+        }
+
+        const assets: Asset[] = ((forAssets ?? []) as string[]).map((identifier: string) => Asset.fromId(identifier));
+        const policyIds: string[] = assets.map((asset: Asset) => asset.policyId);
+        const nameHexs: string[] = assets.map((asset: Asset) => asset.nameHex);
 
         const fetchOrders: any = (manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolDeposit, 'deposits')
@@ -139,6 +179,16 @@ export class LiquidityPoolController extends BaseApiController {
                         operationType: LiquidityPoolDeposit.name,
                     }
                 )
+                .andWhere(
+                    new Brackets((query) => {
+                        if (assets.length > 0) {
+                            query.andWhere('(depositAToken.policyId IN(:policyIds) AND depositAToken.nameHex IN(:nameHexs)) OR (depositBToken.policyId IN(:policyIds) AND depositBToken.nameHex IN(:nameHexs))', {
+                                policyIds,
+                                nameHexs,
+                            });
+                        }
+                    })
+                )
                 .andWhere('deposits.slot >= :fromSlot', {
                     fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
                 })
@@ -160,7 +210,7 @@ export class LiquidityPoolController extends BaseApiController {
         const {
             fromTimestamp,
             toTimestamp,
-        } = request.query;
+        } = request.body;
 
         const fetchOrders: any = (manager: EntityManager) => {
             return manager.createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
@@ -289,10 +339,7 @@ export class LiquidityPoolController extends BaseApiController {
                 Math.ceil(total / (take ?? 1)),
                 resource.manyToJson(liquidityPools)
             ));
-        }).catch((e: any) => {
-            console.error(e)
-            response.send(super.failResponse('Unable to retrieve liquidity pools'))
-        });
+        }).catch(() => response.send(super.failResponse('Unable to retrieve liquidity pools')));
     }
 
     private liquidityPool(request: express.Request, response: express.Response) {
@@ -387,7 +434,7 @@ export class LiquidityPoolController extends BaseApiController {
             }).catch((e) => response.send(super.failResponse(e)));
     }
 
-    private liquidityPoolSwaps(request: express.Request, response: express.Response) {
+    private async liquidityPoolSwaps(request: express.Request, response: express.Response) {
         const {
             identifier,
         } = request.params;
@@ -405,67 +452,77 @@ export class LiquidityPoolController extends BaseApiController {
             return response.send(super.failResponse("Must supply 'identifier'"));
         }
 
+        const liquidityPool: LiquidityPool | null = await dbApiService.query((manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPool, 'pools')
+                .leftJoinAndSelect('pools.tokenA', 'tokenA')
+                .leftJoinAndSelect('pools.tokenB', 'tokenB')
+                .where('pools.identifier = :identifier', { identifier })
+                .getOne();
+        });
+
+        if (! liquidityPool) {
+            return response.send(super.failResponse('Unable to find liquidity pool'));
+        }
+
         const fetchOrders: any = (manager: EntityManager) => {
-            return manager.findOneBy(LiquidityPool, {
-                identifier,
-            }).then((pool: LiquidityPool | null) => {
-                if (! pool) {
-                    return Promise.reject('Unable to find liquidity pool');
-                }
-                return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
-                    .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
-                    .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
-                    .leftJoinAndSelect('swaps.liquidityPool', 'liquidityPool')
-                    .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
-                    .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
-                    .leftJoinAndMapMany(
-                        'swaps.statuses',
-                        OperationStatus,
-                        'status',
-                        'operationId = swaps.id AND operationType = :operationType',
-                        {
-                            operationType: LiquidityPoolSwap.name,
+            return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
+                .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
+                .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
+                .leftJoinAndMapMany(
+                    'swaps.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = swaps.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolSwap.name,
+                    }
+                )
+                .where('swaps.liquidityPoolId = :poolId', {
+                    poolId: liquidityPool.id,
+                })
+                .andWhere(
+                    new Brackets((query) => {
+                        if (sender) {
+                            if ((sender as string).startsWith('addr')) {
+                                query.where('swaps.senderPubKeyHash = :hash', {
+                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                });
+                            } else {
+                                query.where('swaps.senderPubKeyHash = :hash', {
+                                    hash: sender
+                                });
+                            }
                         }
-                    )
-                    .where('swaps.liquidityPoolId = :poolId', {
-                        poolId: pool.id,
-                    })
-                    .andWhere(
-                        new Brackets((query) => {
-                            if (sender) {
-                                if ((sender as string).startsWith('addr')) {
-                                    query.where('swaps.senderPubKeyHash = :hash', {
-                                        hash: lucidUtils.paymentCredentialOf(sender as string).hash
-                                    });
-                                } else {
-                                    query.where('swaps.senderPubKeyHash = :hash', {
-                                        hash: sender
-                                    });
-                                }
-                            }
 
-                            if (type && type === 'buy') {
-                                query.andWhere('swaps.swapInTokenId = liquidityPool.tokenAId')
-                                    .orWhere('swaps.swapInToken IS NULL AND liquidityPool.tokenA IS NULL');
+                        if (type && type === 'buy') {
+                            if (! liquidityPool.tokenA) {
+                                query.andWhere('swaps.swapInTokenId IS NULL');
+                            } else {
+                                query.andWhere('swaps.swapInTokenId = :tokenAId', { tokenAId: liquidityPool.tokenA?.id ?? 0 });
                             }
-                            if (type && type === 'sell') {
-                                query.andWhere('swaps.swapInTokenId != liquidityPool.tokenAId')
-                                    .orWhere('swaps.swapInToken IS NOT NULL AND liquidityPool.tokenA IS NULL');
+                        }
+                        if (type && type === 'sell') {
+                            if (! liquidityPool.tokenA) {
+                                query.andWhere('swaps.swapOutTokenId IS NULL');
+                            } else {
+                                query.andWhere('swaps.swapOutTokenId = :tokenAId', { tokenAId: liquidityPool.tokenA?.id ?? 0 });
                             }
+                        }
 
-                            return query;
-                        }),
-                    )
-                    .orderBy('swaps.id', 'DESC')
-                    .take(take)
-                    .skip(skip)
-                    .getManyAndCount();
-            });
+                        return query;
+                    }),
+                )
+                .orderBy('swaps.id', 'DESC')
+                .take(take)
+                .skip(skip)
+                .getManyAndCount();
         };
 
         return dbApiService.query(fetchOrders)
             .then(([swaps, total]) => {
                 const resource: LiquidityPoolSwapResource = new LiquidityPoolSwapResource();
+
+                swaps.forEach((order: LiquidityPoolSwap) => order.liquidityPool = liquidityPool);
 
                 response.send(super.formatPaginatedResponse(
                     Number(page ?? 1),
@@ -473,10 +530,13 @@ export class LiquidityPoolController extends BaseApiController {
                     Math.ceil(total / take),
                     resource.manyToJson(swaps)
                 ));
-            }).catch((e) => response.send(super.failResponse(e)));
+            }).catch((e) => {
+                console.error(e)
+                response.send(super.failResponse(e))
+            });
     }
 
-    private liquidityPoolDeposits(request: express.Request, response: express.Response) {
+    private async liquidityPoolDeposits(request: express.Request, response: express.Response) {
         const {
             identifier,
         } = request.params;
@@ -493,55 +553,62 @@ export class LiquidityPoolController extends BaseApiController {
             return response.send(super.failResponse("Must supply 'identifier'"));
         }
 
-        const fetchOrders: any = (manager: EntityManager) => {
-            return manager.findOneBy(LiquidityPool, {
-                identifier,
-            }).then((pool: LiquidityPool | null) => {
-                if (! pool) {
-                    return Promise.reject('Unable to find liquidity pool');
-                }
-                return manager.createQueryBuilder(LiquidityPoolDeposit, 'deposits')
-                    .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
-                    .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
-                    .leftJoinAndMapMany(
-                        'deposits.statuses',
-                        OperationStatus,
-                        'status',
-                        'operationId = deposits.id AND operationType = :operationType',
-                        {
-                            operationType: LiquidityPoolDeposit.name,
-                        }
-                    )
-                    .where('deposits.liquidityPoolId = :poolId', {
-                        poolId: pool.id,
-                    })
-                    .andWhere(
-                        new Brackets((query) => {
-                            if (sender) {
-                                if ((sender as string).startsWith('addr')) {
-                                    query.where('deposits.senderPubKeyHash = :hash', {
-                                        hash: lucidUtils.paymentCredentialOf(sender as string).hash
-                                    });
-                                } else {
-                                    query.where('deposits.senderPubKeyHash = :hash', {
-                                        hash: sender
-                                    });
-                                }
-                            }
+        const liquidityPool: LiquidityPool | null = await dbApiService.query((manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPool, 'pools')
+                .leftJoinAndSelect('pools.tokenA', 'tokenA')
+                .leftJoinAndSelect('pools.tokenB', 'tokenB')
+                .where('pools.identifier = :identifier', { identifier })
+                .getOne();
+        });
 
-                            return query;
-                        }),
-                    )
-                    .orderBy('deposits.id', 'DESC')
-                    .take(take)
-                    .skip(skip)
-                    .getManyAndCount();
-            });
+        if (! liquidityPool) {
+            return response.send(super.failResponse('Unable to find liquidity pool'));
+        }
+
+        const fetchOrders: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolDeposit, 'deposits')
+                .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
+                .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
+                .leftJoinAndMapMany(
+                    'deposits.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = deposits.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolDeposit.name,
+                    }
+                )
+                .where('deposits.liquidityPoolId = :poolId', {
+                    poolId: liquidityPool.id,
+                })
+                .andWhere(
+                    new Brackets((query) => {
+                        if (sender) {
+                            if ((sender as string).startsWith('addr')) {
+                                query.where('deposits.senderPubKeyHash = :hash', {
+                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                });
+                            } else {
+                                query.where('deposits.senderPubKeyHash = :hash', {
+                                    hash: sender
+                                });
+                            }
+                        }
+
+                        return query;
+                    }),
+                )
+                .orderBy('deposits.id', 'DESC')
+                .take(take)
+                .skip(skip)
+                .getManyAndCount();
         };
 
         return dbApiService.query(fetchOrders)
             .then(([deposits, total]) => {
                 const resource: LiquidityPoolDepositResource = new LiquidityPoolDepositResource();
+
+                deposits.forEach((order: LiquidityPoolSwap) => order.liquidityPool = liquidityPool);
 
                 response.send(super.formatPaginatedResponse(
                     Number(page ?? 1),
@@ -552,7 +619,7 @@ export class LiquidityPoolController extends BaseApiController {
             }).catch((e) => response.send(super.failResponse(e)));
     }
 
-    private liquidityPoolWithdraws(request: express.Request, response: express.Response) {
+    private async liquidityPoolWithdraws(request: express.Request, response: express.Response) {
         const {
             identifier,
         } = request.params;
@@ -569,54 +636,61 @@ export class LiquidityPoolController extends BaseApiController {
             return response.send(super.failResponse("Must supply 'identifier'"));
         }
 
-        const fetchOrders: any = (manager: EntityManager) => {
-            return manager.findOneBy(LiquidityPool, {
-                identifier,
-            }).then((pool: LiquidityPool | null) => {
-                if (! pool) {
-                    return Promise.reject('Unable to find liquidity pool');
-                }
-                return manager.createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
-                    .leftJoinAndSelect('withdraws.lpToken', 'lpToken')
-                    .leftJoinAndMapMany(
-                        'withdraws.statuses',
-                        OperationStatus,
-                        'status',
-                        'operationId = withdraws.id AND operationType = :operationType',
-                        {
-                            operationType: LiquidityPoolWithdraw.name,
-                        }
-                    )
-                    .where('withdraws.liquidityPoolId = :poolId', {
-                        poolId: pool.id,
-                    })
-                    .andWhere(
-                        new Brackets((query) => {
-                            if (sender) {
-                                if ((sender as string).startsWith('addr')) {
-                                    query.where('withdraws.senderPubKeyHash = :hash', {
-                                        hash: lucidUtils.paymentCredentialOf(sender as string).hash
-                                    });
-                                } else {
-                                    query.where('withdraws.senderPubKeyHash = :hash', {
-                                        hash: sender
-                                    });
-                                }
-                            }
+        const liquidityPool: LiquidityPool | null = await dbApiService.query((manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPool, 'pools')
+                .leftJoinAndSelect('pools.tokenA', 'tokenA')
+                .leftJoinAndSelect('pools.tokenB', 'tokenB')
+                .where('pools.identifier = :identifier', { identifier })
+                .getOne();
+        });
 
-                            return query;
-                        }),
-                    )
-                    .orderBy('withdraws.id', 'DESC')
-                    .take(take)
-                    .skip(skip)
-                    .getManyAndCount();
-            });
+        if (! liquidityPool) {
+            return response.send(super.failResponse('Unable to find liquidity pool'));
+        }
+
+        const fetchOrders: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
+                .leftJoinAndSelect('withdraws.lpToken', 'lpToken')
+                .leftJoinAndMapMany(
+                    'withdraws.statuses',
+                    OperationStatus,
+                    'status',
+                    'operationId = withdraws.id AND operationType = :operationType',
+                    {
+                        operationType: LiquidityPoolWithdraw.name,
+                    }
+                )
+                .where('withdraws.liquidityPoolId = :poolId', {
+                    poolId: liquidityPool.id,
+                })
+                .andWhere(
+                    new Brackets((query) => {
+                        if (sender) {
+                            if ((sender as string).startsWith('addr')) {
+                                query.where('withdraws.senderPubKeyHash = :hash', {
+                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                });
+                            } else {
+                                query.where('withdraws.senderPubKeyHash = :hash', {
+                                    hash: sender
+                                });
+                            }
+                        }
+
+                        return query;
+                    }),
+                )
+                .orderBy('withdraws.id', 'DESC')
+                .take(take)
+                .skip(skip)
+                .getManyAndCount();
         };
 
         return dbApiService.query(fetchOrders)
             .then(([withdraws, total]) => {
                 const resource: LiquidityPoolWithdrawResource = new LiquidityPoolWithdrawResource();
+
+                withdraws.forEach((order: LiquidityPoolSwap) => order.liquidityPool = liquidityPool);
 
                 response.send(super.formatPaginatedResponse(
                     Number(page ?? 1),

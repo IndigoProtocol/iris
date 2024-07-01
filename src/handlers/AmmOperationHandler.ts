@@ -1,6 +1,6 @@
 import { DexOperationStatus } from '../constants';
 import { AmmDexOperation, StatusableEntity, TokenMetadata } from '../types';
-import { logInfo } from '../logger';
+import { logError, logInfo } from '../logger';
 import { dbService, eventService, metadataService, operationWs, queue } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
@@ -15,7 +15,6 @@ import CONFIG from '../config';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { UpdateLiquidityPoolTvlJob } from '../jobs/UpdateLiquidityPoolTvlJob';
 import { UpdateAmountReceived } from '../jobs/UpdateAmountReceived';
-import { LiquidityPoolUpdated } from '../events.types';
 
 const MAX_RESOLVE_ATTEMPTS: number = 3;
 
@@ -40,7 +39,11 @@ export class AmmOperationHandler {
 
                 return Promise.resolve();
             })
-            .catch(() => Promise.resolve());
+            .catch((e: any) => {
+                logError(e);
+
+                return Promise.resolve();
+            });
     }
 
     /**
@@ -129,6 +132,10 @@ export class AmmOperationHandler {
         }
         if (order.swapOutToken) {
             order.swapOutToken = await this.retrieveAsset(order.swapOutToken);
+        }
+
+        if (! order.swapInToken && ! order.swapOutToken) {
+            return Promise.reject(`Neither order tokens are set. ${stringify(order)}`);
         }
 
         const retrievePool: any = async (manager: EntityManager, attempt: number = 0) => {

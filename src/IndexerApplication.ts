@@ -28,6 +28,8 @@ import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
 import { CacheStorage } from './storage/CacheStorage';
 import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionIndexer';
 import { AxoAnalyzer } from './dex/AxoAnalyzer';
+import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
+// import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
 
 export class IndexerApplication {
 
@@ -44,13 +46,15 @@ export class IndexerApplication {
         new AmmDexTransactionIndexer([
             new MinswapAnalyzer(this),
             new SundaeSwapAnalyzer(this),
+            // new SundaeSwapV3Analyzer(this),
             new WingRidersAnalyzer(this),
             new SpectrumAnalyzer(this),
             new TeddySwapAnalyzer(this),
+            new VyFiAnalyzer(this),
         ]),
         new OrderBookDexTransactionIndexer([
             new GeniusYieldAnalyzer(this),
-            new AxoAnalyzer(this),
+            // new AxoAnalyzer(this),
         ]),
         new HybridDexTransactionIndexer([
             new MuesliSwapAnalyzer(this),
@@ -168,11 +172,11 @@ export class IndexerApplication {
          * Minswap     - 56553560,  f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
          * WingRiders  - 57274883,  2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
          * MuesliSwap  - 64985346,  8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca
+         * VyFi        - 92003644, bc671f811db2d4ecb25fd11e444aee98a42eb0132729982f9cd7f80a1bc84b73
          * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
          * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          */
-        // return this.chainSyncClient.startSync([{ slot: 64985346, hash: '8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca' }]);
         return lastSync
             ? this.chainSyncClient.startSync([{ slot: lastSync.slot, hash: lastSync.blockHash }])
             : this.chainSyncClient.startSync([{ slot: FIRST_SYNC_SLOT, hash: FIRST_SYNC_BLOCK_HASH }]);
