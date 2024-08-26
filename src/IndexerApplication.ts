@@ -53,7 +53,7 @@ export class IndexerApplication {
             new VyFiAnalyzer(this),
         ]),
         new OrderBookDexTransactionIndexer([
-            new GeniusYieldAnalyzer(this),
+            // new GeniusYieldAnalyzer(this),
             // new AxoAnalyzer(this),
         ]),
         new HybridDexTransactionIndexer([
@@ -176,6 +176,7 @@ export class IndexerApplication {
          * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
          * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
+         * Minswap v2  - 128247239,  d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
          */
         return lastSync
             ? this.chainSyncClient.startSync([{ slot: lastSync.slot, hash: lastSync.blockHash }])
