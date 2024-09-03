@@ -10,7 +10,12 @@ import {
 import { Lucid, Utils } from 'lucid-cardano';
 import { Asset, Token } from './db/entities/Asset';
 import { LiquidityPool } from './db/entities/LiquidityPool';
-import { BlockAlonzo, BlockBabbage, Datum, TxAlonzo, TxBabbage, TxIn, TxOut } from '@cardano-ogmios/schema';
+import {
+    BlockPraos,
+    Transaction as OgmiosTransaction,
+    TransactionOutput,
+    TransactionOutputReference
+} from '@cardano-ogmios/schema';
 
 export const lucidUtils: Utils = new Utils(new Lucid());
 
@@ -67,61 +72,74 @@ export function tokenDecimals(token: Token, pool: LiquidityPool): number {
     return pool.tokenB.decimals;
 }
 
-export function formatTransaction(block: BlockBabbage | BlockAlonzo, transaction: TxBabbage | TxAlonzo): Transaction {
+export function formatTransaction(block: BlockPraos, transaction: OgmiosTransaction): Transaction {
     return {
         hash: transaction.id,
-        blockHash: block.headerHash,
-        blockSlot: block.header.slot,
-        inputs: transaction.body.inputs.map((input: TxIn) => {
+        blockHash: block.id,
+        blockSlot: block.slot,
+        inputs: transaction.inputs.map((input: TransactionOutputReference) => {
             return {
-                forTxHash: input.txId,
+                forTxHash: input.transaction.id,
                 index: input.index,
             } as Utxo;
         }) as Utxo[],
-        outputs: transaction.body.outputs.map((output: TxOut, index: number) => {
+        outputs: transaction.outputs.map((output: TransactionOutput, index: number) => {
             return {
                 forTxHash: transaction.id,
                 toAddress: output.address,
                 datum: output.datum
-                    ? transaction.witness.datums[output.datum as Datum] ?? output.datum
-                    : (output.datumHash ? transaction.witness.datums[output.datumHash] : undefined),
+                    ? (transaction.datums ? transaction.datums[output.datum] : output.datum)
+                    : (transaction.datums && output.datumHash ? transaction.datums[output.datumHash] : undefined),
                 index: index,
-                lovelaceBalance: BigInt(output.value.coins),
-                assetBalances: output.value.assets
-                    ? Object.keys(output.value.assets).map((unit: string) => {
-                        return {
-                            asset: Asset.fromId(unit),
-                            quantity: BigInt(output.value.assets ? output.value.assets[unit] : 0),
-                        } as AssetBalance;
-                    })
+                lovelaceBalance: BigInt(output.value.ada.lovelace),
+                assetBalances: output.value
+                    ? Object.keys(output.value)
+                        .filter((key: string) => key !== 'ada')
+                        .reduce((balances: AssetBalance[], policyId: string) => {
+                            balances.push(
+                                ...Object.keys(output.value[policyId]).map((nameHex: string) => {
+                                    return {
+                                        asset: Asset.fromId(`${policyId}${nameHex}`),
+                                        quantity: BigInt(output.value ? output.value[policyId][nameHex] : 0),
+                                    } as AssetBalance;
+                                })
+                            );
+
+                            return balances;
+                        }, [])
                     : [],
                 script: output.script,
             } as Utxo;
         }) as Utxo[],
-        fee: transaction.body.fee,
-        mints: transaction.body.mint.assets
-            ? Object.keys(transaction.body.mint.assets).map((unit: string) => {
-                return {
-                    asset: Asset.fromId(unit),
-                    quantity: BigInt(transaction.body.mint.assets ? transaction.body.mint.assets[unit] : 0),
-                } as AssetBalance;
-            })
+        fee: transaction.fee?.ada.lovelace ?? 0n,
+        mints: transaction.mint?.assets
+            ? Object.keys(transaction.mint)
+                .reduce((mints: AssetBalance[], policyId: string) => {
+                    if (! transaction.mint) return mints;
+
+                    mints.push(
+                        ...Object.keys(transaction.mint[policyId] ?? []).map((nameHex: string) => {
+                            return {
+                                asset: Asset.fromId(`${policyId}${nameHex}`),
+                                quantity: BigInt(transaction.mint ? transaction.mint[policyId][nameHex] : 0),
+                            } as AssetBalance;
+                        })
+                    );
+
+                    return mints;
+                }, [])
             : [],
-        datums: transaction.witness.datums,
+        datums: transaction.datums ?? {},
         metadata: transaction.metadata
-            ? Object.keys(transaction.metadata.body.blob as Object).reduce((metadata: any, label: string) => {
-                if (transaction.metadata && transaction.metadata.body.blob) {
-                    metadata[label] = Object.values(transaction.metadata.body.blob[label])[0];
+            ? Object.keys(transaction.metadata.labels).reduce((metadata: any, label: string) => {
+                if (transaction.metadata) {
+                    metadata[label] = transaction.metadata.labels[label].json;
                 }
 
                 return metadata;
             }, {})
             : undefined,
-        redeemers: Object.keys(transaction.witness.redeemers as Object).reduce((redeemers: any, label: string) => {
-            redeemers[label] = transaction.witness.redeemers[label].redeemer;
-
-            return redeemers;
-        }, {}),
-        scriptHashes: Object.keys(transaction.witness.scripts),
+        redeemers: transaction.redeemers ?? [],
+        scriptHashes: Object.keys(transaction.scripts ?? {}),
     };
 }

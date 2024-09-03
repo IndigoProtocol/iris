@@ -1,5 +1,5 @@
 import { BaseIndexer } from './BaseIndexer';
-import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
+import { Slot, BlockPraos, Transaction as OgmiosTransaction } from '@cardano-ogmios/schema';
 import { OrderBookDexOperation, Transaction } from '../types';
 import { dbService } from '../indexerServices';
 import { EntityManager, MoreThan } from 'typeorm';
@@ -23,8 +23,8 @@ export class OrderBookDexTransactionIndexer extends BaseIndexer {
         this._handler = new OrderBookOperationHandler();
     }
 
-    async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
-        const operationPromises: Promise<OrderBookDexOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
+    async onRollForward(block: BlockPraos): Promise<any> {
+        const operationPromises: Promise<OrderBookDexOperation[]>[] = (block.transactions ?? []).map((transaction: OgmiosTransaction) => {
             return this._analyzers.map((analyzer: BaseOrderBookDexAnalyzer) => {
                 const tx: Transaction = formatTransaction(block, transaction);
 

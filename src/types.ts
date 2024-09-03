@@ -8,7 +8,7 @@ import { LiquidityPoolWithdraw } from './db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from './db/entities/OperationStatus';
 import { OrderBookOrder } from './db/entities/OrderBookOrder';
 import { OrderBookMatch } from './db/entities/OrderBookMatch';
-import { Script } from '@cardano-ogmios/schema';
+import { Redeemer, Script } from '@cardano-ogmios/schema';
 
 export interface Utxo {
     forTxHash: TxHash;
@@ -34,9 +34,7 @@ export interface Transaction {
     metadata?: {
         [label: string]: any;
     },
-    redeemers: {
-        [label: string]: any;
-    },
+    redeemers: Redeemer[],
     scriptHashes?: string[],
 }
 

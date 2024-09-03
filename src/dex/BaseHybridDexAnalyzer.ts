@@ -1,4 +1,4 @@
-import { AmmDexOperation, HybridOperation, OrderBookDexOperation, Transaction, Utxo } from '../types';
+import { HybridOperation, Transaction, Utxo } from '../types';
 import { scriptHashToAddress } from '../utils';
 import { DexOperationStatus } from '../constants';
 import { OperationStatus } from '../db/entities/OperationStatus';
@@ -10,6 +10,7 @@ import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { IndexerApplication } from '../IndexerApplication';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { OrderBookOrder } from '../db/entities/OrderBookOrder';
+import { Redeemer } from '@cardano-ogmios/schema';
 
 export abstract class BaseHybridDexAnalyzer {
 
@@ -41,11 +42,9 @@ export abstract class BaseHybridDexAnalyzer {
      * Retrieve the corresponding spent operations for a transaction.
      */
     protected spentOperationInputs(transaction: Transaction): OperationStatus[] {
-        const indexes: number[] = Object.keys(transaction.redeemers).filter((label: string) => {
-            return label.startsWith('spend');
-        }).map((label: string) => {
-            return parseInt(label.split(':')[1]);
-        });
+        const indexes: number[] = transaction.redeemers.filter((redeemer: Redeemer) => {
+            return redeemer.validator.purpose === 'spend';
+        }).map((redeemer: Redeemer) => redeemer.validator.index);
 
         return transaction.inputs.reduce((spentInputs: OperationStatus[], input: Utxo, index: number) => {
             if (indexes.includes(index)) {
@@ -78,9 +77,11 @@ export abstract class BaseHybridDexAnalyzer {
         if (! containsOrderAddress) return [];
 
         return transaction.inputs.reduce((cancelInputs: OperationStatus[], input: Utxo, index: number) => {
-            const redeemerLabel: string = `spend:${index}`;
+            const redeemer: Redeemer | undefined = transaction.redeemers.find((redeemer: Redeemer) => {
+               return redeemer.validator.index === index && redeemer.redeemer === redeemerDatum;
+            });
 
-            if ((redeemerLabel in transaction.redeemers) && transaction.redeemers[redeemerLabel] === redeemerDatum) {
+            if (redeemer) {
                 cancelInputs.push(
                     OperationStatus.make(
                         DexOperationStatus.Cancelled,
