@@ -86,7 +86,7 @@ export abstract class BaseAmmDexAnalyzer {
      */
     protected cancelledOperationInputs(transaction: Transaction, orderAddresses: string[], redeemerDatum: string): OperationStatus[] {
         const containsOrderAddress: boolean = transaction.scriptHashes?.some((scriptHash: string) => {
-            return orderAddresses.includes(scriptHashToAddress(scriptHash));
+            return orderAddresses.includes(scriptHashToAddress(scriptHash)) || orderAddresses.includes(scriptHash);
         }) ?? false;
 
         if (! containsOrderAddress) return [];

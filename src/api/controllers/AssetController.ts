@@ -1,12 +1,15 @@
 import { BaseApiController } from './BaseApiController';
 import express from 'express';
 import { dbApiService } from '../../apiServices';
-import { Brackets, EntityManager } from 'typeorm';
+import { Brackets, EntityManager, SelectQueryBuilder } from 'typeorm';
 import { Asset } from '../../db/entities/Asset';
 import { AssetResource } from '../resources/AssetResource';
 import { LiquidityPoolState } from '../../db/entities/LiquidityPoolState';
 import { LiquidityPoolResource } from '../resources/LiquidityPoolResource';
 import { LiquidityPool } from '../../db/entities/LiquidityPool';
+import { TickInterval } from '../../constants';
+import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
+import { LiquidityPoolTickResource } from '../resources/LiquidityPoolTickResource';
 
 const MAX_PER_PAGE: number = 100;
 
@@ -16,6 +19,7 @@ export class AssetController extends BaseApiController {
         this.router.get(`${this.basePath}`, this.assets);
         this.router.post(`${this.basePath}`, this.assets);
         this.router.get(`${this.basePath}/search`, this.search);
+        this.router.post(`${this.basePath}/ticks`, this.ticks);
         this.router.get(`${this.basePath}/:lpToken/pool`, this.lpTokenPool);
         this.router.get(`${this.basePath}/:asset`, this.asset);
         this.router.get(`${this.basePath}/:asset/price`, this.assetPrice);
@@ -215,6 +219,76 @@ export class AssetController extends BaseApiController {
 
             return response.send({ price: avgPrice });
         }).catch(() => response.send(super.failResponse('Unable to retrieve asset price')));
+    }
+
+    private ticks(request: express.Request, response: express.Response) {
+        const {
+            forAssets,
+        } = request.body;
+        const {
+            resolution,
+            fromTime,
+            toTime,
+            orderBy,
+        } = request.query;
+
+        if (forAssets && ! (forAssets instanceof Array)) {
+            return response.send(super.failResponse('Assets must be an array'));
+        }
+        if (! (Object.values(TickInterval) as string[]).includes(resolution as string)) {
+            return response.send(super.failResponse(`Must supply 'resolution' as ${Object.values(TickInterval).join(',')}`));
+        }
+        if (orderBy && ! ['ASC', 'DESC'].includes(orderBy as string)) {
+            return response.send(super.failResponse("orderBy must be 'ASC' or 'DESC'"));
+        }
+
+        const assets: Asset[] = ((forAssets ?? []) as string[]).map((identifier: string) => Asset.fromId(identifier));
+        const policyIds: string[] = assets.map((asset: Asset) => asset.policyId);
+        const nameHexs: string[] = assets.map((asset: Asset) => asset.nameHex);
+
+        const fetchTicks: any = (manager: EntityManager) => {
+            return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
+                .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
+                .leftJoinAndMapOne(
+                    'liquidityPool.latestState',
+                    LiquidityPoolState,
+                    'states',
+                    'states.liquidityPoolId = liquidityPool.id AND states.id = (SELECT MAX(id) FROM liquidity_pool_states WHERE liquidity_pool_states.slot + 1596491091 - 4924800 <= ticks.time AND liquidity_pool_states.liquidityPoolId = liquidityPool.id)'
+                )
+                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+                .andWhere('liquidityPool.tokenA IS NULL')
+                .andWhere(
+                    new Brackets((query) => {
+                        query.andWhere('tokenB.policyId IN(:policyIds) AND tokenB.nameHex IN(:nameHexs)', {
+                            policyIds,
+                            nameHexs,
+                        });
+
+                        if (fromTime && ! isNaN(parseInt(fromTime as string))) {
+                            query.andWhere('ticks.time >= :fromTime', {
+                                fromTime: parseInt(fromTime as string),
+                            });
+                        }
+
+                        if (toTime && ! isNaN(parseInt(toTime as string))) {
+                            query.andWhere('ticks.time < :toTime', {
+                                toTime: parseInt(toTime as string),
+                            });
+                        }
+
+                        return query;
+                    }),
+                )
+                .orderBy('time', orderBy ? (orderBy as 'ASC' | 'DESC') : 'ASC')
+                .getMany();
+        };
+
+        return dbApiService.transaction(fetchTicks)
+            .then((ticks: LiquidityPoolTick[]) => {
+                const resource: LiquidityPoolTickResource = new LiquidityPoolTickResource();
+
+                response.send(resource.manyToJson(ticks));
+            }).catch((e) => response.send(super.failResponse(e)));
     }
 
 }

@@ -6,6 +6,8 @@ export enum DatumParameterKey {
     ReceiverStakingKeyHash = 'ReceiverStakingKeyHash',
     SenderKeyHashes = 'SenderKeyHashes',
     SwapInAmount = 'SwapInAmount',
+    SwapInA = 'SwapInA',
+    SwapInB = 'SwapInB',
     MinReceive = 'MinReceive',
     MinReceiveA = 'MinReceiveA',
     MinReceiveB = 'MinReceiveB',
@@ -36,6 +38,11 @@ export enum DatumParameterKey {
     OpeningFee = 'OpeningFee',
     FinalFee = 'FinalFee',
     ProtocolFee = 'ProtocolFee',
+    BaseFee = 'BaseFee',
+    FeeSharingNumerator = 'FeeSharingNumerator',
+    ReserveA = 'ReserveA',
+    ReserveB = 'ReserveB',
+    Direction = 'Direction',
 
     TokenPolicyId = 'TokenPolicyId',
     TokenAssetName = 'TokenAssetName',
@@ -68,6 +75,7 @@ export enum DatumParameterKey {
 
 export enum Dex {
     Minswap = 'Minswap',
+    MinswapV2 = 'MinswapV2',
     SundaeSwap = 'SundaeSwap',
     SundaeSwapV3 = 'SundaeSwapV3',
     WingRiders = 'WingRiders',

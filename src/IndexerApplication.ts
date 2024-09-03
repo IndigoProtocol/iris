@@ -21,14 +21,13 @@ import { Sync } from './db/entities/Sync';
 import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from './constants';
 import { TeddySwapAnalyzer } from './dex/TeddySwapAnalyzer';
 import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
-import { GeniusYieldAnalyzer } from './dex/GeniusYieldAnalyzer';
 import { BaseEventListener } from './listeners/BaseEventListener';
 import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
 import { CacheStorage } from './storage/CacheStorage';
 import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionIndexer';
-import { AxoAnalyzer } from './dex/AxoAnalyzer';
 import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
 import { ChainSynchronization } from '@cardano-ogmios/client';
+import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
 // import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
 
 export class IndexerApplication {
@@ -45,6 +44,7 @@ export class IndexerApplication {
         new SyncIndexer(),
         new AmmDexTransactionIndexer([
             new MinswapAnalyzer(this),
+            new MinswapV2Analyzer(this),
             new SundaeSwapAnalyzer(this),
             // new SundaeSwapV3Analyzer(this),
             new WingRidersAnalyzer(this),
@@ -53,7 +53,7 @@ export class IndexerApplication {
             new VyFiAnalyzer(this),
         ]),
         new OrderBookDexTransactionIndexer([
-            new GeniusYieldAnalyzer(this),
+            // new GeniusYieldAnalyzer(this),
             // new AxoAnalyzer(this),
         ]),
         new HybridDexTransactionIndexer([
@@ -176,6 +176,7 @@ export class IndexerApplication {
          * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
          * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
+         * Minswap v2  - 128247239,  d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
          */
         return lastSync
             ? this.chainSyncClient?.resume([{ slot: lastSync.slot, id: lastSync.blockHash }])
