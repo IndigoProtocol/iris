@@ -1,5 +1,5 @@
 import { BaseIndexer } from './BaseIndexer';
-import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
+import { Slot, BlockPraos, Transaction as OgmiosTransaction } from '@cardano-ogmios/schema';
 import { HybridOperation, Transaction } from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { OperationStatus } from '../db/entities/OperationStatus';
@@ -21,8 +21,8 @@ export class HybridDexTransactionIndexer extends BaseIndexer {
         this._handler = new HybridOperationHandler();
     }
 
-    async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
-        const operationPromises: Promise<HybridOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
+    async onRollForward(block: BlockPraos): Promise<any> {
+        const operationPromises: Promise<HybridOperation[]>[] = (block.transactions ?? []).map((transaction: OgmiosTransaction) => {
             return this._analyzers.map((analyzer: BaseHybridDexAnalyzer) => {
                 const tx: Transaction = formatTransaction(block, transaction);
 

@@ -1,14 +1,13 @@
 import 'reflect-metadata';
 import { dbService, eventService, metadataService, operationWs, queue } from './indexerServices';
 import {
-    createChainSyncClient,
+    createChainSynchronizationClient,
     createInteractionContext,
     InteractionContext
 } from '@cardano-ogmios/client';
-import { Block, TipOrOrigin, Point, PointOrOrigin, BlockAlonzo, BlockBabbage } from '@cardano-ogmios/schema';
+import { Block, TipOrOrigin, Point, PointOrOrigin, BlockPraos } from '@cardano-ogmios/schema';
 import { logError, logInfo } from './logger';
 import { BaseIndexer } from './indexers/BaseIndexer';
-import { ChainSyncClient } from '@cardano-ogmios/client/dist/ChainSync';
 import { AmmDexTransactionIndexer } from './indexers/AmmDexTransactionIndexer';
 import { BaseCacheStorage } from './storage/BaseCacheStorage';
 import { MinswapAnalyzer } from './dex/MinswapAnalyzer';
@@ -29,6 +28,7 @@ import { CacheStorage } from './storage/CacheStorage';
 import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionIndexer';
 import { AxoAnalyzer } from './dex/AxoAnalyzer';
 import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
+import { ChainSynchronization } from '@cardano-ogmios/client';
 // import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
 
 export class IndexerApplication {
@@ -36,7 +36,7 @@ export class IndexerApplication {
     private readonly _cache: BaseCacheStorage;
 
     private _eventListeners: BaseEventListener[] = [];
-    private chainSyncClient: ChainSyncClient | undefined = undefined;
+    private chainSyncClient: ChainSynchronization.ChainSynchronizationClient | undefined = undefined;
 
     /**
      * Indexers to make aware of new blocks & rollbacks.
@@ -150,7 +150,7 @@ export class IndexerApplication {
             process.exit(0);
         });
 
-        this.chainSyncClient = await createChainSyncClient(
+        this.chainSyncClient = await createChainSynchronizationClient(
             context,
             {
                 rollForward: this.rollForward.bind(this),
@@ -178,8 +178,8 @@ export class IndexerApplication {
          * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          */
         return lastSync
-            ? this.chainSyncClient.startSync([{ slot: lastSync.slot, hash: lastSync.blockHash }])
-            : this.chainSyncClient.startSync([{ slot: FIRST_SYNC_SLOT, hash: FIRST_SYNC_BLOCK_HASH }]);
+            ? this.chainSyncClient?.resume([{ slot: lastSync.slot, id: lastSync.blockHash }])
+            : this.chainSyncClient?.resume([{ slot: FIRST_SYNC_SLOT, id: FIRST_SYNC_BLOCK_HASH }]);
     }
 
     /**
@@ -188,19 +188,13 @@ export class IndexerApplication {
      * @param requestNext - Callback to request next block.
      */
     private async rollForward(update: { block: Block, tip: TipOrOrigin }, requestNext: () => void): Promise<void> {
-        let block: BlockAlonzo | BlockBabbage | undefined = undefined;
+        if (update.block.type === 'praos') {
+            const block: BlockPraos = update.block;
 
-        if ('babbage' in update.block) {
-            block = update.block.babbage;
-        } else if ('alonzo' in update.block) {
-            block = update.block.alonzo;
-        }
-
-        if (block) {
-            logInfo(`====== Analyzing block at slot ${block.header.slot} ======`);
+            logInfo(`====== Analyzing block at slot ${block.slot} ======`);
 
             await Promise.all(
-                this._indexers.map((indexer: BaseIndexer) => indexer.onRollForward(block as BlockAlonzo | BlockBabbage)),
+                this._indexers.map((indexer: BaseIndexer) => indexer.onRollForward(block)),
             );
 
             if (queue.size > 0) {
@@ -209,7 +203,7 @@ export class IndexerApplication {
                 logInfo('[Queue] Finished jobs');
             }
 
-            logInfo(`====== Finished with block at slot ${block.header.slot} ======`);
+            logInfo(`====== Finished with block at slot ${block.slot} ======`);
         }
 
         requestNext();
@@ -227,7 +221,7 @@ export class IndexerApplication {
             const point: Point = update.point;
 
             await Promise.all(
-                this._indexers.map((indexer: BaseIndexer) => indexer.onRollBackward(point.hash, point.slot)),
+                this._indexers.map((indexer: BaseIndexer) => indexer.onRollBackward(point.id, point.slot)),
             );
         }
 

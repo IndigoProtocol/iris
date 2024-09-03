@@ -1,5 +1,5 @@
 import { BaseIndexer } from './BaseIndexer';
-import { BlockAlonzo, BlockBabbage, Slot, TxAlonzo, TxBabbage } from '@cardano-ogmios/schema';
+import { Slot, BlockPraos, Transaction as OgmiosTransaction } from '@cardano-ogmios/schema';
 import { BaseAmmDexAnalyzer } from '../dex/BaseAmmDexAnalyzer';
 import { AmmDexOperation, Transaction } from '../types';
 import { dbService } from '../indexerServices';
@@ -21,8 +21,8 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
         this._handler = new AmmOperationHandler();
     }
 
-    async onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any> {
-        const operationPromises: Promise<AmmDexOperation[]>[] = block.body?.map((transaction: TxBabbage | TxAlonzo) => {
+    async onRollForward(block: BlockPraos): Promise<any> {
+        const operationPromises: Promise<AmmDexOperation[]>[] = (block.transactions ?? []).map((transaction: OgmiosTransaction) => {
             return this._analyzers.map((analyzer: BaseAmmDexAnalyzer) => {
                 const tx: Transaction = formatTransaction(block, transaction);
 

@@ -52,7 +52,7 @@ const SUNDAESWAP_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SUNDAESWAP_DEPOSIT_TX: Transaction = {
@@ -82,7 +82,7 @@ const SUNDAESWAP_DEPOSIT_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SUNDAESWAP_WITHDRAW_TX: Transaction = {
@@ -108,7 +108,7 @@ const SUNDAESWAP_WITHDRAW_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SUNDAESWAP_LP_STATE_TX: Transaction = {
@@ -142,7 +142,7 @@ const SUNDAESWAP_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 /**
@@ -166,7 +166,7 @@ const MINSWAP_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const MINSWAP_DEPOSIT_TX: Transaction = {
@@ -192,7 +192,7 @@ const MINSWAP_DEPOSIT_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const MINSWAP_WITHDRAW_TX: Transaction = {
@@ -218,7 +218,7 @@ const MINSWAP_WITHDRAW_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const MINSWAP_LP_STATE_TX: Transaction = {
@@ -256,7 +256,7 @@ const MINSWAP_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 /**
@@ -280,7 +280,7 @@ const WINGRIDERS_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const WINGRIDERS_DEPOSIT_TX: Transaction = {
@@ -306,7 +306,7 @@ const WINGRIDERS_DEPOSIT_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const WINGRIDERS_WITHDRAW_TX: Transaction = {
@@ -332,7 +332,7 @@ const WINGRIDERS_WITHDRAW_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const WINGRIDERS_LP_STATE_TX: Transaction = {
@@ -366,7 +366,7 @@ const WINGRIDERS_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 /**
@@ -390,7 +390,7 @@ const SPECTRUM_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SPECTRUM_DEPOSIT_TX: Transaction = {
@@ -416,7 +416,7 @@ const SPECTRUM_DEPOSIT_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SPECTRUM_WITHDRAW_TX: Transaction = {
@@ -442,7 +442,7 @@ const SPECTRUM_WITHDRAW_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const SPECTRUM_LP_STATE_TX: Transaction = {
@@ -476,7 +476,7 @@ const SPECTRUM_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 /**
@@ -500,7 +500,7 @@ const TEDDYSWAP_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const TEDDYSWAP_DEPOSIT_TX: Transaction = {
@@ -526,7 +526,7 @@ const TEDDYSWAP_DEPOSIT_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const TEDDYSWAP_WITHDRAW_TX: Transaction = {
@@ -552,7 +552,7 @@ const TEDDYSWAP_WITHDRAW_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const TEDDYSWAP_LP_STATE_TX: Transaction = {
@@ -586,7 +586,7 @@ const TEDDYSWAP_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 /**
@@ -615,7 +615,7 @@ const MUESLISWAP_SWAP_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 const MUESLISWAP_LP_STATE_TX: Transaction = {
@@ -649,7 +649,7 @@ const MUESLISWAP_LP_STATE_TX: Transaction = {
     fee: 0n,
     mints: [],
     datums: {},
-    redeemers: {},
+    redeemers: [],
 };
 
 // Setup globals

@@ -1,8 +1,8 @@
-import { BlockAlonzo, BlockBabbage, Slot } from '@cardano-ogmios/schema';
+import { BlockPraos, Slot } from '@cardano-ogmios/schema';
 
 export abstract class BaseIndexer {
 
-    abstract onRollForward(block: BlockBabbage | BlockAlonzo): Promise<any>;
+    abstract onRollForward(block: BlockPraos): Promise<any>;
 
     abstract onRollBackward(blockHash: string, slot: Slot): Promise<any>;
 
