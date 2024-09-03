@@ -6,6 +6,8 @@ export enum DatumParameterKey {
     ReceiverStakingKeyHash = 'ReceiverStakingKeyHash',
     SenderKeyHashes = 'SenderKeyHashes',
     SwapInAmount = 'SwapInAmount',
+    SwapInA = 'SwapInA',
+    SwapInB = 'SwapInB',
     MinReceive = 'MinReceive',
     MinReceiveA = 'MinReceiveA',
     MinReceiveB = 'MinReceiveB',

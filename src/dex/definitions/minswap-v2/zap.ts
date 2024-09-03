@@ -1,8 +1,19 @@
 import { DatumParameterKey } from '../../../constants';
 
+/**
+ * https://github.com/minswap/minswap-dex-v2/blob/main/src/types/order.ts
+ */
 export default {
   constructor: 0,
   fields: [
+    {
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.SenderPubKeyHash,
+        }
+      ]
+    },
     {
       constructor: 0,
       fields: [
@@ -36,12 +47,16 @@ export default {
     },
     {
       constructor: 0,
+      fields: []
+    },
+    {
+      constructor: 0,
       fields: [
         {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.ReceiverPubKeyHash,
+              bytes: DatumParameterKey.SenderPubKeyHash,
             }
           ]
         },
@@ -55,7 +70,7 @@ export default {
                   constructor: 0,
                   fields: [
                     {
-                      bytes: DatumParameterKey.ReceiverStakingKeyHash,
+                      bytes: DatumParameterKey.SenderStakingKeyHash,
                     }
                   ]
                 }
@@ -66,8 +81,19 @@ export default {
       ]
     },
     {
-      constructor: 1,
+      constructor: 0,
       fields: []
+    },
+    {
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.LpTokenPolicyId
+        },
+        {
+          bytes: DatumParameterKey.LpTokenAssetName
+        }
+      ]
     },
     {
       constructor: 4,
@@ -76,15 +102,19 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.TokenPolicyId
+              int: DatumParameterKey.SwapInA
             },
             {
-              bytes: DatumParameterKey.TokenAssetName
+              int: DatumParameterKey.SwapInB
             }
           ]
         },
         {
           int: DatumParameterKey.MinReceive
+        },
+        {
+          constructor: 0,
+          fields: []
         }
       ]
     },
@@ -92,7 +122,8 @@ export default {
       int: DatumParameterKey.BatcherFee
     },
     {
-      int: DatumParameterKey.DepositFee
+      constructor: 1,
+      fields: []
     }
   ]
 }
