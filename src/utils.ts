@@ -27,6 +27,12 @@ export function toDefinitionDatum(unconstructedField: any): DefinitionField {
         } as DefinitionConstr;
     }
 
+    if (unconstructedField instanceof Array) {
+        return unconstructedField.map((field: any) => {
+            return toDefinitionDatum(field);
+        })
+    }
+
     if (typeof unconstructedField === 'bigint') {
         return {
             int: Number(unconstructedField)
@@ -72,11 +78,11 @@ export function tokenDecimals(token: Token, pool: LiquidityPool): number {
     return pool.tokenB.decimals;
 }
 
-export function formatTransaction(block: BlockPraos, transaction: OgmiosTransaction): Transaction {
+export function formatTransaction(block: BlockPraos | null, transaction: OgmiosTransaction): Transaction {
     return {
         hash: transaction.id,
-        blockHash: block.id,
-        blockSlot: block.slot,
+        blockHash: block?.id ?? '',
+        blockSlot: block?.slot ?? 0,
         inputs: transaction.inputs.map((input: TransactionOutputReference) => {
             return {
                 forTxHash: input.transaction.id,

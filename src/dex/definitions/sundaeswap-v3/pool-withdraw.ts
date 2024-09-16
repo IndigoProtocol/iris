@@ -5,7 +5,23 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.PoolIdentifier
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.PoolIdentifier
+        }
+      ]
+    },
+    {
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.SenderStakingKeyHash
+        }
+      ]
+    },
+    {
+      int: DatumParameterKey.ProtocolFee
     },
     {
       constructor: 0,
@@ -17,55 +33,54 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  constructor: 0,
-                  fields: [
-                    {
-                      bytes: DatumParameterKey.SenderPubKeyHash
-                    }
-                  ]
-                },
-                (field: DefinitionField, foundParameters: DatumParameters) => {
-                  if ('fields' in field) {
-                    if (field.constructor === 1) {
-                      return;
-                    }
-
-                    const constr: DefinitionField = field.fields[0];
-
-                    if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
-                      const field: DefinitionField = constr.fields[0].fields[0];
-                      foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
-
-                      return;
-                    }
-                  }
-
-                  throw new Error("Template definition does not match with 'bytes'");
+                  bytes: DatumParameterKey.SenderPubKeyHash
                 }
               ]
             },
             {
-              constructor: 1,
-              fields: []
+              constructor: 0,
+              fields: [
+                {
+                  constructor: 0,
+                  fields: [
+                    {
+                      constructor: 0,
+                      fields: [
+                        {
+                          bytes: DatumParameterKey.SenderStakingKeyHash
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
         {
-          constructor: 1,
+          constructor: 0,
           fields: []
         }
       ]
     },
     {
-      int: DatumParameterKey.ScooperFee
+      constructor: 3,
+      fields: [
+        [
+          {
+            bytes: DatumParameterKey.LpTokenPolicyId
+          },
+          {
+            bytes: DatumParameterKey.LpTokenAssetName
+          },
+          {
+            int: DatumParameterKey.LpTokens
+          }
+        ]
+      ]
     },
     {
-      constructor: 1,
-      fields: [
-        {
-          int: DatumParameterKey.LpTokens
-        }
-      ]
+      bytes: DatumParameterKey.CancelDatum
     }
   ]
 }

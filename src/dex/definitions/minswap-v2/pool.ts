@@ -7,13 +7,8 @@ import { DatumParameters, DefinitionField } from '../../../types';
 export default {
   constructor: 0,
   fields: [
-    {
-      constructor: 0,
-      fields: [
-        (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
-          return;
-        },
-      ]
+    (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+      return;
     },
     {
       constructor: 0,

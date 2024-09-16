@@ -54,7 +54,7 @@ export class DatabaseService extends BaseService {
             ],
             migrationsTableName: 'migrations',
             migrationsRun: true,
-            poolSize: 100,
+            poolSize: 500,
         });
 
         return this.dbSource.initialize()
@@ -76,7 +76,13 @@ export class DatabaseService extends BaseService {
     public async transaction(logicFunc: (manager: EntityManager) => any, retryOnDuplicate: boolean = false, isolationLevel: IsolationLevel = 'READ UNCOMMITTED'): Promise<any> {
         const query: QueryRunner = this.dbSource.createQueryRunner();
 
-        await query.connect();
+        try {
+            await query.connect();
+        } catch (e) {
+            await this.boot(this.app);
+            return await this.transaction(logicFunc, false, isolationLevel);
+        }
+
         await query.startTransaction(isolationLevel);
 
         try {

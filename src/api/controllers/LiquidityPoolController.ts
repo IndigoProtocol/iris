@@ -279,6 +279,7 @@ export class LiquidityPoolController extends BaseApiController {
                 .leftJoinAndSelect('pools.tokenA', 'tokenA')
                 .leftJoinAndSelect('pools.tokenB', 'tokenB')
                 .leftJoinAndSelect('pools.latestState', 'latestState')
+                .leftJoinAndSelect('latestState.tokenLp', 'tokenLp')
                 .where(
                     new Brackets((query) => {
                         if (identifier) {
@@ -356,6 +357,7 @@ export class LiquidityPoolController extends BaseApiController {
                 .leftJoinAndSelect('pools.tokenA', 'tokenA')
                 .leftJoinAndSelect('pools.tokenB', 'tokenB')
                 .leftJoinAndSelect('pools.latestState', 'latestState')
+                .leftJoinAndSelect('latestState.tokenLp', 'tokenLp')
                 .where('pools.identifier = :identifier', {
                     identifier,
                 })
@@ -486,6 +488,8 @@ export class LiquidityPoolController extends BaseApiController {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('swaps.senderPubKeyHash = :hash', {
                                     hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                }).orWhere('swaps.senderStakeKeyHash = :hash', {
+                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('swaps.senderPubKeyHash = :hash', {
@@ -587,6 +591,8 @@ export class LiquidityPoolController extends BaseApiController {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('deposits.senderPubKeyHash = :hash', {
                                     hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                }).orWhere('swaps.senderStakeKeyHash = :hash', {
+                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('deposits.senderPubKeyHash = :hash', {
@@ -669,6 +675,8 @@ export class LiquidityPoolController extends BaseApiController {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('withdraws.senderPubKeyHash = :hash', {
                                     hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                }).orWhere('swaps.senderStakeKeyHash = :hash', {
+                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('withdraws.senderPubKeyHash = :hash', {

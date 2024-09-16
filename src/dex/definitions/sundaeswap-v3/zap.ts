@@ -1,13 +1,27 @@
 import { DatumParameterKey } from '../../../constants';
+import { DatumParameters, DefinitionField } from '../../../types';
 
-/**
- * https://github.com/SundaeSwap-finance/sundae-sdk/blob/27bdb4b092a3180b05b79b3a8c8cb880dc211efe/packages/core/src/classes/Extensions/DatumBuilders/DatumBuilder.Lucid.class.ts#L137
- */
 export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.PoolIdentifier
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.PoolIdentifier,
+        }
+      ]
+    },
+    {
+      constructor: 0,
+      fields: [
+        {
+          bytes: DatumParameterKey.SenderStakingKeyHash,
+        }
+      ]
+    },
+    {
+      int: DatumParameterKey.ProtocolFee,
     },
     {
       constructor: 0,
@@ -16,19 +30,10 @@ export default {
           constructor: 0,
           fields: [
             {
-              constructor: 0,
+              constructor: 1,
               fields: [
                 {
-                  constructor: 1,
-                  fields: [
-                    {
-                      bytes: DatumParameterKey.RequestScriptHash
-                    }
-                  ]
-                },
-                {
-                  constructor: 1,
-                  fields: []
+                  bytes: DatumParameterKey.SenderPubKeyHash,
                 }
               ]
             },
@@ -36,44 +41,56 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  bytes: DatumParameterKey.Unknown
+                  constructor: 0,
+                  fields: [
+                    {
+                      constructor: 0,
+                      fields: [
+                        {
+                          bytes: DatumParameterKey.SenderStakingKeyHash,
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
           ]
         },
-        {
-          constructor: 0,
-          fields: [
-            {
-              bytes: DatumParameterKey.ReceiverPubKeyHash
-            }
-          ]
-        }
+        (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+          return;
+        },
       ]
     },
     {
-      int: DatumParameterKey.ScooperFee
-    },
-    {
-      constructor: 0,
+      constructor: 1,
       fields: [
-        {
-          constructor: DatumParameterKey.Action, // 0 -> Token A, 1 -> Token B
-          fields: []
-        },
-        {
-          int: DatumParameterKey.DepositA
-        },
-        {
-          constructor: 0,
-          fields: [
-            {
-              int: DatumParameterKey.DepositB
-            }
-          ]
-        }
+        [
+          {
+            bytes: DatumParameterKey.PoolAssetAPolicyId
+          },
+          {
+            bytes: DatumParameterKey.PoolAssetAAssetName
+          },
+          {
+            int: DatumParameterKey.DepositA
+          }
+        ],
+        [
+          {
+            bytes: DatumParameterKey.PoolAssetBPolicyId
+          },
+          {
+            bytes: DatumParameterKey.PoolAssetBAssetName
+          },
+          {
+            int: DatumParameterKey.DepositB
+          }
+        ]
       ]
+    },
+    {
+      bytes: DatumParameterKey.CancelDatum,
     }
   ]
 }

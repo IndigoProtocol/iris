@@ -28,14 +28,15 @@ import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionInde
 import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
 import { ChainSynchronization } from '@cardano-ogmios/client';
 import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
-// import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
+import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
 
 export class IndexerApplication {
 
     private readonly _cache: BaseCacheStorage;
 
     private _eventListeners: BaseEventListener[] = [];
-    private chainSyncClient: ChainSynchronization.ChainSynchronizationClient | undefined = undefined;
+    private _chainSyncClient: ChainSynchronization.ChainSynchronizationClient | undefined = undefined;
+    private _ogmiosContext: InteractionContext | undefined = undefined;
 
     /**
      * Indexers to make aware of new blocks & rollbacks.
@@ -46,7 +47,7 @@ export class IndexerApplication {
             new MinswapAnalyzer(this),
             new MinswapV2Analyzer(this),
             new SundaeSwapAnalyzer(this),
-            // new SundaeSwapV3Analyzer(this),
+            new SundaeSwapV3Analyzer(this),
             new WingRidersAnalyzer(this),
             new SpectrumAnalyzer(this),
             new TeddySwapAnalyzer(this),
@@ -77,6 +78,14 @@ export class IndexerApplication {
      */
     get cache(): BaseCacheStorage {
         return this._cache;
+    }
+
+    get ogmios(): InteractionContext | undefined {
+        return this._ogmiosContext;
+    }
+
+    get indexers(): BaseIndexer[] {
+        return this._indexers;
     }
 
     public withEventListeners(eventListeners: BaseEventListener[]): IndexerApplication {
@@ -127,7 +136,7 @@ export class IndexerApplication {
     private async bootOgmios(): Promise<any> {
         logInfo('Booting Ogmios connection...');
 
-        const context: InteractionContext = await createInteractionContext(
+        this._ogmiosContext = await createInteractionContext(
             err => logError(err.message),
             () => {
                 logError('Ogmios connection closed. Restarting...');
@@ -150,8 +159,8 @@ export class IndexerApplication {
             process.exit(0);
         });
 
-        this.chainSyncClient = await createChainSynchronizationClient(
-            context,
+        this._chainSyncClient = await createChainSynchronizationClient(
+            this._ogmiosContext,
             {
                 rollForward: this.rollForward.bind(this),
                 rollBackward: this.rollBackward.bind(this),
@@ -168,19 +177,20 @@ export class IndexerApplication {
         });
 
         /**
-         * SundaeSwap  - 50367177,  91c16d5ae92f2eb791c3c2da9b38126b98623b07f611d4a4b913f0ab2af721d2
-         * Minswap     - 56553560,  f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
-         * WingRiders  - 57274883,  2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
-         * MuesliSwap  - 64985346,  8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca
-         * VyFi        - 92003644, bc671f811db2d4ecb25fd11e444aee98a42eb0132729982f9cd7f80a1bc84b73
-         * Spectrum    - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
-         * TeddySwap   - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
-         * GeniusYield - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
-         * Minswap v2  - 128247239,  d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
+         * SundaeSwap    - 50367177,  91c16d5ae92f2eb791c3c2da9b38126b98623b07f611d4a4b913f0ab2af721d2
+         * Minswap       - 56553560,  f6579343856a49cd76f713c2ac9ded86690bec029878ca67b87e9caa80d4de18
+         * WingRiders    - 57274883,  2793f430b0ae3fa2a64a3d6aa7f3aad87e0af34239a52f36b26353756a423b34
+         * MuesliSwap    - 64985346,  8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca
+         * VyFi          - 92003644,  bc671f811db2d4ecb25fd11e444aee98a42eb0132729982f9cd7f80a1bc84b73
+         * Spectrum      - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
+         * SundaeSwap v3 - 123703733, 3e5f5bca1d1ae0749c808d29817212ef64606c79732d238d6492a085057b493f
+         * TeddySwap     - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
+         * GeniusYield   - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
+         * Minswap v2    - 128247239, d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
          */
         return lastSync
-            ? this.chainSyncClient?.resume([{ slot: lastSync.slot, id: lastSync.blockHash }])
-            : this.chainSyncClient?.resume([{ slot: FIRST_SYNC_SLOT, id: FIRST_SYNC_BLOCK_HASH }]);
+            ? this._chainSyncClient?.resume([{ slot: lastSync.slot, id: lastSync.blockHash }])
+            : this._chainSyncClient?.resume([{ slot: FIRST_SYNC_SLOT, id: FIRST_SYNC_BLOCK_HASH }]);
     }
 
     /**

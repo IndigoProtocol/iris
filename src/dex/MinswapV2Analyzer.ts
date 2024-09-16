@@ -9,7 +9,7 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { lucidUtils, toDefinitionDatum, tokenId } from '../utils';
+import { lucidUtils, toDefinitionDatum } from '../utils';
 import { AddressDetails, Data } from 'lucid-cardano';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/minswap-v2/swap';
@@ -27,10 +27,10 @@ import { OperationStatus } from '../db/entities/OperationStatus';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
 
 /**
- * Minswap constants.
+ * MinswapV2 constants.
  */
 const LP_TOKEN_POLICY_ID: string = 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c';
-const VALIDITY_TOKEN: string = 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c4d5350';
+const MSP: string = 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c4d5350';
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 const ORDER_SCRIPT_HASH: string = 'c3e28c36c3447315ba5a56f33da6a6ddc1770a876a8d9f0cb3a97c4c';
 
@@ -75,11 +75,15 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     const builder: DefinitionBuilder = new DefinitionBuilder(swapDefinition);
                     const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
 
-                    const existingPool: LiquidityPool | undefined = await this.liquidityPoolFromIdentifier(
-                        `${datumParameters.LpTokenPolicyId}${datumParameters.LpTokenAssetName}`
-                    );
+                    if (! [0, 1].includes(datumParameters.Direction as number)) {
+                        return resolve(undefined);
+                    }
 
-                    if (! existingPool) return reject(`Unable to find ${Dex.MinswapV2} pool with identifier ${datumParameters.PoolIdentifier}`);
+                    const lpToken: Asset = new Asset(datumParameters.LpTokenPolicyId as string, datumParameters.LpTokenAssetName as string);
+
+                    const existingPool: LiquidityPool | undefined = await this.liquidityPoolFromIdentifier(lpToken.identifier());
+
+                    if (! existingPool) return reject(`Unable to find ${Dex.MinswapV2} pool with identifier ${lpToken.identifier()}`);
 
                     return resolve(
                         LiquidityPoolSwap.make(
@@ -109,7 +113,8 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((swapOrders: (LiquidityPoolSwap | undefined)[]) => {
                 return swapOrders.filter((operation: LiquidityPoolSwap | undefined) => operation !== undefined) as LiquidityPoolSwap[]
-            });
+            })
+            .catch(() => Promise.resolve([]));
     }
 
     /**
@@ -117,7 +122,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
      */
     protected zapOrders(transaction: Transaction): Promise<LiquidityPoolZap[]> {
         const promises: Promise<LiquidityPoolZap | undefined>[] = transaction.outputs.map((output: Utxo) => {
-            return new Promise(async (resolve) => {
+            return new Promise(async (resolve, reject) => {
                 if (! output.datum) {
                     return resolve(undefined);
                 }
@@ -135,24 +140,37 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     const builder: DefinitionBuilder = new DefinitionBuilder(zapDefinition);
                     const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
 
-                    const swapInToken: Token = output.assetBalances.length > 0
-                        ? output.assetBalances[0].asset
-                        : 'lovelace';
-                    const forToken: Token = datumParameters.TokenPolicyId === ''
-                        ? 'lovelace'
-                        : new Asset(datumParameters.TokenPolicyId as string, datumParameters.TokenAssetName as string);
+                    const lpToken: Asset = new Asset(datumParameters.LpTokenPolicyId as string, datumParameters.LpTokenAssetName as string);
+
+                    const existingPool: LiquidityPool | undefined = await this.liquidityPoolFromIdentifier(lpToken.identifier());
+
+                    if (! existingPool) return reject(`Unable to find ${Dex.MinswapV2} pool with identifier ${lpToken.identifier()}`);
+
+                    let swapInToken: Token;
+                    let forToken: Token;
+                    let swapInAmount: number;
+
+                    if (Number(datumParameters.SwapInA as number) > 0) {
+                        swapInToken = existingPool.tokenA ?? 'lovelace';
+                        forToken = existingPool.tokenB;
+                        swapInAmount = Number(datumParameters.SwapInA as number);
+                    } else {
+                        swapInToken = existingPool.tokenB;
+                        forToken = existingPool.tokenA ?? 'lovelace';
+                        swapInAmount = Number(datumParameters.SwapInB as number);
+                    }
 
                     return resolve(
                         LiquidityPoolZap.make(
-                            Dex.Minswap,
+                            Dex.MinswapV2,
                             undefined,
                             swapInToken,
                             forToken,
-                            Number((datumParameters.SwapInA ?? datumParameters.SwapInB) as number),
+                            swapInAmount,
                             Number(datumParameters.MinReceive),
                             Number(datumParameters.BatcherFee),
-                            datumParameters.ReceiverPubKeyHash as string,
-                            (datumParameters.ReceiverStakingKeyHash ?? '') as string,
+                            datumParameters.SenderPubKeyHash as string,
+                            (datumParameters.SenderStakingKeyHash ?? '') as string,
                             transaction.blockSlot,
                             transaction.hash,
                             output.index,
@@ -168,7 +186,8 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((zapOrders: (LiquidityPoolZap | undefined)[]) => {
                 return zapOrders.filter((operation: LiquidityPoolZap | undefined) => operation !== undefined) as LiquidityPoolZap[]
-            });
+            })
+            .catch(() => Promise.resolve([]));
     }
 
     /**
@@ -178,7 +197,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
         return transaction.outputs.map((output: Utxo) => {
             // Check if pool output is valid
             const hasFactoryNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
-                return balance.asset.identifier() === VALIDITY_TOKEN;
+                return balance.asset.policyId === LP_TOKEN_POLICY_ID;
             });
             if (! output.datum || ! hasFactoryNft) {
                 return undefined;
@@ -198,18 +217,10 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     ? 'lovelace'
                     : new Asset(datumParameters.PoolAssetBPolicyId as string, datumParameters.PoolAssetBAssetName as string);
                 const lpToken: Asset | undefined = output.assetBalances.find((balance: AssetBalance) => {
-                    return balance.asset.policyId === LP_TOKEN_POLICY_ID;
+                    return balance.asset.policyId === LP_TOKEN_POLICY_ID && balance.asset.identifier() !== MSP;
                 })?.asset;
 
                 if (! lpToken) return undefined;
-
-                const reserveA: bigint = tokenA === 'lovelace'
-                    ? output.lovelaceBalance
-                    : output.assetBalances.find((balance: AssetBalance) =>  balance.asset.identifier() === tokenA.identifier())?.quantity ?? 0n;
-
-                const reserveB: bigint = tokenB === 'lovelace'
-                    ? output.lovelaceBalance
-                    : output.assetBalances.find((balance: AssetBalance) =>  balance.asset.identifier() === tokenB.identifier())?.quantity ?? 0n;
 
                 const possibleOperationStatuses: OperationStatus[] = this.spentOperationInputs(transaction);
 
@@ -220,8 +231,8 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     tokenA,
                     tokenB,
                     lpToken,
-                    Number(reserveA),
-                    Number(reserveB),
+                    Number(datumParameters.ReserveA),
+                    Number(datumParameters.ReserveB),
                     Number(datumParameters.TotalLpTokens),
                     Number(datumParameters.BaseFee) / 100,
                     transaction.blockSlot,
@@ -265,21 +276,23 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
 
                     if (! existingPool) return reject(`Unable to find ${Dex.MinswapV2} pool`);
 
-                    return LiquidityPoolDeposit.make(
-                        Dex.MinswapV2,
-                        existingPool.identifier,
-                        existingPool.tokenA,
-                        existingPool.tokenB,
-                        Number(datumParameters.DepositA),
-                        Number(datumParameters.DepositB),
-                        Number(datumParameters.MinReceive),
-                        Number(datumParameters.BatcherFee),
-                        datumParameters.SenderPubKeyHash as string,
-                        (datumParameters.SenderStakingKeyHash ?? '') as string,
-                        transaction.blockSlot,
-                        transaction.hash,
-                        output.index,
-                        transaction,
+                    return resolve(
+                        LiquidityPoolDeposit.make(
+                            Dex.MinswapV2,
+                            existingPool.identifier,
+                            existingPool.tokenA,
+                            existingPool.tokenB,
+                            Number(datumParameters.DepositA),
+                            Number(datumParameters.DepositB),
+                            Number(datumParameters.MinReceive),
+                            Number(datumParameters.BatcherFee),
+                            datumParameters.SenderPubKeyHash as string,
+                            (datumParameters.SenderStakingKeyHash ?? '') as string,
+                            transaction.blockSlot,
+                            transaction.hash,
+                            output.index,
+                            transaction,
+                        )
                     );
                 } catch (e) {
                     return resolve(undefined);
@@ -290,7 +303,8 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((orders: (LiquidityPoolDeposit | undefined)[]) => {
                 return orders.filter((operation: LiquidityPoolDeposit | undefined) => operation !== undefined) as LiquidityPoolDeposit[]
-            });
+            })
+            .catch(() => Promise.resolve([]));
     }
 
     /**
@@ -331,8 +345,8 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     Number(datumParameters.MinReceiveA),
                     Number(datumParameters.MinReceiveB),
                     Number(datumParameters.BatcherFee),
-                    datumParameters.ReceiverPubKeyHash as string,
-                    (datumParameters.ReceiverStakingKeyHash ?? '') as string,
+                    datumParameters.SenderPubKeyHash as string,
+                    (datumParameters.SenderStakingKeyHash ?? '') as string,
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,

@@ -121,7 +121,8 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((swapOrders: (LiquidityPoolSwap | undefined)[]) => {
                 return swapOrders.filter((operation: LiquidityPoolSwap | undefined) => operation !== undefined) as LiquidityPoolSwap[]
-            });
+            })
+            .catch(() => Promise.resolve([]));
     }
 
     /**
@@ -188,7 +189,8 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((zapOrders: (LiquidityPoolZap | undefined)[]) => {
                 return zapOrders.filter((operation: LiquidityPoolZap | undefined) => operation !== undefined) as LiquidityPoolZap[]
-            });
+            })
+            .catch(() => Promise.resolve([]));
     }
 
     /**

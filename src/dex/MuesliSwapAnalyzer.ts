@@ -53,7 +53,6 @@ const METADATA_OUT_NAME_HEX: string = '1003';
 const METADATA_MIN_RECEIVE: string = '1004';
 const METADATA_FEES_PAID: string = '1005';
 
-
 export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
     public startSlot: number = 65063916;
@@ -371,6 +370,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
                 || ! (METADATA_OUT_NAME_HEX in transaction.metadata)
                 || ! (METADATA_MIN_RECEIVE in transaction.metadata)
                 || ! (METADATA_FEES_PAID in transaction.metadata)
+                || ! transaction.metadata[METADATA_SENDER]
             ) {
                 return undefined;
             }

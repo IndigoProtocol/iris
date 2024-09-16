@@ -43,6 +43,10 @@ export class WebsocketService extends BaseService {
      * https://github.com/websockets/ws
      */
     public boot(): Promise<void> {
+        if (this._websocket) {
+            return Promise.resolve();
+        }
+
         this._websocket = new WebSocketServer({
             port: this._port,
         });

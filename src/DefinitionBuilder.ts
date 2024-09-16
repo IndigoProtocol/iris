@@ -1,6 +1,7 @@
 import { DatumParameterKey } from './constants';
 import { DatumParameters, DefinitionConstr, DefinitionField } from './types';
 import _ from 'lodash';
+import * as process from 'process';
 
 export class DefinitionBuilder {
 
@@ -29,6 +30,8 @@ export class DefinitionBuilder {
      * Recursively pull parameters from datum using definition template.
      */
     private extractParameters(definedDefinition: DefinitionField, templateDefinition: DefinitionField, foundParameters: DatumParameters = {}): DatumParameters {
+        if (! templateDefinition || ! definedDefinition) return foundParameters;
+
         if (templateDefinition instanceof Function) {
             templateDefinition(definedDefinition, foundParameters);
 
@@ -36,8 +39,11 @@ export class DefinitionBuilder {
         }
 
         if (templateDefinition instanceof Array) {
+            if (! (definedDefinition instanceof Array)) {
+                throw new Error("Template definition does not match with array");
+            }
             templateDefinition.map((fieldParameter: DefinitionField, index: number) => {
-                return this.extractParameters(fieldParameter, templateDefinition[index], foundParameters);
+                return this.extractParameters(definedDefinition[index], fieldParameter, foundParameters);
             }).forEach((parameters: DatumParameters) => {
                 foundParameters = {...foundParameters, ...parameters};
             });

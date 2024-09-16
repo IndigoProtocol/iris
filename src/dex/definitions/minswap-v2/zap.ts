@@ -70,7 +70,7 @@ export default {
                   constructor: 0,
                   fields: [
                     {
-                      bytes: DatumParameterKey.SenderStakingKeyHash,
+                      bytes: DatumParameterKey.SenderPubKeyHash,
                     }
                   ]
                 }
