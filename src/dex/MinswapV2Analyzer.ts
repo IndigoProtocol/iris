@@ -25,6 +25,7 @@ import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { logInfo } from '../logger';
 
 /**
  * MinswapV2 constants.
@@ -199,6 +200,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
             const hasFactoryNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
                 return balance.asset.policyId === LP_TOKEN_POLICY_ID;
             });
+
             if (! output.datum || ! hasFactoryNft) {
                 return undefined;
             }

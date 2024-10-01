@@ -94,7 +94,7 @@ export function formatTransaction(block: BlockPraos | null, transaction: OgmiosT
                 forTxHash: transaction.id,
                 toAddress: output.address,
                 datum: output.datum
-                    ? (transaction.datums ? transaction.datums[output.datum] : output.datum)
+                    ? (transaction.datums && output.datum in transaction.datums ? transaction.datums[output.datum] : output.datum)
                     : (transaction.datums && output.datumHash ? transaction.datums[output.datumHash] : undefined),
                 index: index,
                 lovelaceBalance: BigInt(output.value.ada.lovelace),
