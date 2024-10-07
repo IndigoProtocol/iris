@@ -53,7 +53,8 @@ npm run test
 ## Notes
 - Liquidity pools often change addresses on-chain, however Iris will automatically update the liquidity pool to the updated address. This also applies to order addresses.
 - Some assets have registered metadata for their logos, ticker, etc. You can supply a `GITHUB_ACCESS_TOKEN` in the `.env` file so this metadata can be fetched from the [Cardano Token Registry](https://github.com/cardano-foundation/cardano-token-registry).
-
+- You may see some errors thrown in the error logs related to database inserting - This is done to prevent race-cases duplicating data in the database & should not cause any issues.
+- Orderbook DEXs still need some validating & testing.
 
 ## Components
 #### Indexers (/src/indexers/)
@@ -120,3 +121,11 @@ const app: ApiApplication = new ApiApplication(
 ```
 
 Iris also has a [TypeScript SDK](https://github.com/IndigoProtocol/iris-sdk), which you can install & easily interact with the Iris API or websocket.
+
+## Websocket Feed
+Iris provides a real-time websocket feed for DEX related operations. Event types you can listen for 
+are provided in `src/events.types.ts`. These events are sent over the feed are minified, however are 're-humanified' through
+the [Iris SDK](https://github.com/IndigoProtocol/iris-sdk).
+
+Default port for the websocket feed is `8080`, and can be overwritten through the `OPERATION_WEBSOCKET_PORT` variable 
+specified in the `.env` file.
