@@ -278,6 +278,9 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
 
                     if (! existingPool) return reject(`Unable to find ${Dex.MinswapV2} pool`);
 
+                    // Zap order
+                    if (Number(datumParameters.DepositB) === 0) return resolve(undefined);
+
                     return resolve(
                         LiquidityPoolDeposit.make(
                             Dex.MinswapV2,
