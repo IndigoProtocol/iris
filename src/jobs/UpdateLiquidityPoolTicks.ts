@@ -5,7 +5,7 @@ import { EntityManager } from 'typeorm';
 import { dbService, eventService, operationWs } from '../indexerServices';
 import { LiquidityPoolTick } from '../db/entities/LiquidityPoolTick';
 import { TickInterval } from '../constants';
-import { logInfo } from '../logger';
+import { logError, logInfo } from '../logger';
 
 export class UpdateLiquidityPoolTicks extends BaseJob {
 
@@ -22,15 +22,17 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
 
         const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._liquidityPoolState.slot));
 
-        const startOfMinute: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), slotDate.getUTCMinutes(), 0, 0).getTime() / 1000;
-        const startOfHour: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), 0, 0, 0).getTime() / 1000;
-        const startOfDay: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), 0, 0, 0, 0).getTime() / 1000;
+        const startOfMinute: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), slotDate.getMinutes(), 0, 0).getTime() / 1000;
+        const startOfHour: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), 0, 0, 0).getTime() / 1000;
+        const startOfDay: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), 0, 0, 0, 0).getTime() / 1000;
 
         return Promise.all([
             this.createOrUpdateTick(startOfMinute, TickInterval.Minute),
             this.createOrUpdateTick(startOfHour, TickInterval.Hour),
             this.createOrUpdateTick(startOfDay, TickInterval.Day)
-        ]);
+        ]).catch((reason) => {
+            logError(`[Queue] \t UpdateLiquidityPoolTicks failed ${reason}`);
+        });
     }
 
     private async createOrUpdateTick(startOfTick: number, resolution: TickInterval): Promise<any> {
@@ -58,12 +60,16 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
                 .limit(1)
                 .getOne() ?? undefined;
         });
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+    logInfo(`ddddd here 1`)
+}
         if (! existingTick) {
             if (! this._liquidityPoolState.liquidityPool) {
                 return Promise.reject('Liquidity Pool not found for liquidity pool state');
             }
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+logInfo(`ddddd here 2`)
+}
             const lastTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
                 return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
                     .where('resolution = :resolution', { resolution })
@@ -76,7 +82,9 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
             });
 
             const open: number = lastTick ? lastTick.close : price;
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+logInfo(`ddddd here 3 ${Math.abs(lastTick ? this._liquidityPoolState.tvl - lastTick.tvl : this._liquidityPoolState.tvl)}`)
+}
             return dbService.transaction((manager: EntityManager) => {
                 return manager.save(
                     LiquidityPoolTick.make(
@@ -92,17 +100,21 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
                     )
                 ).then((tick: LiquidityPoolTick) => {
                     operationWs.broadcast(tick);
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+logInfo(`ddddd here 3.5 ${tick.time}`)
+}
                     eventService.pushEvent({
                         type: 'LiquidityPoolTickCreated',
                         data: tick,
                     });
 
                     return Promise.resolve();
-                }).catch(() => this.createOrUpdateTick(startOfTick, resolution));
+                }).catch((reason: any) => this.createOrUpdateTick(startOfTick, resolution));
             });
         }
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+logInfo(`ddddd here 4`)
+}
         if (price < existingTick.low) {
             existingTick.low = price;
         }
@@ -119,7 +131,9 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
             return manager.save(existingTick)
                 .then((tick: LiquidityPoolTick) => {
                     operationWs.broadcast(tick);
-
+if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+logInfo(`ddddd here 5`)
+}
                     eventService.pushEvent({
                         type: 'LiquidityPoolTickUpdated',
                         data: tick,

@@ -461,7 +461,6 @@ export class AmmOperationHandler {
             if (! entity) {
                 return Promise.reject(`Unable to find entity with Tx hash ${operationStatus.operationTxHash}#${operationStatus.operationOutputIndex}`);
             }
-
             operationStatus.operationEntity = entity;
             operationStatus.operationId = entity.id;
             operationStatus.operationType = entity.constructor.name;

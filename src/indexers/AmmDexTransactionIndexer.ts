@@ -6,7 +6,7 @@ import { dbService } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { logInfo } from '../logger';
-import { formatTransaction } from '../utils';
+import { formatTransaction, lucidUtils } from '../utils';
 import { AmmOperationHandler } from '../handlers/AmmOperationHandler';
 
 export class AmmDexTransactionIndexer extends BaseIndexer {
@@ -78,14 +78,14 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
 
     async onRollBackward(blockHash: string, slot: Slot): Promise<any> {
         // Raw delete with for better performance
-        await dbService.dbSource.query("DELETE FROM operation_statuses WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_states WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_deposits WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_withdraws WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_swaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot])
-        await dbService.dbSource.query("DELETE FROM liquidity_pools WHERE createdSlot > ?", [slot])
+        await dbService.dbSource.query("DELETE FROM operation_statuses WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_states WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_deposits WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_withdraws WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_swaps WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pools WHERE createdSlot > ?", [slot]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_ticks WHERE time > ?", [lucidUtils.slotToUnixTime(slot) / 1000]);
 
         logInfo('Removed AMM entities');
     }

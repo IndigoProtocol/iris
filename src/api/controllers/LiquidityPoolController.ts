@@ -809,13 +809,17 @@ export class LiquidityPoolController extends BaseApiController {
 
                     const price: number = (entry.latestState.reserveA / 10**tokenADecimals) / (entry.latestState.reserveB / 10**tokenBDecimals);
 
+                    if (entry.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
+                        console.log(entry.hour_tick, price)
+                    }
+
                     prices.push({
                         identifier: entry.identifier,
                         price: price,
                         dayLow: entry.day_tick ? Math.min(entry.day_tick.low, price) : price,
                         dayHigh: entry.day_tick ? Math.max(entry.day_tick.high, price) : price,
                         dayChange: ! entry.day_tick ? 0 : (price - entry.day_tick.close) / entry.day_tick.close * 100,
-                        hourChange: ! entry.hour_tick ? 0 : (price - entry.hour_tick.close) / entry.hour_tick.close * 100,
+                        hourChange: ! entry.hour_tick ? 0 : (price - entry.hour_tick.open) / entry.hour_tick.open * 100,
                     });
 
                     return prices;

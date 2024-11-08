@@ -28,10 +28,8 @@ export class UpdateLiquidityPoolTvlJob extends BaseJob {
             this._liquidityPoolState.liquidityPool.tokenA
                 ? this.updateNonAdaPoolTvl(this._liquidityPoolState.liquidityPool)
                 : this.updateAdaPoolTvl(this._liquidityPoolState.liquidityPool)
-        ).then(() => {
-            if (this._liquidityPoolState.tvl !== 0) {
-                queue.dispatch(new UpdateLiquidityPoolTicks(this._liquidityPoolState));
-            }
+        ).finally(() => {
+            queue.dispatch(new UpdateLiquidityPoolTicks(this._liquidityPoolState));
         })
     }
 
