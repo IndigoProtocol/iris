@@ -29,6 +29,7 @@ import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
 import { ChainSynchronization } from '@cardano-ogmios/client';
 import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
 import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
+import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
 
 export class IndexerApplication {
 
@@ -49,6 +50,7 @@ export class IndexerApplication {
             new SundaeSwapAnalyzer(this),
             new SundaeSwapV3Analyzer(this),
             new WingRidersAnalyzer(this),
+            // new WingRidersV2Analyzer(this),
             new SpectrumAnalyzer(this),
             new TeddySwapAnalyzer(this),
             new VyFiAnalyzer(this),
@@ -187,6 +189,7 @@ export class IndexerApplication {
          * TeddySwap     - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
          * GeniusYield   - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          * Minswap v2    - 128247239, d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
+         * WingRiders v2 - 133796834, 4525344131bc0f7a85b375d8bab72ac17518038f29ed613e4bbaae8e9757dca4
          */
         return lastSync
             ? this._chainSyncClient?.resume([{ slot: lastSync.slot, id: lastSync.blockHash }])

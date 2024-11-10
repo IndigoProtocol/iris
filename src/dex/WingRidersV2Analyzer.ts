@@ -12,10 +12,10 @@ import { DefinitionBuilder } from '../DefinitionBuilder';
 import { toDefinitionDatum, tokensMatch } from '../utils';
 import { Data } from 'lucid-cardano';
 import { Dex, SwapOrderType } from '../constants';
-import swapDefinition from './definitions/wingriders/swap';
-import poolDefinition from './definitions/wingriders/pool';
-import poolDepositDefinition from './definitions/wingriders/pool-deposit';
-import poolWithdrawDefinition from './definitions/wingriders/pool-withdraw';
+import swapDefinition from './definitions/wingriders-v2/swap';
+import poolDefinition from './definitions/wingriders-v2/pool';
+import poolDepositDefinition from './definitions/wingriders-v2/pool-deposit';
+import poolWithdrawDefinition from './definitions/wingriders-v2/pool-withdraw';
 import { Asset, Token } from '../db/entities/Asset';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
@@ -26,18 +26,17 @@ import { OperationStatus } from '../db/entities/OperationStatus';
 /**
  * WingRiders constants.
  */
-const ORDER_CONTRACT_ADDRESS: string = 'addr1wxr2a8htmzuhj39y2gq7ftkpxv98y2g67tg8zezthgq4jkg0a4ul4';
-const POOL_NFT_POLICY_ID: string = '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
+const ORDER_CONTRACT_ADDRESS: string = 'addr1w8qnfkpe5e99m7umz4vxnmelxs5qw5dxytmfjk964rla98q605wte';
+const POOL_NFT_POLICY_ID: string = '026a18d04a0c642759bb3d83b12e3344894e5c1c7b2aeb1a2113a570';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE: bigint = 2000000n;
-const OIL_FEE: bigint = 2000000n;
 const FEE_PERCENT: number = 0.35;
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 
-export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
+export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
-    public startSlot: number = 57274883;
+    public startSlot: number = 133796834;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -84,7 +83,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                     swapInAmount = output.assetBalances[0].quantity;
                 } else {
                     swapInToken = 'lovelace';
-                    swapInAmount = output.lovelaceBalance - BATCHER_FEE - OIL_FEE;
+                    swapInAmount = output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.PoolAssetBAssetName as string);
                 }
 
                 swapOutToken = tokensMatch(poolTokenA, swapInToken)
@@ -100,7 +99,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                 }
 
                 return LiquidityPoolSwap.make(
-                    Dex.WingRiders,
+                    Dex.WingRidersV2,
                     undefined,
                     swapInToken,
                     swapOutToken,
@@ -175,7 +174,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                 const possibleOperationStatuses: OperationStatus[] = this.spentOperationInputs(transaction);
 
                 return LiquidityPoolState.make(
-                    Dex.WingRiders,
+                    Dex.WingRidersV2,
                     output.toAddress,
                     lpTokenAssetBalance.asset.identifier(),
                     tokenA,
@@ -241,12 +240,12 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                 }
 
                 return LiquidityPoolDeposit.make(
-                    Dex.WingRiders,
+                    Dex.WingRidersV2,
                     undefined,
                     depositAToken,
                     depositBToken,
                     Number(depositAToken === 'lovelace'
-                        ? output.lovelaceBalance - BATCHER_FEE - OIL_FEE
+                        ? output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.PoolAssetBAssetName as string)
                         : output.assetBalances[0].quantity),
                     Number(depositAToken === 'lovelace'
                         ? output.assetBalances[0].quantity
@@ -287,7 +286,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
                 }
 
                 return LiquidityPoolWithdraw.make(
-                    Dex.WingRiders,
+                    Dex.WingRidersV2,
                     undefined,
                     output.assetBalances[0].asset,
                     Number(output.assetBalances[0].quantity),
