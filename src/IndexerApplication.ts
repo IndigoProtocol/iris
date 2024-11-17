@@ -29,6 +29,7 @@ import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
 import { ChainSynchronization } from '@cardano-ogmios/client';
 import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
 import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
+import { QueueProcessor } from './utils';
 
 export class IndexerApplication {
 
@@ -130,6 +131,8 @@ export class IndexerApplication {
         });
     }
 
+    blockQueue = new QueueProcessor(5000, (block) => this.rollForward(block), (block) => this.rollBackward(block));
+
     /**
      * Boot Ogmios connection.
      */
@@ -162,8 +165,8 @@ export class IndexerApplication {
         this._chainSyncClient = await createChainSynchronizationClient(
             this._ogmiosContext,
             {
-                rollForward: this.rollForward.bind(this),
-                rollBackward: this.rollBackward.bind(this),
+                rollForward: (response, nextBlock) => this.blockQueue.enqueue(response, nextBlock),
+                rollBackward: (response, nextBlock) => this.blockQueue.enqueue(response, nextBlock),
             },
             {
                 sequential: true,
@@ -198,7 +201,7 @@ export class IndexerApplication {
      * @param update - New block update.
      * @param requestNext - Callback to request next block.
      */
-    private async rollForward(update: { block: Block, tip: TipOrOrigin }, requestNext: () => void): Promise<void> {
+    private async rollForward(update: { block: Block, tip: TipOrOrigin }): Promise<void> {
         if (update.block.type === 'praos') {
             const block: BlockPraos = update.block;
 
@@ -216,8 +219,6 @@ export class IndexerApplication {
 
             logInfo(`====== Finished with block at slot ${block.slot} ======`);
         }
-
-        requestNext();
     }
 
     /**
@@ -225,7 +226,7 @@ export class IndexerApplication {
      * @param update - Point in which to revert to.
      * @param requestNext - Callback to request next block.
      */
-    private async rollBackward(update: { point: PointOrOrigin }, requestNext: () => void): Promise<void> {
+    private async rollBackward(update: { point: PointOrOrigin }): Promise<void> {
         if (typeof update.point === 'object' && 'slot' in update.point) {
             logInfo(`Rollback occurred to slot ${update.point.slot}`);
 
@@ -235,8 +236,6 @@ export class IndexerApplication {
                 this._indexers.map((indexer: BaseIndexer) => indexer.onRollBackward(point.id, point.slot)),
             );
         }
-
-        requestNext();
     }
 
 }

@@ -11,11 +11,17 @@ import { Lucid, Utils } from 'lucid-cardano';
 import { Asset, Token } from './db/entities/Asset';
 import { LiquidityPool } from './db/entities/LiquidityPool';
 import {
+    Block,
     BlockPraos,
     Transaction as OgmiosTransaction,
+    Origin,
+    PointOrOrigin,
+    Tip,
     TransactionOutput,
     TransactionOutputReference
 } from '@cardano-ogmios/schema';
+import PQueue from 'p-queue';
+import { logError, logInfo } from './logger';
 
 export const lucidUtils: Utils = new Utils(new Lucid());
 
@@ -148,4 +154,53 @@ export function formatTransaction(block: BlockPraos | null, transaction: OgmiosT
         redeemers: transaction.redeemers ?? [],
         scriptHashes: Object.keys(transaction.scripts ?? {}),
     };
+}
+
+type ForwardBlock = { block: Block, tip: Tip | Origin};
+type BackwardBlock = { point: PointOrOrigin };
+
+export class QueueProcessor {
+    private queue: PQueue; // Use p-queue for queue management
+    private maxSize: number;
+
+    constructor(
+        maxSize: number,
+        private rollForward: (update: ForwardBlock) => Promise<void>,
+        private rollBackward: (update: BackwardBlock) => Promise<void>
+    ) {
+        this.maxSize = maxSize;
+        this.queue = new PQueue({
+            concurrency: 1, // Ensure sequential processing
+            autoStart: true, // Automatically start processing tasks
+        });
+    }
+
+    async enqueue(response: ForwardBlock | BackwardBlock, requestNext: () => void): Promise<void> {
+        try {
+            // Add the task to the queue
+            this.queue.add(async () => {
+                if ('block' in response) {
+                    await this.rollForward(response);
+                } else {
+                    await this.rollBackward(response);
+                }
+            });
+
+            // Call next block when there's room
+            await this.queue.onSizeLessThan(this.maxSize)
+            requestNext();
+        } catch (error) {
+            logError(`BlockQueue.enqueue error: ${error}`);
+        }
+    }
+
+    async stopProcessing(): Promise<void> {
+        logInfo('Stopping Queue Processor...');
+        this.queue.pause(); // Pause the queue
+        await this.queue.onIdle(); // Wait until all tasks are finished
+    }
+
+    queueSize(): number {
+        return this.queue.size;
+    }
 }
