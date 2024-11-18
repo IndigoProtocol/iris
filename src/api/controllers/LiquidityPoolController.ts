@@ -804,14 +804,12 @@ export class LiquidityPoolController extends BaseApiController {
         }).then((results: any) => {
             response.send(
                 results.reduce((prices: Object[], entry: any) => {
+                    if (! entry.latestState) return prices;
+
                     const tokenADecimals: number = entry.tokenA ? entry.tokenA.decimals : 6;
                     const tokenBDecimals: number = entry.tokenB.decimals ?? 0;
 
                     const price: number = (entry.latestState.reserveA / 10**tokenADecimals) / (entry.latestState.reserveB / 10**tokenBDecimals);
-
-                    if (entry.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-                        console.log(entry.hour_tick, price)
-                    }
 
                     prices.push({
                         identifier: entry.identifier,

@@ -28,6 +28,7 @@ export class OrdersController extends BaseApiController {
     private swaps(request: express.Request, response: express.Response) {
         const {
             pubKeyHashes,
+            stakeKeyHashes,
         } = request.body;
         const {
             poolIdentifier,
@@ -44,7 +45,7 @@ export class OrdersController extends BaseApiController {
             ? (token as string).split('.')
             : [null, null];
 
-        if (pubKeyHashes.length === 0) {
+        if (! pubKeyHashes && ! stakeKeyHashes) {
             response.send(super.formatPaginatedResponse(
                 Number(page ?? 1),
                 Number(limit ?? MAX_PER_PAGE),
@@ -69,9 +70,24 @@ export class OrdersController extends BaseApiController {
                         operationType: LiquidityPoolSwap.name,
                     }
                 )
-                .where('swaps.senderPubKeyHash IN(:...hashes)', { hashes: pubKeyHashes })
                 .andWhere(
                     new Brackets((query) => {
+                        query.andWhere(
+                            new Brackets((query1) => {
+                                if (pubKeyHashes && pubKeyHashes.length > 0) {
+                                    query1.orWhere('swaps.senderPubKeyHash IN(:...pkHashes)', {
+                                        pkHashes: pubKeyHashes,
+                                    });
+                                }
+
+                                if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                                    query1.orWhere('swaps.senderStakeKeyHash IN(:...skHashes)', {
+                                        skHashes: stakeKeyHashes,
+                                    });
+                                }
+                            })
+                        );
+
                         if (poolIdentifier) {
                             query.andWhere('liquidityPool.identifier = :identifier', {
                                 identifier: poolIdentifier,
@@ -131,6 +147,7 @@ export class OrdersController extends BaseApiController {
     private deposits(request: express.Request, response: express.Response) {
         const {
             pubKeyHashes,
+            stakeKeyHashes,
         } = request.body;
         const {
             poolIdentifier,
@@ -146,7 +163,7 @@ export class OrdersController extends BaseApiController {
             ? (token as string).split('.')
             : [null, null];
 
-        if (pubKeyHashes.length === 0) {
+        if (! pubKeyHashes && ! stakeKeyHashes) {
             response.send(super.formatPaginatedResponse(
                 Number(page ?? 1),
                 Number(limit ?? MAX_PER_PAGE),
@@ -171,12 +188,23 @@ export class OrdersController extends BaseApiController {
                         operationType: LiquidityPoolDeposit.name,
                     }
                 )
-                .where('deposits.senderPubKeyHash IN(:...hashes)', { hashes: pubKeyHashes })
                 .andWhere(
                     new Brackets((query) => {
                         if (poolIdentifier) {
                             query.andWhere('liquidityPool.identifier = :identifier', {
                                 identifier: poolIdentifier,
+                            });
+                        }
+
+                        if (pubKeyHashes && pubKeyHashes.length > 0) {
+                            query.andWhere('deposits.senderPubKeyHash IN(:...pkHashes)', {
+                                pkHashes: pubKeyHashes,
+                            });
+                        }
+
+                        if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                            query.andWhere('deposits.senderStakeKeyHash IN(:...skHashes)', {
+                                skHashes: stakeKeyHashes,
                             });
                         }
 
@@ -218,6 +246,7 @@ export class OrdersController extends BaseApiController {
     private withdraws(request: express.Request, response: express.Response) {
         const {
             pubKeyHashes,
+            stakeKeyHashes,
         } = request.body;
         const {
             poolIdentifier,
@@ -228,7 +257,7 @@ export class OrdersController extends BaseApiController {
         const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
         const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
 
-        if (pubKeyHashes.length === 0) {
+        if (! pubKeyHashes && ! stakeKeyHashes) {
             response.send(super.formatPaginatedResponse(
                 Number(page ?? 1),
                 Number(limit ?? MAX_PER_PAGE),
@@ -252,12 +281,23 @@ export class OrdersController extends BaseApiController {
                         operationType: LiquidityPoolWithdraw.name,
                     }
                 )
-                .where('withdraws.senderPubKeyHash IN(:...hashes)', { hashes: pubKeyHashes })
                 .andWhere(
                     new Brackets((query) => {
                         if (poolIdentifier) {
                             query.andWhere('liquidityPool.identifier = :identifier', {
                                 identifier: poolIdentifier,
+                            });
+                        }
+
+                        if (pubKeyHashes && pubKeyHashes.length > 0) {
+                            query.andWhere('withdraws.senderPubKeyHash IN(:...pkHashes)', {
+                                pkHashes: pubKeyHashes,
+                            });
+                        }
+
+                        if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                            query.andWhere('withdraws.senderStakeKeyHash IN(:...skHashes)', {
+                                skHashes: stakeKeyHashes,
                             });
                         }
 

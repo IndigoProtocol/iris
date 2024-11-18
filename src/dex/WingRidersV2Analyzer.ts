@@ -27,7 +27,7 @@ import { OperationStatus } from '../db/entities/OperationStatus';
  * WingRiders constants.
  */
 const ORDER_CONTRACT_ADDRESS: string = 'addr1w8qnfkpe5e99m7umz4vxnmelxs5qw5dxytmfjk964rla98q605wte';
-const POOL_NFT_POLICY_ID: string = '026a18d04a0c642759bb3d83b12e3344894e5c1c7b2aeb1a2113a570';
+const POOL_NFT_POLICY_ID: string = '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE: bigint = 2000000n;
@@ -36,7 +36,7 @@ const CANCEL_ORDER_DATUM: string = 'd87a80';
 
 export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
-    public startSlot: number = 133796834;
+    public startSlot: number = 133880255;
 
     /**
      * Analyze transaction for possible DEX operations.
@@ -83,7 +83,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                     swapInAmount = output.assetBalances[0].quantity;
                 } else {
                     swapInToken = 'lovelace';
-                    swapInAmount = output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.PoolAssetBAssetName as string);
+                    swapInAmount = output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.Deposit as string);
                 }
 
                 swapOutToken = tokensMatch(poolTokenA, swapInToken)
@@ -245,7 +245,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                     depositAToken,
                     depositBToken,
                     Number(depositAToken === 'lovelace'
-                        ? output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.PoolAssetBAssetName as string)
+                        ? output.lovelaceBalance - BATCHER_FEE - BigInt(datumParameters.Deposit as string)
                         : output.assetBalances[0].quantity),
                     Number(depositAToken === 'lovelace'
                         ? output.assetBalances[0].quantity

@@ -31,7 +31,10 @@ export class UpdateAmountReceived extends BaseJob {
         let swapOrders: LiquidityPoolSwap[] | null = await dbService.dbSource.createQueryBuilder(LiquidityPoolSwap, 'orders')
             .leftJoinAndSelect('orders.swapOutToken', 'swapOutToken')
             .where('orders.txHash IN(:...txHashes)', {
-                txHashes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.forTxHash)
+                txHashes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.forTxHash),
+            })
+            .andWhere('orders.outputIndex IN(:...indexes)', {
+                indexes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.index)
             })
             .andWhere('orders.liquidityPoolId = :poolId', { poolId: this._liquidityPoolState.liquidityPool.id })
             .getMany();

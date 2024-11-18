@@ -11,7 +11,7 @@ export default {
       constructor: 0,
       fields: [
         {
-          constructor: 0,
+          constructor: DatumParameterKey.Unknown,
           fields: [
             {
               bytes: DatumParameterKey.SenderPubKeyHash

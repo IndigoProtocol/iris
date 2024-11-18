@@ -27,7 +27,7 @@ import { OperationStatus } from '../db/entities/OperationStatus';
  * WingRiders constants.
  */
 const ORDER_CONTRACT_ADDRESS: string = 'addr1wxr2a8htmzuhj39y2gq7ftkpxv98y2g67tg8zezthgq4jkg0a4ul4';
-const POOL_NFT_POLICY_ID: string = '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
+const POOL_NFT_POLICY_ID: string = '026a18d04a0c642759bb3d83b12e3344894e5c1c7b2aeb1a2113a570';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE: bigint = 2000000n;

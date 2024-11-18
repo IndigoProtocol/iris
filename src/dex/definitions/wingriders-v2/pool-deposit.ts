@@ -11,7 +11,7 @@ export default {
       constructor: 0,
       fields: [
         {
-          constructor: 1,
+          constructor: DatumParameterKey.Unknown,
           fields: [
             {
               bytes: DatumParameterKey.ReceiverPubKeyHash
@@ -29,8 +29,8 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
-                  const field: DefinitionField = constr.fields[0].fields[0];
+                if ('fields' in constr && 'bytes' in constr.fields[0]) {
+                  const field: DefinitionField = constr.fields[0];
                   foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
 
                   return;
@@ -65,9 +65,9 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
-                  const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                if ('fields' in constr && 'bytes' in constr.fields[0]) {
+                  const field: DefinitionField = constr.fields[0];
+                  foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
 
                   return;
                 }
@@ -135,7 +135,7 @@ export default {
       ]
     },
     {
-      constructor: 1,
+      constructor: DatumParameterKey.Unknown,
       fields: []
     },
     {
