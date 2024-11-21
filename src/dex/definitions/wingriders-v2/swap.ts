@@ -21,28 +21,23 @@ export default {
             }
           ]
         },
-        {
-          constructor: 0,
-          fields: [
-            (field: DefinitionField, foundParameters: DatumParameters) => {
-              if ('fields' in field) {
-                if (field.constructor === 1) {
-                  return;
-                }
-
-                const constr: DefinitionField = field.fields[0];
-
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
-                  const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
-
-                  return;
-                }
-              }
-
-              throw new Error("Template definition does not match with 'bytes'");
+        (field: DefinitionField, foundParameters: DatumParameters) => {
+          if ('fields' in field) {
+            if (field.constructor === 1) {
+              return;
             }
-          ]
+
+            const constr: DefinitionField = field.fields[0];
+
+            if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+              const field: DefinitionField = constr.fields[0].fields[0];
+              foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
+
+              return;
+            }
+          }
+
+          throw new Error("Template definition does not match with 'bytes'");
         }
       ]
     },
@@ -57,33 +52,28 @@ export default {
             }
           ]
         },
-        {
-          constructor: 0,
-          fields: [
-            (field: DefinitionField, foundParameters: DatumParameters) => {
-              if ('fields' in field) {
-                if (field.constructor === 1) {
-                  return;
-                }
-
-                const constr: DefinitionField = field.fields[0];
-
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
-                  const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
-
-                  return;
-                }
-              }
-
-              throw new Error("Template definition does not match with 'bytes'");
+        (field: DefinitionField, foundParameters: DatumParameters) => {
+          if ('fields' in field) {
+            if (field.constructor === 1) {
+              return;
             }
-          ]
+
+            const constr: DefinitionField = field.fields[0];
+
+            if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+              const field: DefinitionField = constr.fields[0].fields[0];
+              foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.bytes;
+
+              return;
+            }
+          }
+
+          throw new Error("Template definition does not match with 'bytes'");
         }
       ]
     },
-    {
-      bytes: DatumParameterKey.Unknown
+    (field: DefinitionField, parameters: DatumParameters) => {
+      return parameters;
     },
     {
       constructor: DatumParameterKey.Unknown,

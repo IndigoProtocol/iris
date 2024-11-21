@@ -202,7 +202,7 @@ export class AssetController extends BaseApiController {
                     policyId: tokenPolicyId,
                     nameHex: tokenNameHex,
                 })
-                .andWhere('latestState.tvl >= :minTvl', { minTvl: 10_000_000000 })
+                .andWhere('latestState.tvl >= :minTvl', { minTvl: 100_000_000000 })
                 .getMany();
         }).then((liquidityPools: LiquidityPool[]) => {
             if (liquidityPools.length === 0) {

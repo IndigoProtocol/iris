@@ -9,8 +9,8 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { toDefinitionDatum, tokensMatch } from '../utils';
-import { Data } from 'lucid-cardano';
+import { lucidUtils, toDefinitionDatum, tokensMatch } from '../utils';
+import { AddressDetails, Data } from 'lucid-cardano';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/wingriders/swap';
 import poolDefinition from './definitions/wingriders/pool';
@@ -26,7 +26,10 @@ import { OperationStatus } from '../db/entities/OperationStatus';
 /**
  * WingRiders constants.
  */
-const ORDER_CONTRACT_ADDRESS: string = 'addr1wxr2a8htmzuhj39y2gq7ftkpxv98y2g67tg8zezthgq4jkg0a4ul4';
+const ORDER_SCRIPT_HASHES: string[] = [
+    '86ae9eebd8b97944a45201e4aec1330a72291af2d071644bba015959',
+    'c5e0385012d5f010b1dc7ab42ba632944052de232051ec6ce3bfd72e',
+];
 const POOL_NFT_POLICY_ID: string = '026a18d04a0c642759bb3d83b12e3344894e5c1c7b2aeb1a2113a570';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
@@ -48,7 +51,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, [ORDER_CONTRACT_ADDRESS], CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, ORDER_SCRIPT_HASHES, CANCEL_ORDER_DATUM),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
     }
 
@@ -57,7 +60,13 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected swapOrders(transaction: Transaction): LiquidityPoolSwap[] {
         return transaction.outputs.map((output: Utxo) => {
-            if (output.toAddress !== ORDER_CONTRACT_ADDRESS || ! output.datum) {
+            if (! output.datum) {
+                return undefined;
+            }
+
+            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+
+            if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '')) {
                 return undefined;
             }
 
@@ -214,7 +223,13 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected depositOrders(transaction: Transaction): LiquidityPoolDeposit[] {
         return transaction.outputs.map((output: Utxo) => {
-            if (output.toAddress !== ORDER_CONTRACT_ADDRESS || ! output.datum) {
+            if (! output.datum) {
+                return undefined;
+            }
+
+            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+
+            if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '')) {
                 return undefined;
             }
 
@@ -271,7 +286,13 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected withdrawOrders(transaction: Transaction): LiquidityPoolWithdraw[] {
         return transaction.outputs.map((output: Utxo) => {
-            if (output.toAddress !== ORDER_CONTRACT_ADDRESS || ! output.datum) {
+            if (! output.datum) {
+                return undefined;
+            }
+
+            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+
+            if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '') && output.toAddress) {
                 return undefined;
             }
 
