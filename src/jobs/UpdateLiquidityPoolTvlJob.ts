@@ -1,7 +1,7 @@
 import { BaseJob } from './BaseJob';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { dbService, queue } from '../indexerServices';
-import { EntityManager } from 'typeorm';
+import { Brackets, EntityManager } from 'typeorm';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
 import { logInfo } from '../logger';
 import { Asset } from '../db/entities/Asset';
@@ -55,14 +55,11 @@ export class UpdateLiquidityPoolTvlJob extends BaseJob {
                     .leftJoinAndSelect('pools.tokenA', 'tokenA')
                     .leftJoinAndSelect('pools.tokenB', 'tokenB')
                     .leftJoinAndSelect('pools.latestState', 'latestState')
-                    .where("pools.dex = :dex", {
-                        dex: liquidityPool.dex,
-                    })
-                    .andWhere('pools.tokenA IS NULL')
-                    .andWhere("pools.tokenB.id = :tokenBId", {
+                    .where('pools.tokenA IS NULL')
+                    .andWhere('pools.tokenB.id = :tokenBId', {
                         tokenBId: token.id,
                     })
-                    .orderBy('pools.createdSlot', 'DESC')
+                    .orderBy('latestState.tvl', 'DESC')
                     .limit(1)
                     .getOne();
             });

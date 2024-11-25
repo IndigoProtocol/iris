@@ -60,16 +60,12 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
                 .limit(1)
                 .getOne() ?? undefined;
         });
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-    logInfo(`ddddd here 1`)
-}
+
         if (! existingTick) {
             if (! this._liquidityPoolState.liquidityPool) {
                 return Promise.reject('Liquidity Pool not found for liquidity pool state');
             }
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-logInfo(`ddddd here 2`)
-}
+
             const lastTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
                 return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
                     .where('resolution = :resolution', { resolution })
@@ -82,9 +78,7 @@ logInfo(`ddddd here 2`)
             });
 
             const open: number = lastTick ? lastTick.close : price;
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-logInfo(`ddddd here 3 ${Math.abs(lastTick ? this._liquidityPoolState.tvl - lastTick.tvl : this._liquidityPoolState.tvl)}`)
-}
+
             return dbService.transaction((manager: EntityManager) => {
                 return manager.save(
                     LiquidityPoolTick.make(
@@ -100,9 +94,7 @@ logInfo(`ddddd here 3 ${Math.abs(lastTick ? this._liquidityPoolState.tvl - lastT
                     )
                 ).then((tick: LiquidityPoolTick) => {
                     operationWs.broadcast(tick);
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-logInfo(`ddddd here 3.5 ${tick.time}`)
-}
+
                     eventService.pushEvent({
                         type: 'LiquidityPoolTickCreated',
                         data: tick,
@@ -112,9 +104,7 @@ logInfo(`ddddd here 3.5 ${tick.time}`)
                 }).catch((reason: any) => this.createOrUpdateTick(startOfTick, resolution));
             });
         }
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-logInfo(`ddddd here 4`)
-}
+
         if (price < existingTick.low) {
             existingTick.low = price;
         }
@@ -131,9 +121,7 @@ logInfo(`ddddd here 4`)
             return manager.save(existingTick)
                 .then((tick: LiquidityPoolTick) => {
                     operationWs.broadcast(tick);
-if (this._liquidityPoolState.liquidityPool.identifier === 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c9b65707373c4cec488b16151a64d7102dbae16857c500652b5c513650b8d604e') {
-logInfo(`ddddd here 5`)
-}
+
                     eventService.pushEvent({
                         type: 'LiquidityPoolTickUpdated',
                         data: tick,
