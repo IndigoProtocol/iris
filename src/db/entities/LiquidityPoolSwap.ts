@@ -35,7 +35,7 @@ export class LiquidityPoolSwap extends BaseEntity {
     swapInAmount: number;
 
     @Column({ type: 'bigint', nullable: true, unsigned: true })
-    minReceive: number | undefined;
+    minReceive: number;
 
     @Column({ type: 'bigint', nullable: true, unsigned: true })
     actualReceive: number | undefined;

@@ -25,7 +25,6 @@ import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
-import { logInfo } from '../logger';
 
 /**
  * MinswapV2 constants.
