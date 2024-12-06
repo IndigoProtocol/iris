@@ -50,6 +50,7 @@ export enum DatumParameterKey {
     Direction = 'Direction',
     AScale = 'AScale',
     BScale = 'BScale',
+    TreasuryFee = 'TreasuryFee',
 
     TokenPolicyId = 'TokenPolicyId',
     TokenAssetName = 'TokenAssetName',
@@ -77,6 +78,8 @@ export enum DatumParameterKey {
     PastOrderFills = 'PastOrderFills',
     ConsumedTxHash = 'ConsumedTxHash',
     CancelDatum = 'CancelDatum',
+    Batcher = 'Batcher',
+    Beacon = 'Beacon',
     Unknown = 'Unknown',
 }
 
@@ -89,6 +92,7 @@ export enum Dex {
     WingRidersV2 = 'WingRidersV2',
     MuesliSwap = 'MuesliSwap',
     Spectrum = 'Spectrum',
+    Splash = 'Splash',
     TeddySwap = 'TeddySwap',
     GeniusYield = 'GeniusYield',
     VyFinance = 'VyFinance',

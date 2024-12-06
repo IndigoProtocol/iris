@@ -7,7 +7,7 @@ export class DefinitionBuilder {
 
     private readonly _definition: DefinitionConstr;
 
-    constructor(definition: DefinitionConstr) {
+    constructor(definition: DefinitionConstr | Function) {
         this._definition = _.cloneDeepWith(definition, (value: any) => {
             if (value instanceof Function) {
                 return value;

@@ -149,6 +149,8 @@ export class AmmOperationHandler {
                     ? [{
                         dex: order.dex,
                         identifier: order.liquidityPoolIdentifier,
+                    }, {
+                        identifier: order.liquidityPoolIdentifier,
                     }]
                     : [{
                         dex: order.dex,
@@ -238,6 +240,8 @@ export class AmmOperationHandler {
                     ? [{
                         dex: order.dex,
                         identifier: order.liquidityPoolIdentifier,
+                    }, {
+                        identifier: order.liquidityPoolIdentifier,
                     }]
                     : [{
                         dex: order.dex,
@@ -319,6 +323,8 @@ export class AmmOperationHandler {
                     ? [{
                         dex: deposit.dex,
                         identifier: deposit.liquidityPoolIdentifier,
+                    }, {
+                        identifier: deposit.liquidityPoolIdentifier,
                     }]
                     : [{
                         dex: deposit.dex,
@@ -396,20 +402,22 @@ export class AmmOperationHandler {
                   'liquidityPool.tokenB',
                   'tokenLp',
                 ],
-                where: [
-                    withdraw.liquidityPoolIdentifier
-                        ? {
-                            liquidityPool: {
-                                dex: withdraw.dex,
-                                identifier: withdraw.liquidityPoolIdentifier,
-                            },
-                        }
-                        : {
-                            tokenLp: {
-                                id: withdraw.lpToken.id
-                            },
-                        }
-                ],
+                where: withdraw.liquidityPoolIdentifier
+                    ? [{
+                        liquidityPool: {
+                            dex: withdraw.dex,
+                            identifier: withdraw.liquidityPoolIdentifier,
+                        },
+                    }, {
+                        liquidityPool: {
+                            identifier: withdraw.liquidityPoolIdentifier,
+                        },
+                    }]
+                    : [{
+                        tokenLp: {
+                            id: withdraw.lpToken.id
+                        },
+                    }],
             }) ?? undefined;
 
             if (liquidityPoolState) {
