@@ -1,7 +1,6 @@
 import { DatumParameterKey } from './constants';
 import { DatumParameters, DefinitionConstr, DefinitionField } from './types';
 import _ from 'lodash';
-import * as process from 'process';
 
 export class DefinitionBuilder {
 

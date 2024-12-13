@@ -22,7 +22,6 @@ import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import * as process from 'process';
 
 /**
  * Splash constants.
