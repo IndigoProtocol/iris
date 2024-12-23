@@ -32,6 +32,9 @@ export class LiquidityPool extends BaseEntity {
     @Column({ type: 'bigint', unsigned: true })
     createdSlot: number;
 
+    @Column({ nullable: true })
+    meta: string;
+
     @OneToOne(() => LiquidityPoolState)
     @JoinColumn()
     latestState: Relation<LiquidityPoolState>;

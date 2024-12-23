@@ -2,6 +2,7 @@ import { BaseEntityResource } from './BaseEntityResource';
 import { LiquidityPool } from '../../db/entities/LiquidityPool';
 import { AssetResource } from './AssetResource';
 import { LiquidityPoolStateResource } from './LiquidityPoolStateResource';
+import { stringify } from '../../utils';
 
 export class LiquidityPoolResource extends BaseEntityResource {
 
@@ -24,7 +25,8 @@ export class LiquidityPoolResource extends BaseEntityResource {
             tokenA: entity.tokenA ? this._assetResource.toJson(entity.tokenA) : null,
             tokenB: entity.tokenB ? this._assetResource.toJson(entity.tokenB) : null,
             createdSlot: entity.createdSlot,
-            state: entity.latestState ? this._stateResource.toJson(entity.latestState) : null
+            state: entity.latestState ? this._stateResource.toJson(entity.latestState) : null,
+            meta: entity.meta ? stringify(entity.meta) : null,
         };
     }
 
@@ -38,7 +40,8 @@ export class LiquidityPoolResource extends BaseEntityResource {
             tA: entity.tokenA ? this._assetResource.toCompressed(entity.tokenA) : null,
             tB: entity.tokenB ? this._assetResource.toCompressed(entity.tokenB) : null,
             cS: entity.createdSlot,
-            s: entity.latestState ? this._stateResource.toCompressed(entity.latestState) : null
+            s: entity.latestState ? this._stateResource.toCompressed(entity.latestState) : null,
+            m: entity.meta ? stringify(entity.meta) : null,
         };
     }
 

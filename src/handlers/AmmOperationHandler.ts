@@ -140,7 +140,7 @@ export class AmmOperationHandler {
 
         const retrievePool: any = async (manager: EntityManager, attempt: number = 0) => {
             if (attempt === MAX_RESOLVE_ATTEMPTS) {
-                return Promise.reject(`Unable to find liquidity pool. ${stringify(order)}`);
+                return Promise.reject(`Unable to find liquidity pool. ${order.txHash}`);
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
@@ -162,6 +162,22 @@ export class AmmOperationHandler {
                         },
                     }, {
                         dex: order.dex,
+                        tokenA: {
+                            id: order.swapOutToken ? order.swapOutToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: order.backupDex,
+                        tokenA: {
+                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: order.swapOutToken ? order.swapOutToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: order.backupDex,
                         tokenA: {
                             id: order.swapOutToken ? order.swapOutToken.id : IsNull(),
                         },
@@ -231,7 +247,7 @@ export class AmmOperationHandler {
 
         const retrievePool: any = async (manager: EntityManager, attempt: number = 0) => {
             if (attempt === MAX_RESOLVE_ATTEMPTS) {
-                return Promise.reject(`Unable to find liquidity pool. ${stringify(order)}`);
+                return Promise.reject(`Unable to find liquidity pool. ${order.txHash}`);
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
@@ -253,6 +269,22 @@ export class AmmOperationHandler {
                         },
                     }, {
                         dex: order.dex,
+                        tokenA: {
+                            id: order.forToken ? order.forToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: order.backupDex,
+                        tokenA: {
+                            id: order.swapInToken ? order.swapInToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: order.forToken ? order.forToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: order.backupDex,
                         tokenA: {
                             id: order.forToken ? order.forToken.id : IsNull(),
                         },
@@ -314,7 +346,7 @@ export class AmmOperationHandler {
 
         const retrievePool: any = async (manager: EntityManager, attempt: number = 0) => {
             if (attempt === MAX_RESOLVE_ATTEMPTS) {
-                return Promise.reject(`Unable to find liquidity pool. ${stringify(deposit)}`);
+                return Promise.reject(`Unable to find liquidity pool. ${deposit.txHash}`);
             }
 
             const liquidityPool: LiquidityPool | undefined = await manager.findOne(LiquidityPool, {
@@ -336,6 +368,22 @@ export class AmmOperationHandler {
                         },
                     }, {
                         dex: deposit.dex,
+                        tokenA: {
+                            id: deposit.depositBToken ? deposit.depositBToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: deposit.depositAToken ? deposit.depositAToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: deposit.backupDex,
+                        tokenA: {
+                            id: deposit.depositAToken ? deposit.depositAToken.id : IsNull(),
+                        },
+                        tokenB: {
+                            id: deposit.depositBToken ? deposit.depositBToken.id : IsNull(),
+                        },
+                    }, {
+                        dex: deposit.backupDex,
                         tokenA: {
                             id: deposit.depositBToken ? deposit.depositBToken.id : IsNull(),
                         },
@@ -392,7 +440,7 @@ export class AmmOperationHandler {
 
         const retrievePool: any = async (manager: EntityManager, attempt: number = 0) => {
             if (attempt === MAX_RESOLVE_ATTEMPTS) {
-                return Promise.reject(`Unable to find liquidity pool. ${stringify(withdraw)}`);
+                return Promise.reject(`Unable to find liquidity pool. ${withdraw.txHash}`);
             }
 
             const liquidityPoolState: LiquidityPoolState | undefined = await manager.findOne(LiquidityPoolState, {

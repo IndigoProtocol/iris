@@ -117,8 +117,14 @@ export function formatTransaction(block: BlockPraos | null, transaction: OgmiosT
                 script: output.script,
             } as Utxo;
         }) as Utxo[],
+        references: transaction.references?.map((reference: TransactionOutputReference) => {
+            return {
+                forTxHash: reference.transaction.id,
+                index: reference.index,
+            } as Utxo;
+        }) ?? [] as Utxo[],
         fee: transaction.fee?.ada.lovelace ?? 0n,
-        mints: transaction.mint?.assets
+        mints: transaction.mint
             ? Object.keys(transaction.mint)
                 .reduce((mints: AssetBalance[], policyId: string) => {
                     if (! transaction.mint) return mints;

@@ -33,6 +33,9 @@ const LP_TOKEN_POLICY_ID: string = 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616
 const MSP: string = 'f5808c2c990d86da54bfc97d89cee6efa20cd8461616359478d96b4c4d5350';
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 const ORDER_SCRIPT_HASH: string = 'c3e28c36c3447315ba5a56f33da6a6ddc1770a876a8d9f0cb3a97c4c';
+const CANCEL_REFERENCE_TX_HASHES: string[] = [
+    'cf4ecddde0d81f9ce8fcc881a85eb1f8ccdaf6807f03fea4cd02da896a621776',
+];
 
 export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
 
@@ -48,7 +51,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
             this.zapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, [ORDER_SCRIPT_HASH], CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, [ORDER_SCRIPT_HASH], CANCEL_ORDER_DATUM, CANCEL_REFERENCE_TX_HASHES),
         ]).then((operations: AmmDexOperation[][]) => operations.flat());
     }
 

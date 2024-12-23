@@ -32,6 +32,9 @@ const WITHDRAW_CONTRACT_ADDRESS: string = 'addr1zx4ktrt9k4chhurm6wc6ntfg6vwpswq3
 const POOL_PUB_KEY: string = '28bbd1f7aebb3bc59e13597f333aeefb8f5ab78eda962de1d605b388';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const CANCEL_ORDER_DATUM: string = 'd8799f00000001ff';
+const CANCEL_REFERENCE_TX_HASHES: string[] = [
+    'fb6906c2bc39777086036f9c46c297e9d8a41ede154b398d85245a2549b4bf04',
+];
 
 export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
 
@@ -46,7 +49,7 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, [SWAP_CONTRACT_ADDRESS, DEPOSIT_CONTRACT_ADDRESS, WITHDRAW_CONTRACT_ADDRESS], CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, [SWAP_CONTRACT_ADDRESS, DEPOSIT_CONTRACT_ADDRESS, WITHDRAW_CONTRACT_ADDRESS], CANCEL_ORDER_DATUM, CANCEL_REFERENCE_TX_HASHES),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
     }
 

@@ -84,12 +84,15 @@ export abstract class BaseAmmDexAnalyzer {
     /**
      * Retrieve the possible operations used in a cancel operation.
      */
-    protected cancelledOperationInputs(transaction: Transaction, orderAddresses: string[], redeemerDatum: string): OperationStatus[] {
+    protected cancelledOperationInputs(transaction: Transaction, orderAddresses: string[], redeemerDatum: string, referenceHashes: string[] = []): OperationStatus[] {
         const containsOrderAddress: boolean = transaction.scriptHashes?.some((scriptHash: string) => {
             return orderAddresses.includes(scriptHashToAddress(scriptHash)) || orderAddresses.includes(scriptHash);
         }) ?? false;
+        const containsReference: boolean = transaction.references?.some((reference: Utxo) => {
+            return referenceHashes.includes(reference.forTxHash);
+        }) ?? false;
 
-        if (! containsOrderAddress) return [];
+        if (! containsOrderAddress && ! containsReference) return [];
 
         return transaction.inputs.reduce((cancelInputs: OperationStatus[], input: Utxo, index: number) => {
             const redeemer: Redeemer | undefined = transaction.redeemers.find((redeemer: Redeemer) => {

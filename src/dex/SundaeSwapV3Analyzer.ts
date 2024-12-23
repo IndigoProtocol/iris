@@ -33,6 +33,9 @@ const LP_TOKEN_POLICY_ID: string = 'e0302560ced2fdcbfcb2602697df970cd0d6a38f94b3
 const CANCEL_ORDER_DATUM: string = 'd87980';
 const DEPOSIT_FEE: bigint = 2_000000n;
 const ORDER_SCRIPT_HASH: string = 'fa6a58bbe2d0ff05534431c8e2f0ef2cbdc1602a8456e4b13c8f3077';
+const CANCEL_REFERENCE_TX_HASHES: string[] = [
+    'f9121bf01434f6c263d5b1ffa35a155bed37a1aba641a209b35da7c841082d7b',
+];
 
 export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
 
@@ -48,7 +51,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             this.zapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, [ORDER_SCRIPT_HASH], CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, [ORDER_SCRIPT_HASH], CANCEL_ORDER_DATUM, CANCEL_REFERENCE_TX_HASHES),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
     }
 

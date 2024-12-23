@@ -35,6 +35,9 @@ const ORDER_SCRIPT_HASHES: string[] = [
     '2025463437ee5d64e89814a66ce7f98cb184a66ae85a2fbbfd750106',
     '464eeee89f05aff787d40045af2a40a83fd96c513197d32fbc54ff02',
 ];
+const CANCEL_REFERENCE_TX_HASHES: string[] = [
+    'b91eda29d145ab6c0bc0d6b7093cb24b131440b7b015033205476f39c690a51f',
+];
 const POOL_CONTRACT_STAKE_KEY: string = 'b2f6abf60ccde92eae1a2f4fdf65f2eaf6208d872c6f0e597cc10b07';
 const ACTION_SWAP: string = '00';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
@@ -52,7 +55,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, ORDER_SCRIPT_HASHES, CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, ORDER_SCRIPT_HASHES, CANCEL_ORDER_DATUM, CANCEL_REFERENCE_TX_HASHES),
         ]).then((operations: AmmDexOperation[][]) => operations.flat());
     }
 
@@ -103,6 +106,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                     output.toAddress,
                     SwapOrderType.Instant,
                     transaction,
+                    Dex.Spectrum
                 );
             } catch (e) {
                 return undefined;
@@ -229,6 +233,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.hash,
                     output.index,
                     transaction,
+                    Dex.Spectrum
                 );
             } catch (e) {
                 return undefined;
@@ -266,6 +271,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                     transaction.hash,
                     output.index,
                     transaction,
+                    Dex.Spectrum
                 );
             } catch (e) {
                 return undefined;

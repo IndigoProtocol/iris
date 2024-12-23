@@ -30,6 +30,9 @@ const ORDER_SCRIPT_HASHES: string[] = [
     'c134d839a64a5dfb9b155869ef3f34280751a622f69958baa8ffd29c',
     '23680ea6701b56f2c12ae79d8af94fd36f509b7b007029c7ce114840',
 ];
+const CANCEL_REFERENCE_TX_HASHES: string[] = [
+    '5ec56338104fcbfe32288c649d9633f0d9060abce8b8608b156294f0a81d29e2',
+];
 const POOL_NFT_POLICY_ID: string = '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
@@ -50,7 +53,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(transaction, ORDER_SCRIPT_HASHES, CANCEL_ORDER_DATUM),
+            this.cancelledOperationInputs(transaction, ORDER_SCRIPT_HASHES, CANCEL_ORDER_DATUM, CANCEL_REFERENCE_TX_HASHES),
         ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
     }
 

@@ -26,6 +26,7 @@ export interface Transaction {
     blockSlot: number;
     inputs: Utxo[];
     outputs: Utxo[];
+    references?: Utxo[];
     fee: bigint;
     mints: AssetBalance[];
     datums: {

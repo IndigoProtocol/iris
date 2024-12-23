@@ -67,11 +67,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             this.swapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
-            this.cancelledOperationInputs(
-                transaction,
-                ORDER_ADDRESSES,
-                CANCEL_ORDER_DATUM
-            ),
+            this.cancelledOperationInputs(transaction, ORDER_ADDRESSES, CANCEL_ORDER_DATUM),
         ]).then((operations: HybridOperation[][]) => operations.flat(2));
     }
 

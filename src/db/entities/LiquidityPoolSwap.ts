@@ -12,6 +12,7 @@ export class LiquidityPoolSwap extends BaseEntity {
     liquidityPoolIdentifier: string | undefined;
     toAddress: string;
     transaction: Transaction | undefined;
+    backupDex: string;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -81,6 +82,7 @@ export class LiquidityPoolSwap extends BaseEntity {
         toAddress: string,
         type: SwapOrderType = SwapOrderType.Instant,
         transaction?: Transaction,
+        backupDex: string = '',
     ): LiquidityPoolSwap {
         let instance: LiquidityPoolSwap = new LiquidityPoolSwap();
 
@@ -99,6 +101,7 @@ export class LiquidityPoolSwap extends BaseEntity {
         instance.outputIndex = outputIndex;
         instance.toAddress = toAddress;
         instance.transaction = transaction;
+        instance.backupDex = backupDex;
 
         return instance;
     }

@@ -11,6 +11,7 @@ export class LiquidityPoolZap extends BaseEntity {
     dex: Dex;
     liquidityPoolIdentifier: string | undefined;
     transaction: Transaction | undefined;
+    backupDex: string;
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -72,6 +73,7 @@ export class LiquidityPoolZap extends BaseEntity {
         txHash: string,
         outputIndex: number,
         transaction?: Transaction,
+        backupDex: string = '',
     ): LiquidityPoolZap {
         let instance: LiquidityPoolZap = new LiquidityPoolZap();
 
@@ -90,6 +92,7 @@ export class LiquidityPoolZap extends BaseEntity {
         instance.txHash = txHash;
         instance.outputIndex = outputIndex;
         instance.transaction = transaction;
+        instance.backupDex = backupDex;
 
         return instance;
     }
