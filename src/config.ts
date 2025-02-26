@@ -17,6 +17,10 @@ type Config = {
     DATABASE: string,
     DATABASE_TYPE: string,
 
+    REDIS_HOST: string,
+    REDIS_PORT: number,
+    REDIS_DB: number,
+
     OPERATION_WEBSOCKET_PORT: number,
 
     API_PORT: number,
@@ -38,6 +42,10 @@ const CONFIG: Config = {
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || '',
     DATABASE: process.env.DATABASE || '',
     DATABASE_TYPE: process.env.DATABASE_TYPE || 'mysql',
+
+    REDIS_HOST: process.env.REDIS_HOST || 'localhost',
+    REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
+    REDIS_DB: Number(process.env.REDIS_DB) || 0,
 
     OPERATION_WEBSOCKET_PORT: Number(process.env.OPERATION_WEBSOCKET_PORT) || 8080,
 

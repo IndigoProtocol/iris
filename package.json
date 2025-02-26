@@ -59,6 +59,7 @@
     "typeorm": "^0.3.17",
     "winston-daily-rotate-file": "^4.7.1",
     "winston-syslog": "^2.7.0",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "ioredis": "^5.5.0"
   }
 }
