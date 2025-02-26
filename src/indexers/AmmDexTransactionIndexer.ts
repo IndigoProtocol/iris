@@ -6,7 +6,8 @@ import { dbService } from '../indexerServices';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { logInfo } from '../logger';
-import { formatTransaction, lucidUtils } from '../utils';
+import { formatTransaction } from '../utils';
+import { slotToUnixTime} from "@lucid-evolution/lucid";
 import { AmmOperationHandler } from '../handlers/AmmOperationHandler';
 
 export class AmmDexTransactionIndexer extends BaseIndexer {
@@ -85,7 +86,7 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
         await dbService.dbSource.query("DELETE FROM liquidity_pool_swaps WHERE slot > ?", [slot]);
         await dbService.dbSource.query("DELETE FROM liquidity_pool_zaps WHERE slot > ?", [slot]);
         await dbService.dbSource.query("DELETE FROM liquidity_pools WHERE createdSlot > ?", [slot]);
-        await dbService.dbSource.query("DELETE FROM liquidity_pool_ticks WHERE time > ?", [lucidUtils.slotToUnixTime(slot) / 1000]);
+        await dbService.dbSource.query("DELETE FROM liquidity_pool_ticks WHERE time > ?", [slotToUnixTime("Mainnet", slot) / 1000]);
 
         logInfo('Removed AMM entities');
     }

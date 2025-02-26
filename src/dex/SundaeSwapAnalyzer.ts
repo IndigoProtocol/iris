@@ -15,7 +15,7 @@ import poolWithdrawDefinition from './definitions/sundaeswap/pool-withdraw';
 import zapDefinition from './definitions/sundaeswap/zap';
 import { Dex, SwapOrderType } from '../constants';
 import { toDefinitionDatum, tokensMatch } from '../utils';
-import { Data } from 'lucid-cardano';
+import { Data } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { Asset, Token } from '../db/entities/Asset';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';

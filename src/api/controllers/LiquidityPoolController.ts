@@ -14,7 +14,7 @@ import { LiquidityPoolWithdrawResource } from '../resources/LiquidityPoolWithdra
 import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
 import { LiquidityPoolTickResource } from '../resources/LiquidityPoolTickResource';
 import { TickInterval } from '../../constants';
-import { lucidUtils } from '../../utils';
+import { unixTimeToSlot, stakeCredentialOf, paymentCredentialOf } from '@lucid-evolution/lucid';
 import { LiquidityPoolState } from '../../db/entities/LiquidityPoolState';
 import { LiquidityPoolStateResource } from '../resources/LiquidityPoolStateResource';
 import { Asset } from '../../db/entities/Asset';
@@ -80,10 +80,10 @@ export class LiquidityPoolController extends BaseApiController {
                     })
                 )
                 .andWhere('swaps.slot >= :fromSlot', {
-                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                    fromSlot: unixTimeToSlot("Mainnet", Number(fromTimestamp) * 1000)
                 })
                 .andWhere('swaps.slot < :toSlot', {
-                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                    toSlot: unixTimeToSlot("Mainnet", Number(toTimestamp) * 1000)
                 })
                 .getMany();
         };
@@ -127,10 +127,10 @@ export class LiquidityPoolController extends BaseApiController {
                     })
                 )
                 .andWhere('states.slot >= :fromSlot', {
-                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                    fromSlot: unixTimeToSlot("Mainnet", Number(fromTimestamp) * 1000)
                 })
                 .andWhere('states.slot < :toSlot', {
-                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                    toSlot: unixTimeToSlot("Mainnet", Number(toTimestamp) * 1000)
                 })
                 .getMany();
         };
@@ -190,10 +190,10 @@ export class LiquidityPoolController extends BaseApiController {
                     })
                 )
                 .andWhere('deposits.slot >= :fromSlot', {
-                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                    fromSlot: unixTimeToSlot("Mainnet", Number(fromTimestamp) * 1000)
                 })
                 .andWhere('deposits.slot < :toSlot', {
-                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                    toSlot: unixTimeToSlot("Mainnet", Number(toTimestamp) * 1000)
                 })
                 .getMany();
         };
@@ -230,10 +230,10 @@ export class LiquidityPoolController extends BaseApiController {
                     }
                 )
                 .andWhere('withdraws.slot >= :fromSlot', {
-                    fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                    fromSlot: unixTimeToSlot("Mainnet", Number(fromTimestamp) * 1000)
                 })
                 .andWhere('withdraws.slot < :toSlot', {
-                    toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                    toSlot: unixTimeToSlot("Mainnet", Number(toTimestamp) * 1000)
                 })
                 .getMany();
         };
@@ -314,13 +314,13 @@ export class LiquidityPoolController extends BaseApiController {
 
                         if (fromTimestamp) {
                             query.andWhere('pools.createdSlot >= :fromSlot', {
-                                fromSlot: lucidUtils.unixTimeToSlot(Number(fromTimestamp) * 1000)
+                                fromSlot: unixTimeToSlot("Mainnet", Number(fromTimestamp) * 1000)
                             });
                         }
 
                         if (toTimestamp) {
                             query.andWhere('pools.createdSlot < :toSlot', {
-                                toSlot: lucidUtils.unixTimeToSlot(Number(toTimestamp) * 1000)
+                                toSlot: unixTimeToSlot("Mainnet", Number(toTimestamp) * 1000)
                             });
                         }
 
@@ -487,9 +487,9 @@ export class LiquidityPoolController extends BaseApiController {
                         if (sender) {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('swaps.senderPubKeyHash = :hash', {
-                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                    hash: paymentCredentialOf(sender as string).hash
                                 }).orWhere('swaps.senderStakeKeyHash = :hash', {
-                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
+                                    hash: stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('swaps.senderPubKeyHash = :hash', {
@@ -590,9 +590,9 @@ export class LiquidityPoolController extends BaseApiController {
                         if (sender) {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('deposits.senderPubKeyHash = :hash', {
-                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                    hash: paymentCredentialOf(sender as string).hash
                                 }).orWhere('deposits.senderStakeKeyHash = :hash', {
-                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
+                                    hash: stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('deposits.senderPubKeyHash = :hash', {
@@ -674,9 +674,9 @@ export class LiquidityPoolController extends BaseApiController {
                         if (sender) {
                             if ((sender as string).startsWith('addr')) {
                                 query.where('withdraws.senderPubKeyHash = :hash', {
-                                    hash: lucidUtils.paymentCredentialOf(sender as string).hash
+                                    hash: paymentCredentialOf(sender as string).hash
                                 }).orWhere('withdraws.senderStakeKeyHash = :hash', {
-                                    hash: lucidUtils.stakeCredentialOf(sender as string).hash
+                                    hash: stakeCredentialOf(sender as string).hash
                                 });
                             } else {
                                 query.where('withdraws.senderPubKeyHash = :hash', {

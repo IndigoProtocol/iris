@@ -14,8 +14,8 @@ import poolDepositDefinition from './definitions/sundaeswap-v3/pool-deposit';
 import poolWithdrawDefinition from './definitions/sundaeswap-v3/pool-withdraw';
 import zapDefinition from './definitions/sundaeswap-v3/zap';
 import { Dex, SwapOrderType } from '../constants';
-import { lucidUtils, toDefinitionDatum, tokensMatch } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { toDefinitionDatum, tokensMatch } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { Asset, Token } from '../db/entities/Asset';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
@@ -65,7 +65,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                     return resolve(undefined);
                 }
 
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                 if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                     return resolve(undefined);
@@ -143,7 +143,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                     return resolve(undefined);
                 }
 
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                 if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                     return resolve(undefined);
@@ -273,7 +273,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                 return undefined;
@@ -321,7 +321,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                 return undefined;

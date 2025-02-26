@@ -4,9 +4,9 @@ import { dbService } from '../indexerServices';
 import { AssetBalance, Utxo } from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
-import { lucidUtils, tokenId } from '../utils';
+import { tokenId } from '../utils';
 import { logInfo } from '../logger';
-import { AddressDetails } from 'lucid-cardano';
+import { AddressDetails, getAddressDetails } from '@lucid-evolution/lucid';
 import { Asset } from '../db/entities/Asset';
 
 export class UpdateAmountReceived extends BaseJob {
@@ -44,7 +44,7 @@ export class UpdateAmountReceived extends BaseJob {
 
         swapOrders = swapOrders.map((swapOrder: LiquidityPoolSwap) => {
             const settledUtxo: Utxo | undefined = this._liquidityPoolState.transactionOutputs.find((utxo: Utxo) => {
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(utxo.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(utxo.toAddress);
 
                 return (addressDetails.paymentCredential && addressDetails.paymentCredential.hash === swapOrder.senderPubKeyHash)
                     && (! swapOrder.senderStakeKeyHash || (addressDetails.stakeCredential && addressDetails.stakeCredential.hash === swapOrder.senderStakeKeyHash));

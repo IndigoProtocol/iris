@@ -11,8 +11,8 @@ import swapDefinition from './definitions/muesliswap/swap';
 import poolDefinition from './definitions/muesliswap/pool';
 import poolDepositDefinition from './definitions/muesliswap/pool-deposit';
 import poolWithdrawDefinition from './definitions/muesliswap/pool-withdraw';
-import { lucidUtils, stringify, toDefinitionDatum } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { stringify, toDefinitionDatum } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { Dex, SwapOrderType } from '../constants';
 import { Asset, Token } from '../db/entities/Asset';
@@ -92,7 +92,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
         if (! receiverUtxo) return [];
 
-        const receiverDetails: AddressDetails = lucidUtils.getAddressDetails(receiverUtxo.toAddress);
+        const receiverDetails: AddressDetails = getAddressDetails(receiverUtxo.toAddress);
         const swapOrder: LiquidityPoolSwap | undefined = this.swapOrderFromUtxo(transaction, updatedOrderUtxo);
 
         if (! swapOrder) return [];

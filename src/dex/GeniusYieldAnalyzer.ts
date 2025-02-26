@@ -10,8 +10,8 @@ import {
     Utxo
 } from '../types';
 import { OrderBookOrder } from '../db/entities/OrderBookOrder';
-import { lucidUtils, toDefinitionDatum } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { toDefinitionDatum } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import orderDefinition from './definitions/genius-yield/order';
 import partialFillDefinition from './definitions/genius-yield/partial-fill';
@@ -99,7 +99,7 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                     const builder: DefinitionBuilder = new DefinitionBuilder(partialFillDefinition);
                     const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
 
-                    const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                    const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                     return OrderBookMatch.make(
                         Dex.GeniusYield,
@@ -149,7 +149,7 @@ export class GeniusYieldAnalyzer extends BaseOrderBookDexAnalyzer {
                         return undefined;
                     }
 
-                    const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                    const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                     return {
                         type: 'OrderBookOrderCancellation',

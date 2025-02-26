@@ -16,7 +16,7 @@ import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import axios from 'axios';
 import { Asset, Token } from '../db/entities/Asset';
 import { toDefinitionDatum, tokensMatch } from '../utils';
-import { Data } from 'lucid-cardano';
+import { Data } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import poolDefinition from './definitions/vyfinance/pool';
 import poolDepositDefinition from './definitions/vyfinance/pool-deposit';

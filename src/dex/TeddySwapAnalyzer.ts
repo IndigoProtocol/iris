@@ -9,8 +9,8 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { lucidUtils, toDefinitionDatum } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { toDefinitionDatum } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/teddyswap/swap';
 import poolDefinition from './definitions/teddyswap/pool';
@@ -107,7 +107,7 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected liquidityPoolStates(transaction: Transaction): LiquidityPoolState[] {
         return transaction.outputs.map((output: Utxo) => {
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             // Other addresses have pools, but are used for testing
             if (! addressDetails.paymentCredential || addressDetails.paymentCredential.hash !== POOL_PUB_KEY || ! output.datum) {

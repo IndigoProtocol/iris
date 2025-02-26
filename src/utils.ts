@@ -7,7 +7,6 @@ import {
     Transaction,
     Utxo
 } from './types';
-import { Lucid, Utils } from 'lucid-cardano';
 import { Asset, Token } from './db/entities/Asset';
 import { LiquidityPool } from './db/entities/LiquidityPool';
 import {
@@ -16,8 +15,6 @@ import {
     TransactionOutput,
     TransactionOutputReference
 } from '@cardano-ogmios/schema';
-
-export const lucidUtils: Utils = new Utils(new Lucid());
 
 export function toDefinitionDatum(unconstructedField: any): DefinitionField {
     if (unconstructedField?.fields) {
@@ -62,12 +59,6 @@ export function stringify(value: any): string {
             ? Number(value)
             : value
     )
-}
-
-export function scriptHashToAddress(scriptHash: string): string {
-    return lucidUtils.credentialToAddress(
-        lucidUtils.scriptHashToCredential(scriptHash)
-    );
 }
 
 export function tokenDecimals(token: Token, pool: LiquidityPool): number {

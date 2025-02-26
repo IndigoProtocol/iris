@@ -1,5 +1,6 @@
 import { BaseJob } from './BaseJob';
-import { lucidUtils, tokensMatch } from '../utils';
+import { tokensMatch } from '../utils';
+import { slotToUnixTime } from '@lucid-evolution/lucid'
 import { EntityManager } from 'typeorm';
 import { dbService, eventService, operationWs, queue } from '../indexerServices';
 import { TickInterval } from '../constants';
@@ -20,7 +21,7 @@ export class UpdateOrderBookTicks extends BaseJob {
     public async handle(): Promise<any> {
         logInfo(`[Queue] \t UpdateOrderBookTicks for ${this._match.txHash}`);
 
-        const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._match.slot));
+        const slotDate: Date = new Date(slotToUnixTime("Mainnet", this._match.slot));
 
         const startOfMinute: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), slotDate.getUTCMinutes(), 0, 0).getTime() / 1000;
         const startOfHour: number = new Date(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), slotDate.getUTCHours(), 0, 0, 0).getTime() / 1000;

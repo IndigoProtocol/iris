@@ -1,6 +1,6 @@
 import { BaseJob } from './BaseJob';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
-import { lucidUtils } from '../utils';
+import { slotToUnixTime } from '@lucid-evolution/lucid'
 import { EntityManager } from 'typeorm';
 import { dbService, eventService, operationWs } from '../indexerServices';
 import { LiquidityPoolTick } from '../db/entities/LiquidityPoolTick';
@@ -20,7 +20,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
     public async handle(): Promise<any> {
         logInfo(`[Queue] \t UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`);
 
-        const slotDate: Date = new Date(lucidUtils.slotToUnixTime(this._liquidityPoolState.slot));
+        const slotDate: Date = new Date(slotToUnixTime("Mainnet", this._liquidityPoolState.slot));
 
         const startOfMinute: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), slotDate.getMinutes(), 0, 0).getTime() / 1000;
         const startOfHour: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), 0, 0, 0).getTime() / 1000;

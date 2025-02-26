@@ -1,5 +1,5 @@
 import { HybridOperation, Transaction, Utxo } from '../types';
-import { scriptHashToAddress } from '../utils';
+import { scriptHashToCredential, credentialToAddress } from '@lucid-evolution/lucid';
 import { DexOperationStatus } from '../constants';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
@@ -71,7 +71,7 @@ export abstract class BaseHybridDexAnalyzer {
      */
     protected cancelledOperationInputs(transaction: Transaction, orderAddresses: string[], redeemerDatum: string, referenceHashes: string[] = []): OperationStatus[] {
         const containsOrderAddress: boolean = transaction.scriptHashes?.some((scriptHash: string) => {
-            return orderAddresses.includes(scriptHashToAddress(scriptHash)) || orderAddresses.includes(scriptHash);
+            return orderAddresses.includes(credentialToAddress("Mainnet", scriptHashToCredential(scriptHash))) || orderAddresses.includes(scriptHash);
         }) ?? false;
         const containsReference: boolean = transaction.references?.some((reference: Utxo) => {
             return referenceHashes.includes(reference.forTxHash);

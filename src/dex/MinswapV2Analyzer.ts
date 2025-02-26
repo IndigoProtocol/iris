@@ -9,8 +9,8 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { lucidUtils, toDefinitionDatum } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { toDefinitionDatum } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/minswap-v2/swap';
 import zapDefinition from './definitions/minswap-v2/zap';
@@ -65,7 +65,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     return resolve(undefined);
                 }
 
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                 if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                     return resolve(undefined);
@@ -130,7 +130,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     return resolve(undefined);
                 }
 
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                 if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                     return resolve(undefined);
@@ -261,7 +261,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     return resolve(undefined);
                 }
 
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+                const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
                 if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                     return resolve(undefined);
@@ -323,7 +323,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
                 return undefined;

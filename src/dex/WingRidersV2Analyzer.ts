@@ -9,8 +9,8 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { lucidUtils, toDefinitionDatum, tokensMatch } from '../utils';
-import { AddressDetails, Data } from 'lucid-cardano';
+import { toDefinitionDatum, tokensMatch } from '../utils';
+import { AddressDetails, Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/wingriders-v2/swap';
 import poolDefinition from './definitions/wingriders-v2/pool';
@@ -66,7 +66,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '')) {
                 return undefined;
@@ -229,7 +229,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '')) {
                 return undefined;
@@ -292,7 +292,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                 return undefined;
             }
 
-            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+            const addressDetails: AddressDetails = getAddressDetails(output.toAddress);
 
             if (! ORDER_SCRIPT_HASHES.includes(addressDetails.paymentCredential?.hash ?? '')) {
                 return undefined;

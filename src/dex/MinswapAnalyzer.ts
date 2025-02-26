@@ -10,7 +10,7 @@ import {
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
 import { toDefinitionDatum, tokenId } from '../utils';
-import { Data } from 'lucid-cardano';
+import { Data } from '@lucid-evolution/lucid';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/minswap/swap';
 import zapDefinition from './definitions/minswap/zap';
