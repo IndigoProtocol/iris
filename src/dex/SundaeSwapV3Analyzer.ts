@@ -326,7 +326,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 : relevantAssets[1].quantity,
             ),
             Number(datumParameters.TotalLpTokens),
-            Number(datumParameters.OpeningFee) / 100,
+            Number(datumParameters.FeeANumerator ?? 0) / 100,
             transaction.blockSlot,
             transaction.hash,
             possibleOperationStatuses,
