@@ -43,11 +43,11 @@ export class LiquidityPoolState extends BaseEntity {
   @JoinColumn()
   tokenLp: Asset;
 
-  @Column({ type: "bigint", unsigned: true })
-  reserveA: number;
+  @Column()
+  reserveA: string;
 
-  @Column({ type: "bigint", unsigned: true })
-  reserveB: number;
+  @Column()
+  reserveB: string;
 
   @Column({ type: "bigint", unsigned: true })
   lpTokens: number;
@@ -74,8 +74,8 @@ export class LiquidityPoolState extends BaseEntity {
     tokenA: Token,
     tokenB: Token,
     tokenLp: Asset,
-    reserveA: number,
-    reserveB: number,
+    reserveA: string,
+    reserveB: string,
     lpTokens: number,
     feePercent: number,
     slot: number,

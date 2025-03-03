@@ -314,13 +314,13 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             tokenA,
             tokenB,
             lpToken,
-            Number(
+            String(
               tokenA === "lovelace"
                 ? output.lovelaceBalance -
                     BigInt(datumParameters.ProtocolFee ?? 0n)
                 : relevantAssets[0].quantity,
             ),
-            Number(
+            String(
               tokenA === "lovelace"
                 ? relevantAssets[0].quantity
                 : relevantAssets[1].quantity,

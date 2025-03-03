@@ -274,14 +274,14 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             tokenA,
             tokenB,
             lpTokenAssetBalance.asset,
-            Number(
+            String(
               tokenA === "lovelace"
                 ? reserveA - treasuryA - MIN_POOL_ADA < 1_000_000n
                   ? reserveA - treasuryA - MIN_POOL_ADA
                   : reserveA - treasuryA
                 : reserveA,
             ),
-            Number(
+            String(
               tokenB === "lovelace"
                 ? reserveB - treasuryB - MIN_POOL_ADA < 1_000_000n
                   ? reserveB - treasuryB - MIN_POOL_ADA

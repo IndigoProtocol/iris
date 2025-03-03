@@ -308,12 +308,12 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
             tokenA,
             tokenB,
             lpToken,
-            Number(
+            String(
               tokenA === "lovelace"
                 ? output.lovelaceBalance
                 : relevantAssets[0].quantity,
             ),
-            Number(
+            String(
               tokenA === "lovelace"
                 ? relevantAssets[0].quantity
                 : relevantAssets[1].quantity,

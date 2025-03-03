@@ -1,135 +1,199 @@
-import { BaseJob } from './BaseJob';
-import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
-import { slotToUnixTime } from '@lucid-evolution/lucid'
-import { EntityManager } from 'typeorm';
-import { dbService, eventService, operationWs } from '../indexerServices';
-import { LiquidityPoolTick } from '../db/entities/LiquidityPoolTick';
-import { TickInterval } from '../constants';
-import { logError, logInfo } from '../logger';
+import { slotToUnixTime } from "@lucid-evolution/lucid";
+import { EntityManager } from "typeorm";
+import { TickInterval } from "../constants";
+import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
+import { LiquidityPoolTick } from "../db/entities/LiquidityPoolTick";
+import { dbService, eventService, operationWs } from "../indexerServices";
+import { logError, logInfo } from "../logger";
+import { BaseJob } from "./BaseJob";
 
 export class UpdateLiquidityPoolTicks extends BaseJob {
+  private readonly _liquidityPoolState: LiquidityPoolState;
 
-    private readonly _liquidityPoolState: LiquidityPoolState;
+  constructor(liquidityPoolState: LiquidityPoolState) {
+    super();
 
-    constructor(liquidityPoolState: LiquidityPoolState) {
-        super();
+    this._liquidityPoolState = liquidityPoolState;
+  }
 
-        this._liquidityPoolState = liquidityPoolState;
+  public async handle(): Promise<any> {
+    logInfo(
+      `[Queue] \t UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`,
+    );
+
+    const slotDate: Date = new Date(
+      slotToUnixTime("Mainnet", this._liquidityPoolState.slot),
+    );
+
+    const startOfMinute: number =
+      new Date(
+        slotDate.getFullYear(),
+        slotDate.getMonth(),
+        slotDate.getDate(),
+        slotDate.getHours(),
+        slotDate.getMinutes(),
+        0,
+        0,
+      ).getTime() / 1000;
+    const startOfHour: number =
+      new Date(
+        slotDate.getFullYear(),
+        slotDate.getMonth(),
+        slotDate.getDate(),
+        slotDate.getHours(),
+        0,
+        0,
+        0,
+      ).getTime() / 1000;
+    const startOfDay: number =
+      new Date(
+        slotDate.getFullYear(),
+        slotDate.getMonth(),
+        slotDate.getDate(),
+        0,
+        0,
+        0,
+        0,
+      ).getTime() / 1000;
+
+    return Promise.all([
+      this.createOrUpdateTick(startOfMinute, TickInterval.Minute),
+      this.createOrUpdateTick(startOfHour, TickInterval.Hour),
+      this.createOrUpdateTick(startOfDay, TickInterval.Day),
+    ]).catch((reason) => {
+      logError(`[Queue] \t UpdateLiquidityPoolTicks failed ${reason}`);
+    });
+  }
+
+  private async createOrUpdateTick(
+    startOfTick: number,
+    resolution: TickInterval,
+  ): Promise<any> {
+    if (!this._liquidityPoolState.liquidityPool) {
+      return Promise.reject(
+        "Liquidity Pool not found for liquidity pool state",
+      );
     }
 
-    public async handle(): Promise<any> {
-        logInfo(`[Queue] \t UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`);
+    const tokenADecimals: number = !this._liquidityPoolState.liquidityPool
+      .tokenA
+      ? 6
+      : (this._liquidityPoolState.liquidityPool.tokenA?.decimals ?? 0);
+    const tokenBDecimals: number =
+      this._liquidityPoolState.liquidityPool.tokenB.decimals;
 
-        const slotDate: Date = new Date(slotToUnixTime("Mainnet", this._liquidityPoolState.slot));
+    const price: number =
+      +this._liquidityPoolState.reserveB !== 0
+        ? +this._liquidityPoolState.reserveA /
+          10 ** tokenADecimals /
+          (+this._liquidityPoolState.reserveB / 10 ** tokenBDecimals)
+        : 0;
+    const existingTick: LiquidityPoolTick | undefined = await dbService.query(
+      (manager: EntityManager) => {
+        return (
+          manager
+            .createQueryBuilder(LiquidityPoolTick, "ticks")
+            .leftJoinAndSelect("ticks.liquidityPool", "liquidityPool")
+            .leftJoinAndSelect("liquidityPool.tokenA", "tokenA")
+            .leftJoinAndSelect("liquidityPool.tokenB", "tokenB")
+            .where("resolution = :resolution", { resolution })
+            .andWhere("ticks.liquidityPoolId = :liquidityPoolId", {
+              liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id,
+            })
+            .andWhere("ticks.time = :time", {
+              time: startOfTick,
+            })
+            .orderBy("ticks.time", "DESC")
+            .limit(1)
+            .getOne() ?? undefined
+        );
+      },
+    );
 
-        const startOfMinute: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), slotDate.getMinutes(), 0, 0).getTime() / 1000;
-        const startOfHour: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), slotDate.getHours(), 0, 0, 0).getTime() / 1000;
-        const startOfDay: number = new Date(slotDate.getFullYear(), slotDate.getMonth(), slotDate.getDate(), 0, 0, 0, 0).getTime() / 1000;
+    if (!existingTick) {
+      if (!this._liquidityPoolState.liquidityPool) {
+        return Promise.reject(
+          "Liquidity Pool not found for liquidity pool state",
+        );
+      }
 
-        return Promise.all([
-            this.createOrUpdateTick(startOfMinute, TickInterval.Minute),
-            this.createOrUpdateTick(startOfHour, TickInterval.Hour),
-            this.createOrUpdateTick(startOfDay, TickInterval.Day)
-        ]).catch((reason) => {
-            logError(`[Queue] \t UpdateLiquidityPoolTicks failed ${reason}`);
-        });
-    }
+      const lastTick: LiquidityPoolTick | undefined = await dbService.query(
+        (manager: EntityManager) => {
+          return (
+            manager
+              .createQueryBuilder(LiquidityPoolTick, "ticks")
+              .where("resolution = :resolution", { resolution })
+              .andWhere("ticks.liquidityPoolId = :liquidityPoolId", {
+                liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id,
+              })
+              .orderBy("ticks.time", "DESC")
+              .limit(1)
+              .getOne() ?? undefined
+          );
+        },
+      );
 
-    private async createOrUpdateTick(startOfTick: number, resolution: TickInterval): Promise<any> {
-        if (! this._liquidityPoolState.liquidityPool) {
-            return Promise.reject('Liquidity Pool not found for liquidity pool state');
-        }
+      const open: number = lastTick ? lastTick.close : price;
 
-        const tokenADecimals: number = ! this._liquidityPoolState.liquidityPool.tokenA ? 6 : this._liquidityPoolState.liquidityPool.tokenA?.decimals ?? 0;
-        const tokenBDecimals: number = this._liquidityPoolState.liquidityPool.tokenB.decimals;
+      return dbService.transaction((manager: EntityManager) => {
+        return manager
+          .save(
+            LiquidityPoolTick.make(
+              this._liquidityPoolState.liquidityPool,
+              resolution,
+              startOfTick,
+              open,
+              open > price ? open : price,
+              open < price ? open : price,
+              price,
+              this._liquidityPoolState.tvl,
+              Math.abs(
+                lastTick
+                  ? this._liquidityPoolState.tvl - lastTick.tvl
+                  : this._liquidityPoolState.tvl,
+              ),
+            ),
+          )
+          .then((tick: LiquidityPoolTick) => {
+            operationWs.broadcast(tick);
 
-        const price: number = this._liquidityPoolState.reserveB !== 0 ? (this._liquidityPoolState.reserveA / 10**tokenADecimals) / (this._liquidityPoolState.reserveB / 10**tokenBDecimals) : 0;
-        const existingTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
-                .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
-                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
-                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
-                .where('resolution = :resolution', { resolution })
-                .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
-                    liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id
-                })
-                .andWhere('ticks.time = :time', {
-                    time: startOfTick
-                })
-                .orderBy('ticks.time', 'DESC')
-                .limit(1)
-                .getOne() ?? undefined;
-        });
-
-        if (! existingTick) {
-            if (! this._liquidityPoolState.liquidityPool) {
-                return Promise.reject('Liquidity Pool not found for liquidity pool state');
-            }
-
-            const lastTick: LiquidityPoolTick | undefined = await dbService.query((manager: EntityManager) => {
-                return manager.createQueryBuilder(LiquidityPoolTick, 'ticks')
-                    .where('resolution = :resolution', { resolution })
-                    .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
-                        liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id
-                    })
-                    .orderBy('ticks.time', 'DESC')
-                    .limit(1)
-                    .getOne() ?? undefined;
+            eventService.pushEvent({
+              type: "LiquidityPoolTickCreated",
+              data: tick,
             });
 
-            const open: number = lastTick ? lastTick.close : price;
-
-            return dbService.transaction((manager: EntityManager) => {
-                return manager.save(
-                    LiquidityPoolTick.make(
-                        this._liquidityPoolState.liquidityPool,
-                        resolution,
-                        startOfTick,
-                        open,
-                        open > price ? open : price,
-                        open < price ? open : price,
-                        price,
-                        this._liquidityPoolState.tvl,
-                        Math.abs(lastTick ? this._liquidityPoolState.tvl - lastTick.tvl : this._liquidityPoolState.tvl)
-                    )
-                ).then((tick: LiquidityPoolTick) => {
-                    operationWs.broadcast(tick);
-
-                    eventService.pushEvent({
-                        type: 'LiquidityPoolTickCreated',
-                        data: tick,
-                    });
-
-                    return Promise.resolve();
-                }).catch((reason: any) => this.createOrUpdateTick(startOfTick, resolution));
-            });
-        }
-
-        if (price < existingTick.low) {
-            existingTick.low = price;
-        }
-
-        if (price > existingTick.high) {
-            existingTick.high = price;
-        }
-
-        existingTick.close = price;
-        existingTick.volume += Math.abs(existingTick.tvl - this._liquidityPoolState.tvl) / 2;
-        existingTick.tvl = this._liquidityPoolState.tvl;
-
-        return dbService.transaction((manager: EntityManager) => {
-            return manager.save(existingTick)
-                .then((tick: LiquidityPoolTick) => {
-                    operationWs.broadcast(tick);
-
-                    eventService.pushEvent({
-                        type: 'LiquidityPoolTickUpdated',
-                        data: tick,
-                    });
-
-                    return Promise.resolve();
-                });
-        });
+            return Promise.resolve();
+          })
+          .catch((reason: any) =>
+            this.createOrUpdateTick(startOfTick, resolution),
+          );
+      });
     }
 
+    if (price < existingTick.low) {
+      existingTick.low = price;
+    }
+
+    if (price > existingTick.high) {
+      existingTick.high = price;
+    }
+
+    existingTick.close = price;
+    existingTick.volume +=
+      Math.abs(existingTick.tvl - this._liquidityPoolState.tvl) / 2;
+    existingTick.tvl = this._liquidityPoolState.tvl;
+
+    return dbService.transaction((manager: EntityManager) => {
+      return manager.save(existingTick).then((tick: LiquidityPoolTick) => {
+        operationWs.broadcast(tick);
+
+        eventService.pushEvent({
+          type: "LiquidityPoolTickUpdated",
+          data: tick,
+        });
+
+        return Promise.resolve();
+      });
+    });
+  }
 }
