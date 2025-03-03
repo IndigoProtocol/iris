@@ -10,56 +10,56 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.TokenPolicyId // Pool NFT
+          bytes: DatumParameterKey.TokenPolicyId, // Pool NFT
         },
         {
-          bytes: DatumParameterKey.TokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.TokenAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.LpTokenPolicyId
+          bytes: DatumParameterKey.LpTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.LpTokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.LpTokenAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.LpFee
+      int: DatumParameterKey.LpFee,
     },
     [
       {
-        bytes: DatumParameterKey.StakeAdminPolicy
-      }
+        bytes: DatumParameterKey.StakeAdminPolicy,
+      },
     ],
     {
-      int: DatumParameterKey.LqBound
-    }
-  ]
-}
+      int: DatumParameterKey.LqBound,
+    },
+  ],
+};

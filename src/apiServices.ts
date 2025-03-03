@@ -1,8 +1,8 @@
 import { DatabaseService } from './services/DatabaseService';
 import { ApplicationContext } from './constants';
 
-const dbApiService: DatabaseService = new DatabaseService(ApplicationContext.Api);
+const dbApiService: DatabaseService = new DatabaseService(
+  ApplicationContext.Api
+);
 
-export {
-    dbApiService,
-}
+export { dbApiService };

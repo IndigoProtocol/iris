@@ -1,7 +1,7 @@
-import { LiquidityPoolStateResource } from "../api/resources/LiquidityPoolStateResource";
-import { IrisEventType } from "../constants";
-import { IrisEvent } from "../events.types";
-import { BaseEventListener } from "./BaseEventListener";
+import { LiquidityPoolStateResource } from '../api/resources/LiquidityPoolStateResource';
+import { IrisEventType } from '../constants';
+import { IrisEvent } from '../events.types';
+import { BaseEventListener } from './BaseEventListener';
 
 export class PoolStateListener extends BaseEventListener {
   public listenFor: IrisEventType[] = [
@@ -26,7 +26,7 @@ export class PoolStateListener extends BaseEventListener {
 
         return this.app.cache.setKey(
           storageKey,
-          new LiquidityPoolStateResource(false).toJson(event.data),
+          new LiquidityPoolStateResource(false).toJson(event.data)
         );
       default:
         return Promise.resolve();

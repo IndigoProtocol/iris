@@ -7,20 +7,20 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolIdentifier
-        }
-      ]
+          bytes: DatumParameterKey.PoolIdentifier,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SenderStakingKeyHash
-        }
-      ]
+          bytes: DatumParameterKey.SenderStakingKeyHash,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.ProtocolFee
+      int: DatumParameterKey.ProtocolFee,
     },
     {
       constructor: 0,
@@ -32,9 +32,9 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  bytes: DatumParameterKey.SenderPubKeyHash
-                }
-              ]
+                  bytes: DatumParameterKey.SenderPubKeyHash,
+                },
+              ],
             },
             {
               constructor: 0,
@@ -46,21 +46,21 @@ export default {
                       constructor: 0,
                       fields: [
                         {
-                          bytes: DatumParameterKey.SenderStakingKeyHash
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+                          bytes: DatumParameterKey.SenderStakingKeyHash,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
         {
           constructor: 0,
-          fields: []
-        }
-      ]
+          fields: [],
+        },
+      ],
     },
     {
       constructor: 2,
@@ -68,31 +68,31 @@ export default {
         [
           [
             {
-              bytes: DatumParameterKey.PoolAssetAPolicyId
+              bytes: DatumParameterKey.PoolAssetAPolicyId,
             },
             {
-              bytes: DatumParameterKey.PoolAssetAAssetName
+              bytes: DatumParameterKey.PoolAssetAAssetName,
             },
             {
-              int: DatumParameterKey.DepositA
-            }
+              int: DatumParameterKey.DepositA,
+            },
           ],
           [
             {
-              bytes: DatumParameterKey.PoolAssetBPolicyId
+              bytes: DatumParameterKey.PoolAssetBPolicyId,
             },
             {
-              bytes: DatumParameterKey.PoolAssetBAssetName
+              bytes: DatumParameterKey.PoolAssetBAssetName,
             },
             {
-              int: DatumParameterKey.DepositB
-            }
-          ]
-        ]
-      ]
+              int: DatumParameterKey.DepositB,
+            },
+          ],
+        ],
+      ],
     },
     {
-      bytes: DatumParameterKey.CancelDatum
-    }
-  ]
-}
+      bytes: DatumParameterKey.CancelDatum,
+    },
+  ],
+};

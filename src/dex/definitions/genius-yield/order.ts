@@ -8,7 +8,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.SenderPubKeyHash
+      bytes: DatumParameterKey.SenderPubKeyHash,
     },
     {
       constructor: 0,
@@ -17,9 +17,9 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.SenderPubKeyHash
-            }
-          ]
+              bytes: DatumParameterKey.SenderPubKeyHash,
+            },
+          ],
         },
         (field: DefinitionField, foundParameters: DatumParameters) => {
           if ('fields' in field) {
@@ -29,93 +29,98 @@ export default {
 
             const constr: DefinitionField = field.fields[0];
 
-            if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+            if (
+              'fields' in constr &&
+              'fields' in constr.fields[0] &&
+              'bytes' in constr.fields[0].fields[0]
+            ) {
               const field: DefinitionField = constr.fields[0].fields[0];
-              foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+              foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                field.bytes;
 
               return;
             }
           }
 
           throw new Error("Template definition does not match with 'bytes'");
-        }
-      ]
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SwapInTokenPolicyId
+          bytes: DatumParameterKey.SwapInTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapInTokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.SwapInTokenAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.OriginalOffer
+      int: DatumParameterKey.OriginalOffer,
     },
     {
-      int: DatumParameterKey.LeftOverOffer
+      int: DatumParameterKey.LeftOverOffer,
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SwapOutTokenPolicyId
+          bytes: DatumParameterKey.SwapOutTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapOutTokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.SwapOutTokenAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          int: DatumParameterKey.PriceDenominator
+          int: DatumParameterKey.PriceDenominator,
         },
         {
-          int: DatumParameterKey.PriceNumerator
-        }
-      ]
+          int: DatumParameterKey.PriceNumerator,
+        },
+      ],
     },
     {
-      bytes: DatumParameterKey.TokenAssetName
+      bytes: DatumParameterKey.TokenAssetName,
     },
     {
       constructor: 1,
-      fields: []
+      fields: [],
     },
     {
       constructor: 1,
-      fields: []
+      fields: [],
     },
     {
-      int: DatumParameterKey.PastOrderFills
+      int: DatumParameterKey.PastOrderFills,
     },
     {
-      int: DatumParameterKey.MakerFee
+      int: DatumParameterKey.MakerFee,
     },
     {
-      int: DatumParameterKey.TakerFee
+      int: DatumParameterKey.TakerFee,
     },
     {
       constructor: 0,
       fields: [
         {
-          int: DatumParameterKey.ContainedFee
+          int: DatumParameterKey.ContainedFee,
         },
         {
-          int: DatumParameterKey.ContainedFeePayment
+          int: DatumParameterKey.ContainedFeePayment,
         },
         {
-          int: DatumParameterKey.Unknown
-        }
-      ]
+          int: DatumParameterKey.Unknown,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.Unknown
-    }
-  ]
-}
+      int: DatumParameterKey.Unknown,
+    },
+  ],
+};

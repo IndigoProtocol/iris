@@ -7,12 +7,12 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
-} from "typeorm";
-import { Dex } from "../../constants";
-import { Asset } from "./Asset";
-import { LiquidityPoolState } from "./LiquidityPoolState";
+} from 'typeorm';
+import { Dex } from '../../constants';
+import { Asset } from './Asset';
+import { LiquidityPoolState } from './LiquidityPoolState';
 
-@Entity({ name: "liquidity_pools" })
+@Entity({ name: 'liquidity_pools' })
 export class LiquidityPool extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -37,7 +37,7 @@ export class LiquidityPool extends BaseEntity {
   @JoinColumn()
   tokenB: Relation<Asset>;
 
-  @Column({ type: "bigint", unsigned: true })
+  @Column({ type: 'bigint', unsigned: true })
   createdSlot: number;
 
   @Column({ nullable: true })
@@ -49,7 +49,7 @@ export class LiquidityPool extends BaseEntity {
 
   @OneToMany(
     () => LiquidityPoolState,
-    (state: LiquidityPoolState) => state.liquidityPool,
+    (state: LiquidityPoolState) => state.liquidityPool
   )
   @JoinColumn()
   states: Relation<LiquidityPoolState>[];
@@ -60,7 +60,7 @@ export class LiquidityPool extends BaseEntity {
     address: string,
     tokenA: Asset | undefined,
     tokenB: Asset,
-    createdSlot: number,
+    createdSlot: number
   ): LiquidityPool {
     let pool: LiquidityPool = new LiquidityPool();
 

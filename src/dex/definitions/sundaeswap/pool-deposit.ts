@@ -5,7 +5,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.PoolIdentifier
+      bytes: DatumParameterKey.PoolIdentifier,
     },
     {
       constructor: 0,
@@ -20,9 +20,9 @@ export default {
                   constructor: 0,
                   fields: [
                     {
-                      bytes: DatumParameterKey.SenderPubKeyHash
-                    }
-                  ]
+                      bytes: DatumParameterKey.SenderPubKeyHash,
+                    },
+                  ],
                 },
                 (field: DefinitionField, foundParameters: DatumParameters) => {
                   if ('fields' in field) {
@@ -32,32 +32,39 @@ export default {
 
                     const constr: DefinitionField = field.fields[0];
 
-                    if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+                    if (
+                      'fields' in constr &&
+                      'fields' in constr.fields[0] &&
+                      'bytes' in constr.fields[0].fields[0]
+                    ) {
                       const field: DefinitionField = constr.fields[0].fields[0];
-                      foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                      foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                        field.bytes;
 
                       return;
                     }
                   }
 
-                  throw new Error("Template definition does not match with 'bytes'");
-                }
-              ]
+                  throw new Error(
+                    "Template definition does not match with 'bytes'"
+                  );
+                },
+              ],
             },
             {
               constructor: 1,
-              fields: []
-            }
-          ]
+              fields: [],
+            },
+          ],
         },
         {
           constructor: 1,
-          fields: []
-        }
-      ]
+          fields: [],
+        },
+      ],
     },
     {
-      int: DatumParameterKey.ScooperFee
+      int: DatumParameterKey.ScooperFee,
     },
     {
       constructor: 2,
@@ -69,16 +76,16 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  int: DatumParameterKey.DepositA
+                  int: DatumParameterKey.DepositA,
                 },
                 {
-                  int: DatumParameterKey.DepositB
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+                  int: DatumParameterKey.DepositB,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

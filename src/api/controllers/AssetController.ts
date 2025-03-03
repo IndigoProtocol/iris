@@ -1,15 +1,15 @@
-import express from "express";
-import { Brackets, EntityManager } from "typeorm";
-import { dbApiService } from "../../apiServices";
-import { TickInterval } from "../../constants";
-import { Asset } from "../../db/entities/Asset";
-import { LiquidityPool } from "../../db/entities/LiquidityPool";
-import { LiquidityPoolState } from "../../db/entities/LiquidityPoolState";
-import { LiquidityPoolTick } from "../../db/entities/LiquidityPoolTick";
-import { AssetResource } from "../resources/AssetResource";
-import { LiquidityPoolResource } from "../resources/LiquidityPoolResource";
-import { LiquidityPoolTickResource } from "../resources/LiquidityPoolTickResource";
-import { BaseApiController } from "./BaseApiController";
+import express from 'express';
+import { Brackets, EntityManager } from 'typeorm';
+import { dbApiService } from '../../apiServices';
+import { TickInterval } from '../../constants';
+import { Asset } from '../../db/entities/Asset';
+import { LiquidityPool } from '../../db/entities/LiquidityPool';
+import { LiquidityPoolState } from '../../db/entities/LiquidityPoolState';
+import { LiquidityPoolTick } from '../../db/entities/LiquidityPoolTick';
+import { AssetResource } from '../resources/AssetResource';
+import { LiquidityPoolResource } from '../resources/LiquidityPoolResource';
+import { LiquidityPoolTickResource } from '../resources/LiquidityPoolTickResource';
+import { BaseApiController } from './BaseApiController';
 
 const MAX_PER_PAGE: number = 100;
 
@@ -30,7 +30,7 @@ export class AssetController extends BaseApiController {
 
     const take: number = Math.min(
       Number((limit ? +limit : undefined) || MAX_PER_PAGE),
-      MAX_PER_PAGE,
+      MAX_PER_PAGE
     );
     const skip: number =
       (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
@@ -56,12 +56,12 @@ export class AssetController extends BaseApiController {
             Number(page ?? 1),
             Number(limit ?? MAX_PER_PAGE),
             Math.ceil(total / take),
-            resource.manyToJson(assets),
-          ),
+            resource.manyToJson(assets)
+          )
         );
       })
       .catch(() =>
-        response.send(super.failResponse("Unable to retrieve assets")),
+        response.send(super.failResponse('Unable to retrieve assets'))
       );
   }
 
@@ -70,45 +70,45 @@ export class AssetController extends BaseApiController {
 
     const take: number = Math.min(
       Number((limit ? +limit : undefined) || MAX_PER_PAGE),
-      MAX_PER_PAGE,
+      MAX_PER_PAGE
     );
     const skip: number =
       (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
 
     const searchQuery: string =
-      "%" + (query as string).replace(/[^a-z0-9\s]/gi, "").toLowerCase() + "%";
+      '%' + (query as string).replace(/[^a-z0-9\s]/gi, '').toLowerCase() + '%';
 
     dbApiService
       .query((manager: EntityManager) => {
         return manager
-          .createQueryBuilder(Asset, "asset")
-          .where("asset.isLpToken = false")
+          .createQueryBuilder(Asset, 'asset')
+          .where('asset.isLpToken = false')
           .andWhere(
             new Brackets((query) => {
               if (onlyVerified) {
-                query.where("asset.isVerified = true");
+                query.where('asset.isVerified = true');
               }
 
               query
-                .where("LOWER(asset.name) LIKE :query", {
+                .where('LOWER(asset.name) LIKE :query', {
                   query: searchQuery,
                 })
-                .orWhere("asset.nameHex LIKE :query", {
+                .orWhere('asset.nameHex LIKE :query', {
                   query: searchQuery,
                 })
-                .orWhere("asset.policyId LIKE :query", {
+                .orWhere('asset.policyId LIKE :query', {
                   query: searchQuery,
                 })
-                .orWhere("LOWER(asset.ticker) LIKE :query", {
+                .orWhere('LOWER(asset.ticker) LIKE :query', {
                   query: searchQuery,
                 })
                 .orWhere(
-                  "CAST(unhex(asset.nameHex) AS CHAR(100)) LIKE :query",
+                  'CAST(unhex(asset.nameHex) AS CHAR(100)) LIKE :query',
                   {
                     query: searchQuery,
-                  },
+                  }
                 );
-            }),
+            })
           )
           .limit(take)
           .offset(skip)
@@ -122,12 +122,12 @@ export class AssetController extends BaseApiController {
             Number(page ?? 1),
             Number(limit ?? MAX_PER_PAGE),
             Math.ceil(total / take),
-            resource.manyToJson(assets),
-          ),
+            resource.manyToJson(assets)
+          )
         );
       })
       .catch(() =>
-        response.send(super.failResponse("Unable to search assets")),
+        response.send(super.failResponse('Unable to search assets'))
       );
   }
 
@@ -138,18 +138,18 @@ export class AssetController extends BaseApiController {
       return response.send(super.failResponse("Must supply 'lpToken'"));
     }
 
-    const [tokenPolicyId, tokenNameHex] = (lpToken as string).split(".");
+    const [tokenPolicyId, tokenNameHex] = (lpToken as string).split('.');
 
     return dbApiService
       .query((manager: EntityManager) => {
         return manager
           .findOne(LiquidityPoolState, {
             relations: [
-              "tokenLp",
-              "liquidityPool",
-              "liquidityPool.tokenA",
-              "liquidityPool.tokenB",
-              "liquidityPool.latestState",
+              'tokenLp',
+              'liquidityPool',
+              'liquidityPool.tokenA',
+              'liquidityPool.tokenB',
+              'liquidityPool.latestState',
             ],
             where: {
               tokenLp: {
@@ -161,7 +161,7 @@ export class AssetController extends BaseApiController {
           .then((state: LiquidityPoolState | null) => {
             if (!state || !state.liquidityPool) {
               return response.send(
-                super.failResponse("Token not assigned to a pool"),
+                super.failResponse('Token not assigned to a pool')
               );
             }
 
@@ -171,7 +171,7 @@ export class AssetController extends BaseApiController {
           });
       })
       .catch(() =>
-        response.send(super.failResponse("Token not assigned to a pool")),
+        response.send(super.failResponse('Token not assigned to a pool'))
       );
   }
 
@@ -182,7 +182,7 @@ export class AssetController extends BaseApiController {
       return response.send(super.failResponse("Must supply 'token'"));
     }
 
-    const [tokenPolicyId, tokenNameHex] = (asset as string).split(".");
+    const [tokenPolicyId, tokenNameHex] = (asset as string).split('.');
 
     return dbApiService
       .query((manager: EntityManager) => {
@@ -195,7 +195,7 @@ export class AssetController extends BaseApiController {
           })
           .then((asset: Asset | null) => {
             if (!asset) {
-              return response.send(super.failResponse("Asset not found"));
+              return response.send(super.failResponse('Asset not found'));
             }
 
             const resource: AssetResource = new AssetResource();
@@ -203,7 +203,7 @@ export class AssetController extends BaseApiController {
             return response.send(resource.toJson(asset));
           });
       })
-      .catch(() => response.send(super.failResponse("Asset not found")));
+      .catch(() => response.send(super.failResponse('Asset not found')));
   }
 
   private assetPrice(request: express.Request, response: express.Response) {
@@ -213,24 +213,26 @@ export class AssetController extends BaseApiController {
       return response.send(super.failResponse("Must supply 'asset'"));
     }
 
-    const [tokenPolicyId, tokenNameHex] = (asset as string).split(".");
+    const [tokenPolicyId, tokenNameHex] = (asset as string).split('.');
 
     return dbApiService
       .query((manager: EntityManager) => {
         return manager
-          .createQueryBuilder(LiquidityPool, "pools")
-          .leftJoinAndSelect("pools.tokenA", "tokenA")
-          .leftJoinAndSelect("pools.tokenB", "tokenB")
-          .leftJoinAndSelect("pools.latestState", "latestState")
-          .where("pools.tokenA IS NULL")
+          .createQueryBuilder(LiquidityPool, 'pools')
+          .leftJoinAndSelect('pools.tokenA', 'tokenA')
+          .leftJoinAndSelect('pools.tokenB', 'tokenB')
+          .leftJoinAndSelect('pools.latestState', 'latestState')
+          .where('pools.tokenA IS NULL')
           .andWhere(
-            "tokenB.policyId = :policyId AND tokenB.nameHex = :nameHex",
+            'tokenB.policyId = :policyId AND tokenB.nameHex = :nameHex',
             {
               policyId: tokenPolicyId,
               nameHex: tokenNameHex,
-            },
+            }
           )
-          .andWhere("latestState.tvl >= :minTvl", { minTvl: 100_000_000000 })
+          .andWhere('latestState.tvl >= :minTvl', {
+            minTvl: 100_000_000000,
+          })
           .getMany();
       })
       .then((liquidityPools: LiquidityPool[]) => {
@@ -253,7 +255,7 @@ export class AssetController extends BaseApiController {
         return response.send({ price: avgPrice });
       })
       .catch(() =>
-        response.send(super.failResponse("Unable to retrieve asset price")),
+        response.send(super.failResponse('Unable to retrieve asset price'))
       );
   }
 
@@ -262,67 +264,67 @@ export class AssetController extends BaseApiController {
     const { resolution, fromTime, toTime, orderBy } = request.query;
 
     if (forAssets && !(forAssets instanceof Array)) {
-      return response.send(super.failResponse("Assets must be an array"));
+      return response.send(super.failResponse('Assets must be an array'));
     }
     if (
       !(Object.values(TickInterval) as string[]).includes(resolution as string)
     ) {
       return response.send(
         super.failResponse(
-          `Must supply 'resolution' as ${Object.values(TickInterval).join(",")}`,
-        ),
+          `Must supply 'resolution' as ${Object.values(TickInterval).join(',')}`
+        )
       );
     }
-    if (orderBy && !["ASC", "DESC"].includes(orderBy as string)) {
+    if (orderBy && !['ASC', 'DESC'].includes(orderBy as string)) {
       return response.send(
-        super.failResponse("orderBy must be 'ASC' or 'DESC'"),
+        super.failResponse("orderBy must be 'ASC' or 'DESC'")
       );
     }
 
     const assets: Asset[] = ((forAssets ?? []) as string[]).map(
-      (identifier: string) => Asset.fromId(identifier),
+      (identifier: string) => Asset.fromId(identifier)
     );
     const policyIds: string[] = assets.map((asset: Asset) => asset.policyId);
     const nameHexs: string[] = assets.map((asset: Asset) => asset.nameHex);
 
     const fetchTicks: any = (manager: EntityManager) => {
       return manager
-        .createQueryBuilder(LiquidityPoolTick, "ticks")
-        .leftJoinAndSelect("ticks.liquidityPool", "liquidityPool")
+        .createQueryBuilder(LiquidityPoolTick, 'ticks')
+        .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
         .leftJoinAndMapOne(
-          "liquidityPool.latestState",
+          'liquidityPool.latestState',
           LiquidityPoolState,
-          "states",
-          "states.liquidityPoolId = liquidityPool.id AND states.id = (SELECT MAX(id) FROM liquidity_pool_states WHERE liquidity_pool_states.slot + 1596491091 - 4924800 <= ticks.time AND liquidity_pool_states.liquidityPoolId = liquidityPool.id)",
+          'states',
+          'states.liquidityPoolId = liquidityPool.id AND states.id = (SELECT MAX(id) FROM liquidity_pool_states WHERE liquidity_pool_states.slot + 1596491091 - 4924800 <= ticks.time AND liquidity_pool_states.liquidityPoolId = liquidityPool.id)'
         )
-        .leftJoinAndSelect("liquidityPool.tokenB", "tokenB")
-        .andWhere("liquidityPool.tokenA IS NULL")
+        .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+        .andWhere('liquidityPool.tokenA IS NULL')
         .andWhere(
           new Brackets((query) => {
             query.andWhere(
-              "tokenB.policyId IN(:policyIds) AND tokenB.nameHex IN(:nameHexs)",
+              'tokenB.policyId IN(:policyIds) AND tokenB.nameHex IN(:nameHexs)',
               {
                 policyIds,
                 nameHexs,
-              },
+              }
             );
 
             if (fromTime && !isNaN(parseInt(fromTime as string))) {
-              query.andWhere("ticks.time >= :fromTime", {
+              query.andWhere('ticks.time >= :fromTime', {
                 fromTime: parseInt(fromTime as string),
               });
             }
 
             if (toTime && !isNaN(parseInt(toTime as string))) {
-              query.andWhere("ticks.time < :toTime", {
+              query.andWhere('ticks.time < :toTime', {
                 toTime: parseInt(toTime as string),
               });
             }
 
             return query;
-          }),
+          })
         )
-        .orderBy("time", orderBy ? (orderBy as "ASC" | "DESC") : "ASC")
+        .orderBy('time', orderBy ? (orderBy as 'ASC' | 'DESC') : 'ASC')
         .getMany();
     };
 

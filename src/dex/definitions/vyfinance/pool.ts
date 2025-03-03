@@ -4,13 +4,13 @@ export default {
   constructor: 0,
   fields: [
     {
-      int: DatumParameterKey.PoolAssetABarFee
+      int: DatumParameterKey.PoolAssetABarFee,
     },
     {
-      int: DatumParameterKey.PoolAssetBBarFee
+      int: DatumParameterKey.PoolAssetBBarFee,
     },
     {
-      int: DatumParameterKey.TotalLpTokens
-    }
-  ]
+      int: DatumParameterKey.TotalLpTokens,
+    },
+  ],
 };

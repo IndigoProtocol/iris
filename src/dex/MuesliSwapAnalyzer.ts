@@ -2,17 +2,17 @@ import {
   AddressDetails,
   Data,
   getAddressDetails,
-} from "@lucid-evolution/lucid";
-import { DefinitionBuilder } from "../DefinitionBuilder";
-import { BIPS, Dex, SwapOrderType } from "../constants";
-import { Asset, Token } from "../db/entities/Asset";
-import { LiquidityPoolDeposit } from "../db/entities/LiquidityPoolDeposit";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolSwap } from "../db/entities/LiquidityPoolSwap";
-import { LiquidityPoolWithdraw } from "../db/entities/LiquidityPoolWithdraw";
-import { OperationStatus } from "../db/entities/OperationStatus";
-import { OrderBookMatch } from "../db/entities/OrderBookMatch";
-import { OrderBookOrder } from "../db/entities/OrderBookOrder";
+} from '@lucid-evolution/lucid';
+import { DefinitionBuilder } from '../DefinitionBuilder';
+import { BIPS, Dex, SwapOrderType } from '../constants';
+import { Asset, Token } from '../db/entities/Asset';
+import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
+import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { OperationStatus } from '../db/entities/OperationStatus';
+import { OrderBookMatch } from '../db/entities/OrderBookMatch';
+import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import {
   AssetBalance,
   DatumParameters,
@@ -21,43 +21,43 @@ import {
   HybridOperation,
   Transaction,
   Utxo,
-} from "../types";
-import { stringify, toDefinitionDatum } from "../utils";
-import { BaseHybridDexAnalyzer } from "./BaseHybridDexAnalyzer";
-import poolDefinition from "./definitions/muesliswap/pool";
-import poolDepositDefinition from "./definitions/muesliswap/pool-deposit";
-import poolWithdrawDefinition from "./definitions/muesliswap/pool-withdraw";
-import swapDefinition from "./definitions/muesliswap/swap";
+} from '../types';
+import { stringify, toDefinitionDatum } from '../utils';
+import { BaseHybridDexAnalyzer } from './BaseHybridDexAnalyzer';
+import poolDefinition from './definitions/muesliswap/pool';
+import poolDepositDefinition from './definitions/muesliswap/pool-deposit';
+import poolWithdrawDefinition from './definitions/muesliswap/pool-withdraw';
+import swapDefinition from './definitions/muesliswap/swap';
 
 /**
  * MuesliSwap constants.
  */
 const ORDER_ADDRESSES: string[] = [
-  "addr1w84psng20ejqcj6a4gljemu9re65waefct7cnahlhmtcwnq63kxyq",
-  "addr1wy2mjh76em44qurn5x73nzqrxua7ataasftql0u2h6g88lc3gtgpz",
-  "addr1z8c7eyxnxgy80qs5ehrl4yy93tzkyqjnmx0cfsgrxkfge27q47h8tv3jp07j8yneaxj7qc63zyzqhl933xsglcsgtqcqxzc2je",
-  "addr1z8l28a6jsx4870ulrfygqvqqdnkdjc5sa8f70ys6dvgvjqc3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqxyrhvq",
-  "addr1zyq0kyrml023kwjk8zr86d5gaxrt5w8lxnah8r6m6s4jp4g3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqqktyhv",
+  'addr1w84psng20ejqcj6a4gljemu9re65waefct7cnahlhmtcwnq63kxyq',
+  'addr1wy2mjh76em44qurn5x73nzqrxua7ataasftql0u2h6g88lc3gtgpz',
+  'addr1z8c7eyxnxgy80qs5ehrl4yy93tzkyqjnmx0cfsgrxkfge27q47h8tv3jp07j8yneaxj7qc63zyzqhl933xsglcsgtqcqxzc2je',
+  'addr1z8l28a6jsx4870ulrfygqvqqdnkdjc5sa8f70ys6dvgvjqc3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqxyrhvq',
+  'addr1zyq0kyrml023kwjk8zr86d5gaxrt5w8lxnah8r6m6s4jp4g3r6dxnzml343sx8jweqn4vn3fz2kj8kgu9czghx0jrsyqqktyhv',
 ];
 const BATCH_ORDER_CONTRACT_ADDRESS: string =
-  "addr1w9e7m6yn74r7m0f9mf548ldr8j4v6q05gprey2lhch8tj5gsvyte9";
+  'addr1w9e7m6yn74r7m0f9mf548ldr8j4v6q05gprey2lhch8tj5gsvyte9';
 const POOL_NFT_POLICY_IDS: string[] = [
-  "909133088303c49f3a30f1cc8ed553a73857a29779f6c6561cd8093f",
-  "7a8041a0693e6605d010d5185b034d55c79eaf7ef878aae3bdcdbf67",
+  '909133088303c49f3a30f1cc8ed553a73857a29779f6c6561cd8093f',
+  '7a8041a0693e6605d010d5185b034d55c79eaf7ef878aae3bdcdbf67',
 ];
 const LP_TOKEN_POLICY_ID: string =
-  "af3d70acf4bd5b3abb319a7d75c89fb3e56eafcdd46b2e9b57a2557f";
-const CANCEL_ORDER_DATUM: string = "d87980";
-const MUESLISWAP_HEX: string = "4d7565736c6953776170";
+  'af3d70acf4bd5b3abb319a7d75c89fb3e56eafcdd46b2e9b57a2557f';
+const CANCEL_ORDER_DATUM: string = 'd87980';
+const MUESLISWAP_HEX: string = '4d7565736c6953776170';
 
-const METADATA_MSG_LABEL: string = "674";
-const METADATA_SENDER: string = "1000";
-const METADATA_IN_POLICY_ID: string = "1008";
-const METADATA_IN_NAME_HEX: string = "1009";
-const METADATA_OUT_POLICY_ID: string = "1002";
-const METADATA_OUT_NAME_HEX: string = "1003";
-const METADATA_MIN_RECEIVE: string = "1004";
-const METADATA_FEES_PAID: string = "1005";
+const METADATA_MSG_LABEL: string = '674';
+const METADATA_SENDER: string = '1000';
+const METADATA_IN_POLICY_ID: string = '1008';
+const METADATA_IN_NAME_HEX: string = '1009';
+const METADATA_OUT_POLICY_ID: string = '1002';
+const METADATA_OUT_NAME_HEX: string = '1003';
+const METADATA_MIN_RECEIVE: string = '1004';
+const METADATA_FEES_PAID: string = '1005';
 
 export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
   public startSlot: number = 65063916;
@@ -66,7 +66,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
    * Analyze transaction for possible DEX operations.
    */
   public async analyzeTransaction(
-    transaction: Transaction,
+    transaction: Transaction
   ): Promise<HybridOperation[]> {
     return Promise.all([
       this.matches(transaction),
@@ -77,13 +77,13 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       this.cancelledOperationInputs(
         transaction,
         ORDER_ADDRESSES,
-        CANCEL_ORDER_DATUM,
+        CANCEL_ORDER_DATUM
       ),
     ]).then((operations: HybridOperation[][]) => operations.flat(2));
   }
 
   protected matches(
-    transaction: Transaction,
+    transaction: Transaction
   ):
     | Promise<(OrderBookMatch | OrderBookOrder)[]>
     | (OrderBookMatch | OrderBookOrder)[] {
@@ -91,7 +91,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       !transaction.metadata ||
       !transaction.metadata[METADATA_MSG_LABEL] ||
       !stringify(transaction.metadata[METADATA_MSG_LABEL]).includes(
-        "MuesliSwap Partial",
+        'MuesliSwap Partial'
       )
     ) {
       return [];
@@ -100,7 +100,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
     const updatedOrderUtxo: Utxo | undefined = transaction.outputs.find(
       (output: Utxo) => {
         return output.datum && ORDER_ADDRESSES.includes(output.toAddress);
-      },
+      }
     );
 
     if (!updatedOrderUtxo) return [];
@@ -108,26 +108,26 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
     const receiverUtxo: Utxo | undefined = transaction.outputs.find(
       (output: Utxo) => {
         return output.datum && output.datum.includes(MUESLISWAP_HEX);
-      },
+      }
     );
 
     if (!receiverUtxo) return [];
 
     const receiverDetails: AddressDetails = getAddressDetails(
-      receiverUtxo.toAddress,
+      receiverUtxo.toAddress
     );
     const swapOrder: LiquidityPoolSwap | undefined = this.swapOrderFromUtxo(
       transaction,
-      updatedOrderUtxo,
+      updatedOrderUtxo
     );
 
     if (!swapOrder) return [];
 
     const updatedOrder: OrderBookOrder = OrderBookOrder.make(
       Dex.MuesliSwap,
-      swapOrder.swapInToken ?? "lovelace",
-      swapOrder.swapOutToken ?? "lovelace",
-      "",
+      swapOrder.swapInToken ?? 'lovelace',
+      swapOrder.swapOutToken ?? 'lovelace',
+      '',
       swapOrder.swapInAmount,
       swapOrder.swapInAmount,
       swapOrder.minReceive ?? 0,
@@ -139,7 +139,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       swapOrder.senderStakeKeyHash,
       swapOrder.slot,
       swapOrder.txHash,
-      swapOrder.outputIndex,
+      swapOrder.outputIndex
     );
 
     return [
@@ -148,16 +148,16 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
         Dex.MuesliSwap,
         undefined,
         0,
-        receiverDetails.paymentCredential?.hash ?? "",
-        receiverDetails.stakeCredential?.hash ?? "",
+        receiverDetails.paymentCredential?.hash ?? '',
+        receiverDetails.stakeCredential?.hash ?? '',
         transaction.blockSlot,
         transaction.hash,
         updatedOrderUtxo.index,
-        "",
-        "",
+        '',
+        '',
         undefined,
         transaction,
-        swapOrder.minReceive,
+        swapOrder.minReceive
       ),
     ];
   }
@@ -171,7 +171,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       transaction.metadata &&
       transaction.metadata[METADATA_MSG_LABEL] &&
       stringify(transaction.metadata[METADATA_MSG_LABEL]).includes(
-        "MuesliSwap Partial Match Order",
+        'MuesliSwap Partial Match Order'
       )
     ) {
       return [];
@@ -182,7 +182,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
         return this.swapOrderFromUtxo(transaction, output);
       })
       .filter(
-        (operation: LiquidityPoolSwap | undefined) => operation !== undefined,
+        (operation: LiquidityPoolSwap | undefined) => operation !== undefined
       ) as LiquidityPoolSwap[];
   }
 
@@ -190,7 +190,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
    * Check for updated liquidity pool states in transaction.
    */
   protected liquidityPoolStates(
-    transaction: Transaction,
+    transaction: Transaction
   ): LiquidityPoolState[] {
     return transaction.outputs
       .map((output: Utxo) => {
@@ -201,10 +201,10 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
         // Check if pool output is valid
         const hasPoolNft: boolean = output.assetBalances.some(
           (balance: AssetBalance) => {
-            return ["MuesliSwap_cLP", "MuesliSwap_AMM"].includes(
-              balance.asset.assetName,
+            return ['MuesliSwap_cLP', 'MuesliSwap_AMM'].includes(
+              balance.asset.assetName
             );
-          },
+          }
         );
 
         if (!hasPoolNft) {
@@ -213,52 +213,52 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDefinition,
+            poolDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           const tokenA: Token =
-            datumParameters.PoolAssetAPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetAPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 );
           const tokenB: Token =
-            datumParameters.PoolAssetBPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetBPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 );
           const poolNft: Asset | undefined = output.assetBalances.find(
             (balance: AssetBalance) => {
               return POOL_NFT_POLICY_IDS.includes(balance.asset.policyId);
-            },
+            }
           )?.asset;
 
           if (!poolNft) return undefined;
 
           const lpToken: Asset = new Asset(LP_TOKEN_POLICY_ID, poolNft.nameHex);
           const reserveA: bigint =
-            tokenA === "lovelace"
+            tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : (output.assetBalances.find(
+              : output.assetBalances.find(
                   (balance: AssetBalance) =>
-                    balance.asset.identifier() === tokenA.identifier(),
-                )?.quantity ?? 0n);
+                    balance.asset.identifier() === tokenA.identifier()
+                )?.quantity ?? 0n;
           const reserveB: bigint =
-            tokenB === "lovelace"
+            tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : (output.assetBalances.find(
+              : output.assetBalances.find(
                   (balance: AssetBalance) =>
-                    balance.asset.identifier() === tokenB.identifier(),
-                )?.quantity ?? 0n);
+                    balance.asset.identifier() === tokenB.identifier()
+                )?.quantity ?? 0n;
 
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);
@@ -279,14 +279,14 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             possibleOperationStatuses,
             transaction.inputs,
             transaction.outputs.filter(
-              (sibling: Utxo) => sibling.index !== output.index,
+              (sibling: Utxo) => sibling.index !== output.index
             ),
             {
               batcherFee: 2_000_000n.toString(),
               feeNumerator: Number(datumParameters.LpFee ?? 0),
               feeDenominator: BIPS,
               minAda: 0n.toString(),
-            },
+            }
           );
         } catch (e) {
           return undefined;
@@ -294,7 +294,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       })
       .flat()
       .filter(
-        (operation: LiquidityPoolState | undefined) => operation !== undefined,
+        (operation: LiquidityPoolState | undefined) => operation !== undefined
       ) as LiquidityPoolState[];
   }
 
@@ -313,21 +313,21 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDepositDefinition,
+            poolDepositDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           let depositAToken: Token =
             output.assetBalances.length > 1
               ? output.assetBalances[0].asset
-              : "lovelace";
+              : 'lovelace';
           let depositBToken: Token =
-            depositAToken === "lovelace"
+            depositAToken === 'lovelace'
               ? output.assetBalances[0].asset
               : output.assetBalances[1].asset;
 
@@ -337,33 +337,32 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             depositAToken,
             depositBToken,
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.lovelaceBalance -
                     BigInt(datumParameters.BatcherFee as number) -
                     BigInt(datumParameters.Deposit as number)
-                : output.assetBalances[0].quantity,
+                : output.assetBalances[0].quantity
             ),
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.assetBalances[0].quantity
-                : output.assetBalances[1].quantity,
+                : output.assetBalances[1].quantity
             ),
             Number(datumParameters.MinReceive),
             Number(datumParameters.BatcherFee),
             datumParameters.ReceiverPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolDeposit | undefined) =>
-          operation !== undefined,
+        (operation: LiquidityPoolDeposit | undefined) => operation !== undefined
       ) as LiquidityPoolDeposit[];
   }
 
@@ -382,13 +381,13 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolWithdrawDefinition,
+            poolWithdrawDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           return LiquidityPoolWithdraw.make(
@@ -400,11 +399,11 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             Number(datumParameters.MinReceiveB),
             Number(datumParameters.BatcherFee),
             datumParameters.ReceiverPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
@@ -412,14 +411,14 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       })
       .filter(
         (operation: LiquidityPoolWithdraw | undefined) =>
-          operation !== undefined,
+          operation !== undefined
       ) as LiquidityPoolWithdraw[];
   }
 
   private swapOrderFromUtxo(
     transaction: Transaction,
     output: Utxo,
-    isRetry: boolean = false,
+    isRetry: boolean = false
   ): LiquidityPoolSwap | undefined {
     if (!output.datum || !ORDER_ADDRESSES.includes(output.toAddress)) {
       return undefined;
@@ -436,26 +435,26 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
     if (!isRetry) {
       try {
         const definitionField: DefinitionField = toDefinitionDatum(
-          Data.from(output.datum),
+          Data.from(output.datum)
         );
 
         const builder: DefinitionBuilder = new DefinitionBuilder(
-          swapDefinition,
+          swapDefinition
         );
         const datumParameters: DatumParameters = builder.pullParameters(
-          definitionField as DefinitionConstr,
+          definitionField as DefinitionConstr
         );
 
-        if (datumParameters.SwapOutTokenPolicyId === "") {
+        if (datumParameters.SwapOutTokenPolicyId === '') {
           // X -> ADA
           swapInToken = output.assetBalances[0].asset;
-          swapOutToken = "lovelace";
+          swapOutToken = 'lovelace';
           swapInAmount = output.assetBalances[0].quantity;
         } else {
           // ADA/Y -> X
           swapOutToken = new Asset(
             datumParameters.SwapOutTokenPolicyId as string,
-            datumParameters.SwapOutTokenAssetName as string,
+            datumParameters.SwapOutTokenAssetName as string
           );
 
           if (output.assetBalances.length > 0) {
@@ -464,7 +463,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
             swapInAmount = output.assetBalances[0].quantity;
           } else {
             // ADA -> X
-            swapInToken = "lovelace";
+            swapInToken = 'lovelace';
             swapInAmount =
               output.lovelaceBalance -
               BigInt(datumParameters.TotalFees as number);
@@ -473,7 +472,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
 
         senderPubKeyHash = datumParameters.SenderPubKeyHash as string;
         senderStakeKeyHash = (datumParameters.SenderStakingKeyHash ??
-          "") as string;
+          '') as string;
         totalFees = BigInt(datumParameters.TotalFees ?? 0);
         minReceive = BigInt(datumParameters.MinReceive ?? 0);
       } catch (e: any) {
@@ -497,18 +496,18 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       swapInToken = transaction.metadata[METADATA_IN_POLICY_ID]
         ? new Asset(
             transaction.metadata[METADATA_IN_POLICY_ID],
-            transaction.metadata[METADATA_IN_NAME_HEX],
+            transaction.metadata[METADATA_IN_NAME_HEX]
           )
-        : "lovelace";
+        : 'lovelace';
       swapOutToken = transaction.metadata[METADATA_OUT_POLICY_ID]
         ? new Asset(
             transaction.metadata[METADATA_OUT_POLICY_ID],
-            transaction.metadata[METADATA_OUT_NAME_HEX],
+            transaction.metadata[METADATA_OUT_NAME_HEX]
           )
-        : "lovelace";
+        : 'lovelace';
       totalFees = BigInt(transaction.metadata[METADATA_FEES_PAID]);
       swapInAmount =
-        swapInToken === "lovelace"
+        swapInToken === 'lovelace'
           ? output.lovelaceBalance - totalFees
           : output.assetBalances[0].quantity;
       minReceive = BigInt(transaction.metadata[METADATA_MIN_RECEIVE]);
@@ -535,7 +534,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
       output.index,
       output.toAddress,
       SwapOrderType.Instant,
-      transaction,
+      transaction
     );
   }
 }

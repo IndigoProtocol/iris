@@ -45,19 +45,30 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+                if (
+                  'fields' in constr &&
+                  'fields' in constr.fields[0] &&
+                  'bytes' in constr.fields[0].fields[0]
+                ) {
                   const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                  foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                    field.bytes;
 
                   return;
                 }
               }
 
-              throw new Error("Template definition does not match with 'bytes'");
-            }
+              throw new Error(
+                "Template definition does not match with 'bytes'"
+              );
+            },
           ],
         },
-        (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+        (
+          field: DefinitionField,
+          parameters: DatumParameters,
+          shouldExtract: boolean = true
+        ) => {
           return;
         },
       ],
@@ -89,8 +100,12 @@ export default {
         ],
       ],
     },
-    (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+    (
+      field: DefinitionField,
+      parameters: DatumParameters,
+      shouldExtract: boolean = true
+    ) => {
       return;
     },
   ],
-}
+};

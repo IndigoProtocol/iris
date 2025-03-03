@@ -5,7 +5,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      int: DatumParameterKey.Deposit
+      int: DatumParameterKey.Deposit,
     },
     {
       constructor: 0,
@@ -14,9 +14,9 @@ export default {
           constructor: DatumParameterKey.Unknown,
           fields: [
             {
-              bytes: DatumParameterKey.SenderPubKeyHash
-            }
-          ]
+              bytes: DatumParameterKey.SenderPubKeyHash,
+            },
+          ],
         },
         {
           constructor: 0,
@@ -29,19 +29,26 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+                if (
+                  'fields' in constr &&
+                  'fields' in constr.fields[0] &&
+                  'bytes' in constr.fields[0].fields[0]
+                ) {
                   const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                  foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                    field.bytes;
 
                   return;
                 }
               }
 
-              throw new Error("Template definition does not match with 'bytes'");
-            }
-          ]
-        }
-      ]
+              throw new Error(
+                "Template definition does not match with 'bytes'"
+              );
+            },
+          ],
+        },
+      ],
     },
     {
       constructor: 0,
@@ -50,9 +57,9 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.SenderPubKeyHash
-            }
-          ]
+              bytes: DatumParameterKey.SenderPubKeyHash,
+            },
+          ],
         },
         {
           constructor: 0,
@@ -65,56 +72,63 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+                if (
+                  'fields' in constr &&
+                  'fields' in constr.fields[0] &&
+                  'bytes' in constr.fields[0].fields[0]
+                ) {
                   const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                  foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                    field.bytes;
 
                   return;
                 }
               }
 
-              throw new Error("Template definition does not match with 'bytes'");
-            }
-          ]
-        }
-      ]
+              throw new Error(
+                "Template definition does not match with 'bytes'"
+              );
+            },
+          ],
+        },
+      ],
     },
     [],
     {
       constructor: 0,
-      fields: []
+      fields: [],
     },
     {
-      int: DatumParameterKey.Expiration
+      int: DatumParameterKey.Expiration,
     },
     {
-      bytes: DatumParameterKey.PoolAssetAPolicyId
+      bytes: DatumParameterKey.PoolAssetAPolicyId,
     },
     {
-      bytes: DatumParameterKey.PoolAssetAAssetName
+      bytes: DatumParameterKey.PoolAssetAAssetName,
     },
     {
-      bytes: DatumParameterKey.PoolAssetBPolicyId
+      bytes: DatumParameterKey.PoolAssetBPolicyId,
     },
     {
-      bytes: DatumParameterKey.PoolAssetBAssetName
+      bytes: DatumParameterKey.PoolAssetBAssetName,
     },
     {
       constructor: 2,
       fields: [
         {
-          int: DatumParameterKey.MinReceiveA
+          int: DatumParameterKey.MinReceiveA,
         },
         {
-          int: DatumParameterKey.MinReceiveB
-        }
-      ]
+          int: DatumParameterKey.MinReceiveB,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.AScale
+      int: DatumParameterKey.AScale,
     },
     {
-      int: DatumParameterKey.BScale
-    }
-  ]
-}
+      int: DatumParameterKey.BScale,
+    },
+  ],
+};

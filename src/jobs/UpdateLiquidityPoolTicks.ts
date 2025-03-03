@@ -1,11 +1,11 @@
-import { slotToUnixTime } from "@lucid-evolution/lucid";
-import { EntityManager } from "typeorm";
-import { TickInterval } from "../constants";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolTick } from "../db/entities/LiquidityPoolTick";
-import { dbService, eventService, operationWs } from "../indexerServices";
-import { logError, logInfo } from "../logger";
-import { BaseJob } from "./BaseJob";
+import { slotToUnixTime } from '@lucid-evolution/lucid';
+import { EntityManager } from 'typeorm';
+import { TickInterval } from '../constants';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolTick } from '../db/entities/LiquidityPoolTick';
+import { dbService, eventService, operationWs } from '../indexerServices';
+import { logError, logInfo } from '../logger';
+import { BaseJob } from './BaseJob';
 
 export class UpdateLiquidityPoolTicks extends BaseJob {
   private readonly _liquidityPoolState: LiquidityPoolState;
@@ -18,11 +18,11 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
 
   public async handle(): Promise<any> {
     logInfo(
-      `[Queue] \t UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`,
+      `[Queue] \t UpdateLiquidityPoolTicks for ${this._liquidityPoolState.txHash}`
     );
 
     const slotDate: Date = new Date(
-      slotToUnixTime("Mainnet", this._liquidityPoolState.slot),
+      slotToUnixTime('Mainnet', this._liquidityPoolState.slot)
     );
 
     const startOfMinute: number =
@@ -33,7 +33,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         slotDate.getHours(),
         slotDate.getMinutes(),
         0,
-        0,
+        0
       ).getTime() / 1000;
     const startOfHour: number =
       new Date(
@@ -43,7 +43,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         slotDate.getHours(),
         0,
         0,
-        0,
+        0
       ).getTime() / 1000;
     const startOfDay: number =
       new Date(
@@ -53,7 +53,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         0,
         0,
         0,
-        0,
+        0
       ).getTime() / 1000;
 
     return Promise.all([
@@ -67,18 +67,18 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
 
   private async createOrUpdateTick(
     startOfTick: number,
-    resolution: TickInterval,
+    resolution: TickInterval
   ): Promise<any> {
     if (!this._liquidityPoolState.liquidityPool) {
       return Promise.reject(
-        "Liquidity Pool not found for liquidity pool state",
+        'Liquidity Pool not found for liquidity pool state'
       );
     }
 
     const tokenADecimals: number = !this._liquidityPoolState.liquidityPool
       .tokenA
       ? 6
-      : (this._liquidityPoolState.liquidityPool.tokenA?.decimals ?? 0);
+      : this._liquidityPoolState.liquidityPool.tokenA?.decimals ?? 0;
     const tokenBDecimals: number =
       this._liquidityPoolState.liquidityPool.tokenB.decimals;
 
@@ -92,28 +92,28 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
       (manager: EntityManager) => {
         return (
           manager
-            .createQueryBuilder(LiquidityPoolTick, "ticks")
-            .leftJoinAndSelect("ticks.liquidityPool", "liquidityPool")
-            .leftJoinAndSelect("liquidityPool.tokenA", "tokenA")
-            .leftJoinAndSelect("liquidityPool.tokenB", "tokenB")
-            .where("resolution = :resolution", { resolution })
-            .andWhere("ticks.liquidityPoolId = :liquidityPoolId", {
+            .createQueryBuilder(LiquidityPoolTick, 'ticks')
+            .leftJoinAndSelect('ticks.liquidityPool', 'liquidityPool')
+            .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+            .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+            .where('resolution = :resolution', { resolution })
+            .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
               liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id,
             })
-            .andWhere("ticks.time = :time", {
+            .andWhere('ticks.time = :time', {
               time: startOfTick,
             })
-            .orderBy("ticks.time", "DESC")
+            .orderBy('ticks.time', 'DESC')
             .limit(1)
             .getOne() ?? undefined
         );
-      },
+      }
     );
 
     if (!existingTick) {
       if (!this._liquidityPoolState.liquidityPool) {
         return Promise.reject(
-          "Liquidity Pool not found for liquidity pool state",
+          'Liquidity Pool not found for liquidity pool state'
         );
       }
 
@@ -121,16 +121,16 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         (manager: EntityManager) => {
           return (
             manager
-              .createQueryBuilder(LiquidityPoolTick, "ticks")
-              .where("resolution = :resolution", { resolution })
-              .andWhere("ticks.liquidityPoolId = :liquidityPoolId", {
+              .createQueryBuilder(LiquidityPoolTick, 'ticks')
+              .where('resolution = :resolution', { resolution })
+              .andWhere('ticks.liquidityPoolId = :liquidityPoolId', {
                 liquidityPoolId: this._liquidityPoolState?.liquidityPool?.id,
               })
-              .orderBy("ticks.time", "DESC")
+              .orderBy('ticks.time', 'DESC')
               .limit(1)
               .getOne() ?? undefined
           );
-        },
+        }
       );
 
       const open: number = lastTick ? lastTick.close : price;
@@ -150,22 +150,22 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
               Math.abs(
                 lastTick
                   ? this._liquidityPoolState.tvl - lastTick.tvl
-                  : this._liquidityPoolState.tvl,
-              ),
-            ),
+                  : this._liquidityPoolState.tvl
+              )
+            )
           )
           .then((tick: LiquidityPoolTick) => {
             operationWs.broadcast(tick);
 
             eventService.pushEvent({
-              type: "LiquidityPoolTickCreated",
+              type: 'LiquidityPoolTickCreated',
               data: tick,
             });
 
             return Promise.resolve();
           })
           .catch((reason: any) =>
-            this.createOrUpdateTick(startOfTick, resolution),
+            this.createOrUpdateTick(startOfTick, resolution)
           );
       });
     }
@@ -188,7 +188,7 @@ export class UpdateLiquidityPoolTicks extends BaseJob {
         operationWs.broadcast(tick);
 
         eventService.pushEvent({
-          type: "LiquidityPoolTickUpdated",
+          type: 'LiquidityPoolTickUpdated',
           data: tick,
         });
 

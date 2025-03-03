@@ -14,9 +14,9 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.SenderPubKeyHash
-            }
-          ]
+              bytes: DatumParameterKey.SenderPubKeyHash,
+            },
+          ],
         },
         {
           constructor: 0,
@@ -28,15 +28,15 @@ export default {
                   constructor: 0,
                   fields: [
                     {
-                      bytes: DatumParameterKey.SenderStakingKeyHash
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                      bytes: DatumParameterKey.SenderStakingKeyHash,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     (field: DefinitionField, foundParameters: DatumParameters) => {
       if ('fields' in field) {
@@ -48,11 +48,18 @@ export default {
 
         if ('fields' in constr && 'bytes' in constr.fields[0]) {
           const nestedField: DefinitionField = constr.fields[0];
-          foundParameters[DatumParameterKey.ReceiverPubKeyHash] = nestedField.bytes;
+          foundParameters[DatumParameterKey.ReceiverPubKeyHash] =
+            nestedField.bytes;
         }
 
-        if ('fields' in field.fields[1] && 'fields' in field.fields[1].fields[0] && 'fields' in field.fields[1].fields[0].fields[0] && 'bytes' in field.fields[1].fields[0].fields[0].fields[0]) {
-          foundParameters[DatumParameterKey.ReceiverStakingKeyHash] = field.fields[1].fields[0].fields[0].fields[0].bytes;
+        if (
+          'fields' in field.fields[1] &&
+          'fields' in field.fields[1].fields[0] &&
+          'fields' in field.fields[1].fields[0].fields[0] &&
+          'bytes' in field.fields[1].fields[0].fields[0].fields[0]
+        ) {
+          foundParameters[DatumParameterKey.ReceiverStakingKeyHash] =
+            field.fields[1].fields[0].fields[0].fields[0].bytes;
         }
         return;
       }
@@ -61,7 +68,7 @@ export default {
     },
     {
       constructor: 1,
-      fields: []
+      fields: [],
     },
     {
       constructor: 0,
@@ -70,23 +77,23 @@ export default {
           constructor: DatumParameterKey.Action,
           fields: [
             {
-              bytes: DatumParameterKey.SwapOutTokenPolicyId
+              bytes: DatumParameterKey.SwapOutTokenPolicyId,
             },
             {
-              bytes: DatumParameterKey.SwapOutTokenAssetName
-            }
-          ]
+              bytes: DatumParameterKey.SwapOutTokenAssetName,
+            },
+          ],
         },
         {
-          int: DatumParameterKey.MinReceive
-        }
-      ]
+          int: DatumParameterKey.MinReceive,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.BatcherFee
+      int: DatumParameterKey.BatcherFee,
     },
     {
-      int: DatumParameterKey.DepositFee
-    }
-  ]
-}
+      int: DatumParameterKey.DepositFee,
+    },
+  ],
+};

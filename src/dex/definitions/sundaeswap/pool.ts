@@ -10,42 +10,42 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.PoolAssetAPolicyId
+              bytes: DatumParameterKey.PoolAssetAPolicyId,
             },
             {
-              bytes: DatumParameterKey.PoolAssetAAssetName
-            }
-          ]
+              bytes: DatumParameterKey.PoolAssetAAssetName,
+            },
+          ],
         },
         {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.PoolAssetBPolicyId
+              bytes: DatumParameterKey.PoolAssetBPolicyId,
             },
             {
-              bytes: DatumParameterKey.PoolAssetBAssetName
-            }
-          ]
-        }
-      ]
+              bytes: DatumParameterKey.PoolAssetBAssetName,
+            },
+          ],
+        },
+      ],
     },
     {
-      bytes: DatumParameterKey.PoolIdentifier
+      bytes: DatumParameterKey.PoolIdentifier,
     },
     {
-      int: DatumParameterKey.TotalLpTokens
+      int: DatumParameterKey.TotalLpTokens,
     },
     {
       constructor: 0,
       fields: [
         {
-          int: DatumParameterKey.LpFeeNumerator
+          int: DatumParameterKey.LpFeeNumerator,
         },
         {
-          int: DatumParameterKey.LpFeeDenominator
-        }
-      ]
-    }
-  ]
-}
+          int: DatumParameterKey.LpFeeDenominator,
+        },
+      ],
+    },
+  ],
+};

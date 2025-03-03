@@ -2,15 +2,15 @@ import {
   AddressDetails,
   Data,
   getAddressDetails,
-} from "@lucid-evolution/lucid";
-import { Dex, SwapOrderType } from "../constants";
-import { Asset, Token } from "../db/entities/Asset";
-import { LiquidityPoolDeposit } from "../db/entities/LiquidityPoolDeposit";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolSwap } from "../db/entities/LiquidityPoolSwap";
-import { LiquidityPoolWithdraw } from "../db/entities/LiquidityPoolWithdraw";
-import { OperationStatus } from "../db/entities/OperationStatus";
-import { DefinitionBuilder } from "../DefinitionBuilder";
+} from '@lucid-evolution/lucid';
+import { Dex, SwapOrderType } from '../constants';
+import { Asset, Token } from '../db/entities/Asset';
+import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
+import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { OperationStatus } from '../db/entities/OperationStatus';
+import { DefinitionBuilder } from '../DefinitionBuilder';
 import {
   AmmDexOperation,
   AssetBalance,
@@ -19,31 +19,31 @@ import {
   DefinitionField,
   Transaction,
   Utxo,
-} from "../types";
-import { toDefinitionDatum, tokensMatch } from "../utils";
-import { BaseAmmDexAnalyzer } from "./BaseAmmDexAnalyzer";
-import poolDefinition from "./definitions/wingriders-v2/pool";
-import poolDepositDefinition from "./definitions/wingriders-v2/pool-deposit";
-import poolWithdrawDefinition from "./definitions/wingriders-v2/pool-withdraw";
-import swapDefinition from "./definitions/wingriders-v2/swap";
+} from '../types';
+import { toDefinitionDatum, tokensMatch } from '../utils';
+import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
+import poolDefinition from './definitions/wingriders-v2/pool';
+import poolDepositDefinition from './definitions/wingriders-v2/pool-deposit';
+import poolWithdrawDefinition from './definitions/wingriders-v2/pool-withdraw';
+import swapDefinition from './definitions/wingriders-v2/swap';
 
 /**
  * WingRiders constants.
  */
 const ORDER_SCRIPT_HASHES: string[] = [
-  "c134d839a64a5dfb9b155869ef3f34280751a622f69958baa8ffd29c",
-  "23680ea6701b56f2c12ae79d8af94fd36f509b7b007029c7ce114840",
+  'c134d839a64a5dfb9b155869ef3f34280751a622f69958baa8ffd29c',
+  '23680ea6701b56f2c12ae79d8af94fd36f509b7b007029c7ce114840',
 ];
 const CANCEL_REFERENCE_TX_HASHES: string[] = [
-  "5ec56338104fcbfe32288c649d9633f0d9060abce8b8608b156294f0a81d29e2",
+  '5ec56338104fcbfe32288c649d9633f0d9060abce8b8608b156294f0a81d29e2',
 ];
 const POOL_NFT_POLICY_ID: string =
-  "6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737";
+  '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
 const MIN_POOL_ADA: bigint = 3_000_000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE: bigint = 2000000n;
 const FEE_PERCENT: number = 0.35;
-const CANCEL_ORDER_DATUM: string = "d87a80";
+const CANCEL_ORDER_DATUM: string = 'd87a80';
 
 export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 133880255;
@@ -52,7 +52,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
    * Analyze transaction for possible DEX operations.
    */
   public async analyzeTransaction(
-    transaction: Transaction,
+    transaction: Transaction
   ): Promise<AmmDexOperation[]> {
     return Promise.all([
       this.liquidityPoolStates(transaction),
@@ -63,7 +63,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
         transaction,
         ORDER_SCRIPT_HASHES,
         CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES,
+        CANCEL_REFERENCE_TX_HASHES
       ),
     ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
   }
@@ -79,12 +79,12 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (
           !ORDER_SCRIPT_HASHES.includes(
-            addressDetails.paymentCredential?.hash ?? "",
+            addressDetails.paymentCredential?.hash ?? ''
           )
         ) {
           return undefined;
@@ -92,13 +92,13 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            swapDefinition,
+            swapDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           let swapInToken: Token | undefined;
@@ -106,25 +106,25 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
           let swapInAmount: bigint;
 
           const poolTokenA: Token =
-            datumParameters.PoolAssetAPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetAPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 );
           const poolTokenB: Token =
-            datumParameters.PoolAssetBPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetBPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 );
 
           if (output.assetBalances.length > 0) {
             swapInToken = output.assetBalances[0].asset;
             swapInAmount = output.assetBalances[0].quantity;
           } else {
-            swapInToken = "lovelace";
+            swapInToken = 'lovelace';
             swapInAmount =
               output.lovelaceBalance -
               BATCHER_FEE -
@@ -158,20 +158,20 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             Number(datumParameters.MinReceive),
             Number(BATCHER_FEE),
             datumParameters.ReceiverPubKeyHash as string,
-            (datumParameters.ReceiverStakingKeyHash ?? "") as string,
+            (datumParameters.ReceiverStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
             output.toAddress,
             SwapOrderType.Instant,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolSwap | undefined) => operation !== undefined,
+        (operation: LiquidityPoolSwap | undefined) => operation !== undefined
       ) as LiquidityPoolSwap[];
   }
 
@@ -179,14 +179,14 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
    * Check for updated liquidity pool states in transaction.
    */
   protected liquidityPoolStates(
-    transaction: Transaction,
+    transaction: Transaction
   ): LiquidityPoolState[] {
     return transaction.outputs
       .map((output: Utxo) => {
         // Check if pool output is valid
         const hasPoolNft: boolean = output.assetBalances.some(
           (balance: AssetBalance) =>
-            balance.asset.identifier() === `${POOL_NFT_POLICY_ID}4c`,
+            balance.asset.identifier() === `${POOL_NFT_POLICY_ID}4c`
         );
         if (!hasPoolNft || !output.datum) {
           return undefined;
@@ -194,34 +194,34 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDefinition,
+            poolDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           let tokenA: Token =
-            datumParameters.PoolAssetAPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetAPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 );
           let tokenB: Token =
-            datumParameters.PoolAssetBPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetBPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 );
           const lpTokenAssetBalance: AssetBalance | undefined =
             output.assetBalances.find((balance: AssetBalance) => {
               return (
                 balance.asset.policyId === POOL_NFT_POLICY_ID &&
-                balance.asset.nameHex !== "4c"
+                balance.asset.nameHex !== '4c'
               );
             });
 
@@ -242,22 +242,22 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
           }
 
           const treasuryA: bigint = BigInt(
-            datumParameters.PoolAssetATreasury as number,
+            datumParameters.PoolAssetATreasury as number
           );
           const treasuryB: bigint = BigInt(
-            datumParameters.PoolAssetBTreasury as number,
+            datumParameters.PoolAssetBTreasury as number
           );
           const reserveA: bigint | undefined =
-            tokenA === "lovelace"
+            tokenA === 'lovelace'
               ? output.lovelaceBalance
               : output.assetBalances.find((balance: AssetBalance) =>
-                  tokensMatch(tokenA, balance.asset),
+                  tokensMatch(tokenA, balance.asset)
                 )?.quantity;
           const reserveB: bigint | undefined =
-            tokenB === "lovelace"
+            tokenB === 'lovelace'
               ? output.lovelaceBalance
               : output.assetBalances.find((balance: AssetBalance) =>
-                  tokensMatch(tokenB, balance.asset),
+                  tokensMatch(tokenB, balance.asset)
                 )?.quantity;
 
           // Reserves possibly zero
@@ -275,18 +275,18 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             tokenB,
             lpTokenAssetBalance.asset,
             String(
-              tokenA === "lovelace"
+              tokenA === 'lovelace'
                 ? reserveA - treasuryA - MIN_POOL_ADA < 1_000_000n
                   ? reserveA - treasuryA - MIN_POOL_ADA
                   : reserveA - treasuryA
-                : reserveA,
+                : reserveA
             ),
             String(
-              tokenB === "lovelace"
+              tokenB === 'lovelace'
                 ? reserveB - treasuryB - MIN_POOL_ADA < 1_000_000n
                   ? reserveB - treasuryB - MIN_POOL_ADA
                   : reserveB - treasuryB
-                : reserveB,
+                : reserveB
             ),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,
@@ -295,7 +295,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             possibleOperationStatuses,
             transaction.inputs,
             transaction.outputs.filter(
-              (sibling: Utxo) => sibling.index !== output.index,
+              (sibling: Utxo) => sibling.index !== output.index
             ),
             {
               batcherFee: String(datumParameters.AgentFee ?? 0),
@@ -311,7 +311,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
               ProjectFeeInBasis: Number(datumParameters.ProjectFeeInBasis ?? 0),
               SwapFee: Number(datumParameters.SwapFee ?? 0),
               AgentFee: Number(datumParameters.AgentFee ?? 0),
-            },
+            }
           );
         } catch (e) {
           return undefined;
@@ -319,7 +319,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
       })
       .flat()
       .filter(
-        (operation: LiquidityPoolState | undefined) => operation !== undefined,
+        (operation: LiquidityPoolState | undefined) => operation !== undefined
       ) as LiquidityPoolState[];
   }
 
@@ -334,12 +334,12 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (
           !ORDER_SCRIPT_HASHES.includes(
-            addressDetails.paymentCredential?.hash ?? "",
+            addressDetails.paymentCredential?.hash ?? ''
           )
         ) {
           return undefined;
@@ -347,21 +347,21 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDepositDefinition,
+            poolDepositDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           let depositAToken: Token =
             output.assetBalances.length > 1
               ? output.assetBalances[0].asset
-              : "lovelace";
+              : 'lovelace';
           let depositBToken: Token =
-            depositAToken === "lovelace"
+            depositAToken === 'lovelace'
               ? output.assetBalances[0].asset
               : output.assetBalances[1].asset;
 
@@ -382,33 +382,32 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             depositAToken,
             depositBToken,
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.lovelaceBalance -
                     BATCHER_FEE -
                     BigInt(datumParameters.Deposit as string)
-                : output.assetBalances[0].quantity,
+                : output.assetBalances[0].quantity
             ),
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.assetBalances[0].quantity
-                : output.assetBalances[1].quantity,
+                : output.assetBalances[1].quantity
             ),
             Number(datumParameters.MinReceive),
             Number(BATCHER_FEE),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolDeposit | undefined) =>
-          operation !== undefined,
+        (operation: LiquidityPoolDeposit | undefined) => operation !== undefined
       ) as LiquidityPoolDeposit[];
   }
 
@@ -423,12 +422,12 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (
           !ORDER_SCRIPT_HASHES.includes(
-            addressDetails.paymentCredential?.hash ?? "",
+            addressDetails.paymentCredential?.hash ?? ''
           )
         ) {
           return undefined;
@@ -436,13 +435,13 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolWithdrawDefinition,
+            poolWithdrawDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           if (
@@ -461,11 +460,11 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             Number(datumParameters.MinReceiveB),
             Number(BATCHER_FEE),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
@@ -473,7 +472,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
       })
       .filter(
         (operation: LiquidityPoolWithdraw | undefined) =>
-          operation !== undefined,
+          operation !== undefined
       ) as LiquidityPoolWithdraw[];
   }
 }

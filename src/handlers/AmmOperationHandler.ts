@@ -1,39 +1,43 @@
-import { BaseEntity, EntityManager, EntityTarget, IsNull } from "typeorm";
-import CONFIG from "../config";
-import { DexOperationStatus } from "../constants";
-import { Asset } from "../db/entities/Asset";
-import { LiquidityPool } from "../db/entities/LiquidityPool";
-import { LiquidityPoolDeposit } from "../db/entities/LiquidityPoolDeposit";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolSwap } from "../db/entities/LiquidityPoolSwap";
-import { LiquidityPoolWithdraw } from "../db/entities/LiquidityPoolWithdraw";
-import { LiquidityPoolZap } from "../db/entities/LiquidityPoolZap";
-import { OperationStatus } from "../db/entities/OperationStatus";
+import { BaseEntity, EntityManager, EntityTarget, IsNull } from 'typeorm';
+import CONFIG from '../config';
+import { DexOperationStatus } from '../constants';
+import { Asset } from '../db/entities/Asset';
+import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
+import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
+import { OperationStatus } from '../db/entities/OperationStatus';
 import {
   dbService,
   eventService,
   metadataService,
   operationWs,
   queue,
-} from "../indexerServices";
-import { UpdateAmountReceived } from "../jobs/UpdateAmountReceived";
-import { UpdateLiquidityPoolTvlJob } from "../jobs/UpdateLiquidityPoolTvlJob";
-import { logError, logInfo } from "../logger";
-import { AmmDexOperation, StatusableEntity, TokenMetadata } from "../types";
-import { stringify } from "../utils";
+} from '../indexerServices';
+import { UpdateAmountReceived } from '../jobs/UpdateAmountReceived';
+import { UpdateLiquidityPoolTvlJob } from '../jobs/UpdateLiquidityPoolTvlJob';
+import { logError, logInfo } from '../logger';
+import { AmmDexOperation, StatusableEntity, TokenMetadata } from '../types';
+import { stringify } from '../utils';
 
 const MAX_RESOLVE_ATTEMPTS: number = 3;
 
 export class AmmOperationHandler {
   public async handle(operation: AmmDexOperation): Promise<any> {
     if (CONFIG.VERBOSE) {
-      if ("dex" in operation) {
+      if ('dex' in operation) {
         logInfo(
-          `[${operation.dex}] ${operation.constructor.name} ${(operation as AmmDexOperation).txHash}`,
+          `[${operation.dex}] ${operation.constructor.name} ${
+            (operation as AmmDexOperation).txHash
+          }`
         );
       } else {
         logInfo(
-          `${operation.constructor.name} ${(operation as AmmDexOperation).txHash}`,
+          `${operation.constructor.name} ${
+            (operation as AmmDexOperation).txHash
+          }`
         );
       }
     }
@@ -58,7 +62,7 @@ export class AmmOperationHandler {
    * Store necessary data into the DB.
    */
   private async handleOperation(
-    operation: AmmDexOperation,
+    operation: AmmDexOperation
   ): Promise<BaseEntity | undefined> {
     if (!dbService.isInitialized) {
       return Promise.resolve(undefined);
@@ -67,7 +71,7 @@ export class AmmOperationHandler {
     switch (operation.constructor) {
       case LiquidityPoolState:
         return await this.handleUpdatedPoolState(
-          operation as LiquidityPoolState,
+          operation as LiquidityPoolState
         );
       case LiquidityPoolSwap:
         return await this.handleSwapOrder(operation as LiquidityPoolSwap);
@@ -77,12 +81,12 @@ export class AmmOperationHandler {
         return await this.handlePoolDeposit(operation as LiquidityPoolDeposit);
       case LiquidityPoolWithdraw:
         return await this.handlePoolWithdraw(
-          operation as LiquidityPoolWithdraw,
+          operation as LiquidityPoolWithdraw
         );
       case OperationStatus:
         return await this.handleOperationStatus(operation as OperationStatus);
       default:
-        return Promise.reject("Encountered unknown event type.");
+        return Promise.reject('Encountered unknown event type.');
     }
   }
 
@@ -90,7 +94,7 @@ export class AmmOperationHandler {
    * Handle an update liquidity pool state event.
    */
   private async handleUpdatedPoolState(
-    instance: LiquidityPoolState,
+    instance: LiquidityPoolState
   ): Promise<any> {
     if (instance.tokenA) {
       instance.tokenA = await this.retrieveAsset(instance.tokenA);
@@ -109,12 +113,11 @@ export class AmmOperationHandler {
         liquidityPool.latestState = newState;
 
         return manager.save(liquidityPool).then(() => newState);
-      },
+      }
     );
 
     eventService.pushEvent({
-      type: "LiquidityPoolStateCreated",
-      // @TODO: change to snapshot data
+      type: 'LiquidityPoolStateCreated',
       data: updatedState,
     });
 
@@ -129,10 +132,10 @@ export class AmmOperationHandler {
             return savedStatus;
           })
           .catch(() => Promise.resolve(undefined));
-      }),
+      })
     ).then((statuses: (OperationStatus | undefined)[]) => {
       statuses = statuses.filter(
-        (status: OperationStatus | undefined) => status !== undefined,
+        (status: OperationStatus | undefined) => status !== undefined
       );
 
       if (statuses.length > 0) {
@@ -157,13 +160,13 @@ export class AmmOperationHandler {
 
     if (!order.swapInToken && !order.swapOutToken) {
       return Promise.reject(
-        `Neither order tokens are set. ${stringify(order)}`,
+        `Neither order tokens are set. ${stringify(order)}`
       );
     }
 
     const retrievePool: any = async (
       manager: EntityManager,
-      attempt: number = 0,
+      attempt: number = 0
     ) => {
       if (attempt === MAX_RESOLVE_ATTEMPTS) {
         return Promise.reject(`Unable to find liquidity pool. ${order.txHash}`);
@@ -171,7 +174,7 @@ export class AmmOperationHandler {
 
       const liquidityPool: LiquidityPool | undefined =
         (await manager.findOne(LiquidityPool, {
-          relations: ["tokenA", "tokenB"],
+          relations: ['tokenA', 'tokenB'],
           where: order.liquidityPoolIdentifier
             ? [
                 {
@@ -230,11 +233,11 @@ export class AmmOperationHandler {
         order.liquidityPool = liquidityPool;
 
         eventService.pushEvent({
-          type: "LiquidityPoolUpdated",
+          type: 'LiquidityPoolUpdated',
           data: liquidityPool,
         });
         eventService.pushEvent({
-          type: "LiquidityPoolSwapCreated",
+          type: 'LiquidityPoolSwapCreated',
           data: order,
         });
 
@@ -250,8 +253,8 @@ export class AmmOperationHandler {
                 order.txHash,
                 order.outputIndex,
                 entity.id,
-                entity.constructor.name,
-              ),
+                entity.constructor.name
+              )
             );
 
             entity.statuses = [status];
@@ -281,7 +284,7 @@ export class AmmOperationHandler {
 
     const retrievePool: any = async (
       manager: EntityManager,
-      attempt: number = 0,
+      attempt: number = 0
     ) => {
       if (attempt === MAX_RESOLVE_ATTEMPTS) {
         return Promise.reject(`Unable to find liquidity pool. ${order.txHash}`);
@@ -289,7 +292,7 @@ export class AmmOperationHandler {
 
       const liquidityPool: LiquidityPool | undefined =
         (await manager.findOne(LiquidityPool, {
-          relations: ["tokenA", "tokenB"],
+          relations: ['tokenA', 'tokenB'],
           where: order.liquidityPoolIdentifier
             ? [
                 {
@@ -344,7 +347,7 @@ export class AmmOperationHandler {
         order.liquidityPool = liquidityPool;
 
         eventService.pushEvent({
-          type: "LiquidityPoolZapCreated",
+          type: 'LiquidityPoolZapCreated',
           data: order,
         });
 
@@ -360,8 +363,8 @@ export class AmmOperationHandler {
                 order.txHash,
                 order.outputIndex,
                 entity.id,
-                entity.constructor.name,
-              ),
+                entity.constructor.name
+              )
             );
 
             entity.statuses = [status];
@@ -391,17 +394,17 @@ export class AmmOperationHandler {
 
     const retrievePool: any = async (
       manager: EntityManager,
-      attempt: number = 0,
+      attempt: number = 0
     ) => {
       if (attempt === MAX_RESOLVE_ATTEMPTS) {
         return Promise.reject(
-          `Unable to find liquidity pool. ${deposit.txHash}`,
+          `Unable to find liquidity pool. ${deposit.txHash}`
         );
       }
 
       const liquidityPool: LiquidityPool | undefined =
         (await manager.findOne(LiquidityPool, {
-          relations: ["tokenA", "tokenB"],
+          relations: ['tokenA', 'tokenB'],
           where: deposit.liquidityPoolIdentifier
             ? [
                 {
@@ -472,7 +475,7 @@ export class AmmOperationHandler {
         deposit.liquidityPool = liquidityPool;
 
         eventService.pushEvent({
-          type: "LiquidityPoolDepositCreated",
+          type: 'LiquidityPoolDepositCreated',
           data: deposit,
         });
 
@@ -488,8 +491,8 @@ export class AmmOperationHandler {
                 deposit.txHash,
                 deposit.outputIndex,
                 entity.id,
-                entity.constructor.name,
-              ),
+                entity.constructor.name
+              )
             );
 
             entity.statuses = [status];
@@ -510,27 +513,27 @@ export class AmmOperationHandler {
    * Handle new liquidity withdraw event.
    */
   private async handlePoolWithdraw(
-    withdraw: LiquidityPoolWithdraw,
+    withdraw: LiquidityPoolWithdraw
   ): Promise<any> {
     withdraw.lpToken = await this.retrieveAsset(withdraw.lpToken, true);
 
     const retrievePool: any = async (
       manager: EntityManager,
-      attempt: number = 0,
+      attempt: number = 0
     ) => {
       if (attempt === MAX_RESOLVE_ATTEMPTS) {
         return Promise.reject(
-          `Unable to find liquidity pool. ${withdraw.txHash}`,
+          `Unable to find liquidity pool. ${withdraw.txHash}`
         );
       }
 
       const liquidityPoolState: LiquidityPoolState | undefined =
         (await manager.findOne(LiquidityPoolState, {
           relations: [
-            "liquidityPool",
-            "liquidityPool.tokenA",
-            "liquidityPool.tokenB",
-            "tokenLp",
+            'liquidityPool',
+            'liquidityPool.tokenA',
+            'liquidityPool.tokenB',
+            'tokenLp',
           ],
           where: withdraw.liquidityPoolIdentifier
             ? [
@@ -559,7 +562,7 @@ export class AmmOperationHandler {
         withdraw.liquidityPool = liquidityPoolState.liquidityPool;
 
         eventService.pushEvent({
-          type: "LiquidityPoolWithdrawCreated",
+          type: 'LiquidityPoolWithdrawCreated',
           data: withdraw,
         });
 
@@ -575,8 +578,8 @@ export class AmmOperationHandler {
                 withdraw.txHash,
                 withdraw.outputIndex,
                 entity.id,
-                entity.constructor.name,
-              ),
+                entity.constructor.name
+              )
             );
 
             entity.statuses = [status];
@@ -597,18 +600,18 @@ export class AmmOperationHandler {
    * Update operation statuses to cancelled state.
    */
   private async handleOperationStatus(
-    operationStatus: OperationStatus,
+    operationStatus: OperationStatus
   ): Promise<any> {
     if (!operationStatus.operationId || !operationStatus.operationType) {
       const entity: StatusableEntity | undefined =
         await this.retrieveOperationEntity(
           operationStatus.operationTxHash,
-          operationStatus.operationOutputIndex,
+          operationStatus.operationOutputIndex
         );
 
       if (!entity) {
         return Promise.reject(
-          `Unable to find entity with Tx hash ${operationStatus.operationTxHash}#${operationStatus.operationOutputIndex}`,
+          `Unable to find entity with Tx hash ${operationStatus.operationTxHash}#${operationStatus.operationOutputIndex}`
         );
       }
       operationStatus.operationEntity = entity;
@@ -617,14 +620,14 @@ export class AmmOperationHandler {
     }
 
     eventService.pushEvent({
-      type: "OperationStatusCreated",
+      type: 'OperationStatusCreated',
       data: operationStatus,
     });
 
     return await dbService.transaction(
       async (manager: EntityManager): Promise<OperationStatus> => {
         return await manager.save(operationStatus);
-      },
+      }
     );
   }
 
@@ -633,12 +636,12 @@ export class AmmOperationHandler {
    */
   private async retrieveOperationEntity(
     txHash: string,
-    outputIndex: number,
+    outputIndex: number
   ): Promise<StatusableEntity | undefined> {
     const retrieveEntity = async (
       manager: EntityManager,
       entityTarget: EntityTarget<StatusableEntity>,
-      relations: string[],
+      relations: string[]
     ): Promise<StatusableEntity | undefined> => {
       return (
         (await manager.findOne(entityTarget, {
@@ -654,31 +657,31 @@ export class AmmOperationHandler {
     return dbService.query(async (manager: EntityManager): Promise<any> => {
       return (
         (await retrieveEntity(manager, LiquidityPoolSwap, [
-          "liquidityPool",
-          "liquidityPool.tokenA",
-          "liquidityPool.tokenB",
-          "swapInToken",
-          "swapOutToken",
+          'liquidityPool',
+          'liquidityPool.tokenA',
+          'liquidityPool.tokenB',
+          'swapInToken',
+          'swapOutToken',
         ])) ??
         (await retrieveEntity(manager, LiquidityPoolDeposit, [
-          "liquidityPool",
-          "liquidityPool.tokenA",
-          "liquidityPool.tokenB",
-          "depositAToken",
-          "depositBToken",
+          'liquidityPool',
+          'liquidityPool.tokenA',
+          'liquidityPool.tokenB',
+          'depositAToken',
+          'depositBToken',
         ])) ??
         (await retrieveEntity(manager, LiquidityPoolWithdraw, [
-          "liquidityPool",
-          "liquidityPool.tokenA",
-          "liquidityPool.tokenB",
-          "lpToken",
+          'liquidityPool',
+          'liquidityPool.tokenA',
+          'liquidityPool.tokenB',
+          'lpToken',
         ])) ??
         (await retrieveEntity(manager, LiquidityPoolZap, [
-          "liquidityPool",
-          "liquidityPool.tokenA",
-          "liquidityPool.tokenB",
-          "swapInToken",
-          "forToken",
+          'liquidityPool',
+          'liquidityPool.tokenA',
+          'liquidityPool.tokenB',
+          'swapInToken',
+          'forToken',
         ]))
       );
     });
@@ -690,7 +693,7 @@ export class AmmOperationHandler {
    */
   private async retrieveAsset(
     asset: Asset,
-    isLpToken: boolean = false,
+    isLpToken: boolean = false
   ): Promise<Asset> {
     const firstOrSaveAsset: any = async (manager: EntityManager) => {
       const existingAsset: Asset | undefined =
@@ -716,14 +719,14 @@ export class AmmOperationHandler {
         if (assetMetadata) {
           asset.name = assetMetadata.name.replace(
             /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g,
-            "",
+            ''
           );
           asset.decimals = assetMetadata.decimals;
           asset.ticker = assetMetadata.ticker;
           asset.logo = assetMetadata.logo;
           asset.description = assetMetadata.description.replace(
             /[\x00-\x08\x0E-\x1F\x7F-\uFFFF]/g,
-            "",
+            ''
           );
           asset.isVerified = true;
         } else {
@@ -732,7 +735,7 @@ export class AmmOperationHandler {
       }
 
       eventService.pushEvent({
-        type: "AssetCreated",
+        type: 'AssetCreated',
         data: asset,
       });
 
@@ -751,12 +754,12 @@ export class AmmOperationHandler {
    * Note - Will store new pool instance if not found.
    */
   private async retrieveLiquidityPoolFromState(
-    state: LiquidityPoolState,
+    state: LiquidityPoolState
   ): Promise<LiquidityPool> {
     const firstOrSavePool: any = async (manager: EntityManager) => {
       let existingPool: LiquidityPool | undefined =
         (await manager.findOne(LiquidityPool, {
-          relations: ["tokenA", "tokenB"],
+          relations: ['tokenA', 'tokenB'],
           where: {
             dex: state.dex,
             identifier: state.liquidityPoolIdentifier,
@@ -767,7 +770,7 @@ export class AmmOperationHandler {
         existingPool.address = state.address;
 
         eventService.pushEvent({
-          type: "LiquidityPoolUpdated",
+          type: 'LiquidityPoolUpdated',
           data: existingPool,
         });
 
@@ -780,11 +783,11 @@ export class AmmOperationHandler {
         state.address,
         state.tokenA,
         state.tokenB,
-        state.slot,
+        state.slot
       );
 
       eventService.pushEvent({
-        type: "LiquidityPoolCreated",
+        type: 'LiquidityPoolCreated',
         data: liquidityPool,
       });
 

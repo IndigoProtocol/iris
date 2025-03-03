@@ -11,51 +11,51 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.TokenPolicyId // Pool NFT
+          bytes: DatumParameterKey.TokenPolicyId, // Pool NFT
         },
         {
-          bytes: DatumParameterKey.TokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.TokenAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.LpTokenPolicyId
+          bytes: DatumParameterKey.LpTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.LpTokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.LpTokenAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.ExecutionFee
+      int: DatumParameterKey.ExecutionFee,
     },
     {
-      bytes: DatumParameterKey.SenderPubKeyHash
+      bytes: DatumParameterKey.SenderPubKeyHash,
     },
     (field: DefinitionField, foundParameters: DatumParameters) => {
       if ('fields' in field) {
@@ -64,9 +64,10 @@ export default {
         }
 
         if (field.fields.length > 0 && 'bytes' in field.fields[0]) {
-          foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.fields[0].bytes;
+          foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+            field.fields[0].bytes;
         }
       }
     },
-  ]
-}
+  ],
+};

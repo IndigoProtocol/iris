@@ -6,16 +6,14 @@ import { ApplicationContext } from './constants';
 import { TokenMetadataService } from './services/TokenMetadataService';
 import { QueueService } from './services/QueueService';
 
-const operationWs: WebsocketService = new WebsocketService(CONFIG.OPERATION_WEBSOCKET_PORT);
+const operationWs: WebsocketService = new WebsocketService(
+  CONFIG.OPERATION_WEBSOCKET_PORT
+);
 const eventService: EventService = new EventService();
-const dbService: DatabaseService = new DatabaseService(ApplicationContext.Indexer);
+const dbService: DatabaseService = new DatabaseService(
+  ApplicationContext.Indexer
+);
 const metadataService: TokenMetadataService = new TokenMetadataService();
 const queue: QueueService = new QueueService();
 
-export {
-    operationWs,
-    eventService,
-    dbService,
-    metadataService,
-    queue,
-}
+export { operationWs, eventService, dbService, metadataService, queue };

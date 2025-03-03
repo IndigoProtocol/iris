@@ -14,9 +14,9 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  bytes: DatumParameterKey.SenderPubKeyHash
-                }
-              ]
+                  bytes: DatumParameterKey.SenderPubKeyHash,
+                },
+              ],
             },
             (field: DefinitionField, foundParameters: DatumParameters) => {
               if ('fields' in field) {
@@ -26,36 +26,44 @@ export default {
 
                 const constr: DefinitionField = field.fields[0];
 
-                if ('fields' in constr && 'fields' in constr.fields[0] && 'bytes' in constr.fields[0].fields[0]) {
+                if (
+                  'fields' in constr &&
+                  'fields' in constr.fields[0] &&
+                  'bytes' in constr.fields[0].fields[0]
+                ) {
                   const field: DefinitionField = constr.fields[0].fields[0];
-                  foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.bytes;
+                  foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+                    field.bytes;
 
                   return;
                 }
               }
 
-              throw new Error("Template definition does not match with 'bytes'");
-            }
-          ]
+              throw new Error(
+                "Template definition does not match with 'bytes'"
+              );
+            },
+          ],
         },
         {
-          bytes: DatumParameterKey.SwapOutTokenPolicyId
+          bytes: DatumParameterKey.SwapOutTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapOutTokenAssetName
+          bytes: DatumParameterKey.SwapOutTokenAssetName,
         },
         {
-          bytes: DatumParameterKey.SwapInTokenPolicyId
+          bytes: DatumParameterKey.SwapInTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapInTokenAssetName
+          bytes: DatumParameterKey.SwapInTokenAssetName,
         },
         {
-          int: DatumParameterKey.MinReceive
+          int: DatumParameterKey.MinReceive,
         },
         (field: DefinitionField, foundParameters: DatumParameters) => {
           if ('fields' in field) {
-            foundParameters[DatumParameterKey.AllowPartialFill] = field.constructor;
+            foundParameters[DatumParameterKey.AllowPartialFill] =
+              field.constructor;
             return;
           }
 
@@ -68,7 +76,8 @@ export default {
         },
         (field: DefinitionField, foundParameters: DatumParameters) => {
           if ('fields' in field) {
-            foundParameters[DatumParameterKey.AllowPartialFill] = field.constructor;
+            foundParameters[DatumParameterKey.AllowPartialFill] =
+              field.constructor;
             return;
           }
 
@@ -79,7 +88,7 @@ export default {
 
           throw new Error("Template definition does not match with 'bytes'");
         },
-      ]
-    }
-  ]
+      ],
+    },
+  ],
 };

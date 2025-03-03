@@ -4,19 +4,25 @@ import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { IndexerApplication } from '../IndexerApplication';
 
 export abstract class BaseOrderBookDexAnalyzer {
+  public app: IndexerApplication;
 
-    public app: IndexerApplication;
+  public abstract startSlot: number;
 
-    public abstract startSlot: number;
+  constructor(app: IndexerApplication) {
+    this.app = app;
+  }
 
-    constructor(app: IndexerApplication) {
-        this.app = app;
-    }
+  public abstract analyzeTransaction(
+    transaction: Transaction
+  ): Promise<OrderBookDexOperation[]>;
 
-    public abstract analyzeTransaction(transaction: Transaction): Promise<OrderBookDexOperation[]>;
+  protected abstract orders(
+    transaction: Transaction
+  ): Promise<OrderBookOrder[]> | OrderBookOrder[];
 
-    protected abstract orders(transaction: Transaction): Promise<OrderBookOrder[]> | OrderBookOrder[];
-
-    protected abstract matches(transaction: Transaction): Promise<(OrderBookMatch | OrderBookOrder)[]> | (OrderBookMatch | OrderBookOrder)[];
-
+  protected abstract matches(
+    transaction: Transaction
+  ):
+    | Promise<(OrderBookMatch | OrderBookOrder)[]>
+    | (OrderBookMatch | OrderBookOrder)[];
 }

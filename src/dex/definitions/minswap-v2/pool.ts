@@ -7,48 +7,56 @@ import { DatumParameters, DefinitionField } from '../../../types';
 export default {
   constructor: 0,
   fields: [
-    (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+    (
+      field: DefinitionField,
+      parameters: DatumParameters,
+      shouldExtract: boolean = true
+    ) => {
       return;
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.TotalLpTokens
+      int: DatumParameterKey.TotalLpTokens,
     },
     {
-      int: DatumParameterKey.ReserveA
+      int: DatumParameterKey.ReserveA,
     },
     {
-      int: DatumParameterKey.ReserveB
+      int: DatumParameterKey.ReserveB,
     },
     {
-      int: DatumParameterKey.BaseFee
+      int: DatumParameterKey.BaseFee,
     },
     {
-      int: DatumParameterKey.FeeSharingNumerator
+      int: DatumParameterKey.FeeSharingNumerator,
     },
-    (field: DefinitionField, parameters: DatumParameters, shouldExtract: boolean = true) => {
+    (
+      field: DefinitionField,
+      parameters: DatumParameters,
+      shouldExtract: boolean = true
+    ) => {
       return;
     },
-  ]
-}
+  ],
+};

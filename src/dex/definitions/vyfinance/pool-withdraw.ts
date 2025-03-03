@@ -4,7 +4,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.SenderKeyHashes
+      bytes: DatumParameterKey.SenderKeyHashes,
     },
     {
       constructor: 1,
@@ -13,14 +13,14 @@ export default {
           constructor: 0,
           fields: [
             {
-              int: DatumParameterKey.MinReceiveA
+              int: DatumParameterKey.MinReceiveA,
             },
             {
-              int: DatumParameterKey.MinReceiveB
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              int: DatumParameterKey.MinReceiveB,
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };

@@ -7,12 +7,12 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
-} from "typeorm";
-import { DatumParameterKey, Dex } from "../../constants";
-import { Utxo } from "../../types";
-import { Asset, Token } from "./Asset";
-import { LiquidityPool } from "./LiquidityPool";
-import { OperationStatus } from "./OperationStatus";
+} from 'typeorm';
+import { DatumParameterKey, Dex } from '../../constants';
+import { Utxo } from '../../types';
+import { Asset, Token } from './Asset';
+import { LiquidityPool } from './LiquidityPool';
+import { OperationStatus } from './OperationStatus';
 
 export type PoolStateExtraData = {
   feeNumerator: number;
@@ -21,7 +21,7 @@ export type PoolStateExtraData = {
   batcherFee: string;
 } & { [key in DatumParameterKey]?: string | number | undefined };
 
-@Entity({ name: "liquidity_pool_states" })
+@Entity({ name: 'liquidity_pool_states' })
 export class LiquidityPoolState extends BaseEntity {
   dex: Dex;
   address: string;
@@ -49,22 +49,22 @@ export class LiquidityPoolState extends BaseEntity {
   @Column()
   reserveB: string;
 
-  @Column({ type: "bigint", unsigned: true })
+  @Column({ type: 'bigint', unsigned: true })
   lpTokens: number;
 
-  @Column({ type: "bigint", unsigned: true })
+  @Column({ type: 'bigint', unsigned: true })
   tvl: number;
 
-  @Column({ type: "float" })
+  @Column({ type: 'float' })
   feePercent: number;
 
-  @Column({ type: "bigint", unsigned: true })
+  @Column({ type: 'bigint', unsigned: true })
   slot: number;
 
   @Column()
   txHash: string;
 
-  @Column("simple-json")
+  @Column('simple-json')
   extra: PoolStateExtraData;
 
   static make(
@@ -84,11 +84,11 @@ export class LiquidityPoolState extends BaseEntity {
     transactionInputs: Utxo[] = [],
     transactionOutputs: Utxo[] = [],
     extra: PoolStateExtraData = {
-      batcherFee: "0",
+      batcherFee: '0',
       feeDenominator: 10_000,
       feeNumerator: 0,
-      minAda: "0",
-    },
+      minAda: '0',
+    }
   ): LiquidityPoolState {
     let instance: LiquidityPoolState = new LiquidityPoolState();
 
@@ -106,17 +106,17 @@ export class LiquidityPoolState extends BaseEntity {
     instance.tvl = 0;
     instance.extra = extra;
 
-    if (tokenA === "lovelace" && tokenB === "lovelace") {
-      throw new Error("Both assets for pool are lovelace.");
+    if (tokenA === 'lovelace' && tokenB === 'lovelace') {
+      throw new Error('Both assets for pool are lovelace.');
     }
 
     // Always force tokenA to the ADA token
-    if (tokenA === "lovelace") {
+    if (tokenA === 'lovelace') {
       instance.tokenA = undefined;
       instance.tokenB = tokenB as Asset;
       instance.reserveA = reserveA;
       instance.reserveB = reserveB;
-    } else if (tokenB === "lovelace") {
+    } else if (tokenB === 'lovelace') {
       instance.tokenA = undefined;
       instance.tokenB = tokenA as Asset;
       instance.reserveA = reserveB;

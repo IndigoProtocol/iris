@@ -3,44 +3,44 @@ import {
   createChainSynchronizationClient,
   createInteractionContext,
   InteractionContext,
-} from "@cardano-ogmios/client";
+} from '@cardano-ogmios/client';
 import {
   Block,
   BlockPraos,
   Point,
   PointOrOrigin,
   TipOrOrigin,
-} from "@cardano-ogmios/schema";
-import "reflect-metadata";
-import { EntityManager } from "typeorm";
-import CONFIG from "./config";
-import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from "./constants";
-import { Sync } from "./db/entities/Sync";
-import { MinswapAnalyzer } from "./dex/MinswapAnalyzer";
-import { MinswapV2Analyzer } from "./dex/MinswapV2Analyzer";
-import { MuesliSwapAnalyzer } from "./dex/MuesliSwapAnalyzer";
-import { SplashAnalyzer } from "./dex/SplashAnalyzer";
-import { SundaeSwapAnalyzer } from "./dex/SundaeSwapAnalyzer";
-import { SundaeSwapV3Analyzer } from "./dex/SundaeSwapV3Analyzer";
-import { VyFiAnalyzer } from "./dex/VyFiAnalyzer";
-import { WingRidersAnalyzer } from "./dex/WingRidersAnalyzer";
-import { WingRidersV2Analyzer } from "./dex/WingRidersV2Analyzer";
-import { AmmDexTransactionIndexer } from "./indexers/AmmDexTransactionIndexer";
-import { BaseIndexer } from "./indexers/BaseIndexer";
-import { HybridDexTransactionIndexer } from "./indexers/HybridDexTransactionIndexer";
-import { OrderBookDexTransactionIndexer } from "./indexers/OrderBookDexTransactionIndexer";
-import { SyncIndexer } from "./indexers/SyncIndexer";
+} from '@cardano-ogmios/schema';
+import 'reflect-metadata';
+import { EntityManager } from 'typeorm';
+import CONFIG from './config';
+import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from './constants';
+import { Sync } from './db/entities/Sync';
+import { MinswapAnalyzer } from './dex/MinswapAnalyzer';
+import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
+import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
+import { SplashAnalyzer } from './dex/SplashAnalyzer';
+import { SundaeSwapAnalyzer } from './dex/SundaeSwapAnalyzer';
+import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
+import { VyFiAnalyzer } from './dex/VyFiAnalyzer';
+import { WingRidersAnalyzer } from './dex/WingRidersAnalyzer';
+import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
+import { AmmDexTransactionIndexer } from './indexers/AmmDexTransactionIndexer';
+import { BaseIndexer } from './indexers/BaseIndexer';
+import { HybridDexTransactionIndexer } from './indexers/HybridDexTransactionIndexer';
+import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
+import { SyncIndexer } from './indexers/SyncIndexer';
 import {
   dbService,
   eventService,
   metadataService,
   operationWs,
   queue,
-} from "./indexerServices";
-import { BaseEventListener } from "./listeners/BaseEventListener";
-import { logError, logInfo } from "./logger";
-import { BaseCacheStorage } from "./storage/BaseCacheStorage";
-import { CacheStorage } from "./storage/CacheStorage";
+} from './indexerServices';
+import { BaseEventListener } from './listeners/BaseEventListener';
+import { logError, logInfo } from './logger';
+import { BaseCacheStorage } from './storage/BaseCacheStorage';
+import { CacheStorage } from './storage/CacheStorage';
 
 export class IndexerApplication {
   private readonly _cache: BaseCacheStorage;
@@ -99,7 +99,7 @@ export class IndexerApplication {
   }
 
   public withEventListeners(
-    eventListeners: BaseEventListener[],
+    eventListeners: BaseEventListener[]
   ): IndexerApplication {
     this._eventListeners = eventListeners;
 
@@ -117,7 +117,7 @@ export class IndexerApplication {
    */
   public async start(): Promise<any> {
     return Promise.all([this._cache.boot(), this.bootServices()]).then(() =>
-      this.bootOgmios(),
+      this.bootOgmios()
     );
   }
 
@@ -125,7 +125,7 @@ export class IndexerApplication {
    * Boot all necessary services for application.
    */
   private async bootServices(): Promise<any> {
-    logInfo("Booting services...");
+    logInfo('Booting services...');
 
     return Promise.all([
       dbService.boot(this),
@@ -135,7 +135,7 @@ export class IndexerApplication {
       queue.boot(),
     ])
       .then(() => {
-        logInfo("Services booted");
+        logInfo('Services booted');
       })
       .catch((reason) => {
         logError(reason);
@@ -147,12 +147,12 @@ export class IndexerApplication {
    * Boot Ogmios connection.
    */
   private async bootOgmios(): Promise<any> {
-    logInfo("Booting Ogmios connection...");
+    logInfo('Booting Ogmios connection...');
 
     this._ogmiosContext = await createInteractionContext(
       (err) => logError(err.message),
       () => {
-        logError("Ogmios connection closed. Restarting...");
+        logError('Ogmios connection closed. Restarting...');
 
         this.start();
       },
@@ -162,10 +162,10 @@ export class IndexerApplication {
           port: CONFIG.OGMIOS_PORT,
           tls: CONFIG.OGMIOS_TLS,
         },
-      },
+      }
     )
       .then((context: InteractionContext) => {
-        logInfo("Ogmios connected");
+        logInfo('Ogmios connected');
 
         return context;
       })
@@ -182,7 +182,7 @@ export class IndexerApplication {
       },
       {
         sequential: true,
-      },
+      }
     );
 
     const lastSync: Sync | undefined = await dbService.transaction(
@@ -192,7 +192,7 @@ export class IndexerApplication {
             id: 1,
           })) ?? undefined
         );
-      },
+      }
     );
 
     /**
@@ -225,23 +225,23 @@ export class IndexerApplication {
    */
   private async rollForward(
     update: { block: Block; tip: TipOrOrigin },
-    requestNext: () => void,
+    requestNext: () => void
   ): Promise<void> {
-    if (update.block.type === "praos") {
+    if (update.block.type === 'praos') {
       const block: BlockPraos = update.block;
 
       logInfo(`====== Analyzing block at slot ${block.slot} ======`);
 
       await Promise.all(
         this._indexers.map((indexer: BaseIndexer) =>
-          indexer.onRollForward(block),
-        ),
+          indexer.onRollForward(block)
+        )
       );
 
       if (queue.size > 0) {
         logInfo(`[Queue] Running jobs`);
         await queue.settle();
-        logInfo("[Queue] Finished jobs");
+        logInfo('[Queue] Finished jobs');
       }
 
       logInfo(`====== Finished with block at slot ${block.slot} ======`);
@@ -257,17 +257,17 @@ export class IndexerApplication {
    */
   private async rollBackward(
     update: { point: PointOrOrigin },
-    requestNext: () => void,
+    requestNext: () => void
   ): Promise<void> {
-    if (typeof update.point === "object" && "slot" in update.point) {
+    if (typeof update.point === 'object' && 'slot' in update.point) {
       logInfo(`Rollback occurred to slot ${update.point.slot}`);
 
       const point: Point = update.point;
 
       await Promise.all(
         this._indexers.map((indexer: BaseIndexer) =>
-          indexer.onRollBackward(point.id, point.slot),
-        ),
+          indexer.onRollBackward(point.id, point.slot)
+        )
       );
     }
 

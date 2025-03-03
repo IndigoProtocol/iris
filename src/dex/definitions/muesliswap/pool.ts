@@ -11,29 +11,29 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.TotalLpTokens
+      int: DatumParameterKey.TotalLpTokens,
     },
     {
-      int: DatumParameterKey.LpFee
+      int: DatumParameterKey.LpFee,
     },
     (field: DefinitionField, foundParameters: DatumParameters) => {
       return; // Concentrated LPs
@@ -47,5 +47,5 @@ export default {
     (field: DefinitionField, foundParameters: DatumParameters) => {
       return; // Concentrated LPs
     },
-  ]
-}
+  ],
+};

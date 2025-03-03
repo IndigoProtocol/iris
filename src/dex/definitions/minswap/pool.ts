@@ -11,34 +11,34 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.TotalLpTokens
+      int: DatumParameterKey.TotalLpTokens,
     },
     {
-      int: DatumParameterKey.RootKLast
+      int: DatumParameterKey.RootKLast,
     },
     (field: DefinitionField, foundParameters: DatumParameters) => {
       // Un-needed data for SenderPubKeyHash & SenderStakingKeyHash
 
       return;
-    }
-  ]
-}
+    },
+  ],
+};

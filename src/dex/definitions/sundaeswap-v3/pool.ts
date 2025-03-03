@@ -1,5 +1,5 @@
-import { DatumParameterKey } from "../../../constants";
-import { DatumParameters, DefinitionField } from "../../../types";
+import { DatumParameterKey } from '../../../constants';
+import { DatumParameters, DefinitionField } from '../../../types';
 
 export default {
   constructor: 0,

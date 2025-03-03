@@ -8,8 +8,8 @@ export default {
       fields: [
         {
           bytes: DatumParameterKey.SenderPubKeyHash,
-        }
-      ]
+        },
+      ],
     },
     {
       constructor: 0,
@@ -19,8 +19,8 @@ export default {
           fields: [
             {
               bytes: DatumParameterKey.SenderPubKeyHash,
-            }
-          ]
+            },
+          ],
         },
         {
           constructor: 0,
@@ -33,18 +33,18 @@ export default {
                   fields: [
                     {
                       bytes: DatumParameterKey.SenderStakingKeyHash,
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       constructor: 0,
-      fields: []
+      fields: [],
     },
     {
       constructor: 0,
@@ -54,8 +54,8 @@ export default {
           fields: [
             {
               bytes: DatumParameterKey.SenderPubKeyHash,
-            }
-          ]
+            },
+          ],
         },
         {
           constructor: 0,
@@ -68,29 +68,29 @@ export default {
                   fields: [
                     {
                       bytes: DatumParameterKey.SenderStakingKeyHash,
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       constructor: 0,
-      fields: []
+      fields: [],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.LpTokenPolicyId
+          bytes: DatumParameterKey.LpTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.LpTokenAssetName
-        }
-      ]
+          bytes: DatumParameterKey.LpTokenAssetName,
+        },
+      ],
     },
     {
       constructor: 5,
@@ -99,28 +99,28 @@ export default {
           constructor: 0,
           fields: [
             {
-              int: DatumParameterKey.LpTokens
-            }
-          ]
+              int: DatumParameterKey.LpTokens,
+            },
+          ],
         },
         {
-          int: DatumParameterKey.MinReceiveA
+          int: DatumParameterKey.MinReceiveA,
         },
         {
-          int: DatumParameterKey.MinReceiveB
+          int: DatumParameterKey.MinReceiveB,
         },
         {
           constructor: 0,
-          fields: []
-        }
-      ]
+          fields: [],
+        },
+      ],
     },
     {
-      int: DatumParameterKey.BatcherFee
+      int: DatumParameterKey.BatcherFee,
     },
     {
       constructor: 1,
-      fields: []
-    }
-  ]
-}
+      fields: [],
+    },
+  ],
+};

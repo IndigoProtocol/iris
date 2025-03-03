@@ -2,15 +2,15 @@ import {
   AddressDetails,
   Data,
   getAddressDetails,
-} from "@lucid-evolution/lucid";
-import { Dex, SwapOrderType } from "../constants";
-import { Asset, Token } from "../db/entities/Asset";
-import { LiquidityPoolDeposit } from "../db/entities/LiquidityPoolDeposit";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolSwap } from "../db/entities/LiquidityPoolSwap";
-import { LiquidityPoolWithdraw } from "../db/entities/LiquidityPoolWithdraw";
-import { OperationStatus } from "../db/entities/OperationStatus";
-import { DefinitionBuilder } from "../DefinitionBuilder";
+} from '@lucid-evolution/lucid';
+import { Dex, SwapOrderType } from '../constants';
+import { Asset, Token } from '../db/entities/Asset';
+import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
+import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { OperationStatus } from '../db/entities/OperationStatus';
+import { DefinitionBuilder } from '../DefinitionBuilder';
 import {
   AmmDexOperation,
   AssetBalance,
@@ -19,36 +19,36 @@ import {
   DefinitionField,
   Transaction,
   Utxo,
-} from "../types";
-import { toDefinitionDatum } from "../utils";
-import { BaseAmmDexAnalyzer } from "./BaseAmmDexAnalyzer";
-import poolDefinition from "./definitions/splash/pool";
-import poolDepositDefinition from "./definitions/splash/pool-deposit";
-import poolWithdrawDefinition from "./definitions/splash/pool-withdraw";
-import swapDefinition from "./definitions/splash/swap";
+} from '../types';
+import { toDefinitionDatum } from '../utils';
+import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
+import poolDefinition from './definitions/splash/pool';
+import poolDepositDefinition from './definitions/splash/pool-deposit';
+import poolWithdrawDefinition from './definitions/splash/pool-withdraw';
+import swapDefinition from './definitions/splash/swap';
 
 /**
  * Splash constants.
  */
 const SPECTRUM_POOL_V1_CONTRACT_ADDRESS: string =
-  "addr1x8nz307k3sr60gu0e47cmajssy4fmld7u493a4xztjrll0aj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrswgxsta";
+  'addr1x8nz307k3sr60gu0e47cmajssy4fmld7u493a4xztjrll0aj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrswgxsta';
 const SPECTRUM_POOL_V2_CONTRACT_ADDRESS: string =
-  "addr1x94ec3t25egvhqy2n265xfhq882jxhkknurfe9ny4rl9k6dj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrst84slu";
+  'addr1x94ec3t25egvhqy2n265xfhq882jxhkknurfe9ny4rl9k6dj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrst84slu';
 const DEPOSIT_CONTRACT_ADDRESS: string =
-  "addr1wyr4uz0tp75fu8wrg6gm83t20aphuc9vt6n8kvu09ctkugqpsrmeh";
+  'addr1wyr4uz0tp75fu8wrg6gm83t20aphuc9vt6n8kvu09ctkugqpsrmeh';
 const WITHDRAW_CONTRACT_ADDRESS: string =
-  "addr1wxpa5704x8qel88ympf4natfdzn59nc9esj7609y3sczmmsasees8";
-const CANCEL_ORDER_DATUM: string = "d87980";
+  'addr1wxpa5704x8qel88ympf4natfdzn59nc9esj7609y3sczmmsasees8';
+const CANCEL_ORDER_DATUM: string = 'd87980';
 const ORDER_SCRIPT_HASHES: string[] = [
-  "2025463437ee5d64e89814a66ce7f98cb184a66ae85a2fbbfd750106",
-  "464eeee89f05aff787d40045af2a40a83fd96c513197d32fbc54ff02",
+  '2025463437ee5d64e89814a66ce7f98cb184a66ae85a2fbbfd750106',
+  '464eeee89f05aff787d40045af2a40a83fd96c513197d32fbc54ff02',
 ];
 const CANCEL_REFERENCE_TX_HASHES: string[] = [
-  "b91eda29d145ab6c0bc0d6b7093cb24b131440b7b015033205476f39c690a51f",
+  'b91eda29d145ab6c0bc0d6b7093cb24b131440b7b015033205476f39c690a51f',
 ];
 const POOL_CONTRACT_STAKE_KEY: string =
-  "b2f6abf60ccde92eae1a2f4fdf65f2eaf6208d872c6f0e597cc10b07";
-const ACTION_SWAP: string = "00";
+  'b2f6abf60ccde92eae1a2f4fdf65f2eaf6208d872c6f0e597cc10b07';
+const ACTION_SWAP: string = '00';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 
 export class SplashAnalyzer extends BaseAmmDexAnalyzer {
@@ -58,7 +58,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
    * Analyze transaction for possible DEX operations.
    */
   public async analyzeTransaction(
-    transaction: Transaction,
+    transaction: Transaction
   ): Promise<AmmDexOperation[]> {
     return Promise.all([
       this.liquidityPoolStates(transaction),
@@ -69,7 +69,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
         transaction,
         ORDER_SCRIPT_HASHES,
         CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES,
+        CANCEL_REFERENCE_TX_HASHES
       ),
     ]).then((operations: AmmDexOperation[][]) => operations.flat());
   }
@@ -78,7 +78,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
    * Check for swap orders in transaction.
    */
   protected async swapOrders(
-    transaction: Transaction,
+    transaction: Transaction
   ): Promise<LiquidityPoolSwap[]> {
     return transaction.outputs
       .map((output: Utxo) => {
@@ -87,7 +87,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (
@@ -99,30 +99,30 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            swapDefinition,
+            swapDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           if (datumParameters.Action !== ACTION_SWAP) return undefined;
 
           const swapInToken: Token =
-            datumParameters.SwapInTokenPolicyId === ""
-              ? "lovelace"
+            datumParameters.SwapInTokenPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.SwapInTokenPolicyId as string,
-                  datumParameters.SwapInTokenAssetName as string,
+                  datumParameters.SwapInTokenAssetName as string
                 );
           const swapOutToken: Token =
-            datumParameters.SwapOutTokenPolicyId === ""
-              ? "lovelace"
+            datumParameters.SwapOutTokenPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.SwapOutTokenPolicyId as string,
-                  datumParameters.SwapOutTokenAssetName as string,
+                  datumParameters.SwapOutTokenAssetName as string
                 );
 
           return LiquidityPoolSwap.make(
@@ -134,21 +134,21 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             Number(datumParameters.MinReceive),
             Number(datumParameters.ExecutionFee),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
             output.toAddress,
             SwapOrderType.Instant,
             transaction,
-            Dex.Spectrum,
+            Dex.Spectrum
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolSwap | undefined) => operation !== undefined,
+        (operation: LiquidityPoolSwap | undefined) => operation !== undefined
       ) as LiquidityPoolSwap[];
   }
 
@@ -156,7 +156,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
    * Check for updated liquidity pool states in transaction.
    */
   protected liquidityPoolStates(
-    transaction: Transaction,
+    transaction: Transaction
   ): LiquidityPoolState[] {
     return transaction.outputs
       .map((output: Utxo) => {
@@ -174,7 +174,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (addressDetails.stakeCredential?.hash !== POOL_CONTRACT_STAKE_KEY) {
@@ -183,13 +183,13 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDefinition,
+            poolDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           const nft: Asset | undefined = output.assetBalances.find(
@@ -198,7 +198,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                 balance.asset.identifier() ===
                 `${datumParameters.TokenPolicyId}${datumParameters.TokenAssetName}`
               );
-            },
+            }
           )?.asset;
           const lpTokenBalance: AssetBalance | undefined =
             output.assetBalances.find((balance: AssetBalance) => {
@@ -211,38 +211,38 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
           if (!nft || !lpTokenBalance) return undefined;
 
           const tokenA: Token =
-            datumParameters.PoolAssetAPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetAPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 );
           const tokenB: Token =
-            datumParameters.PoolAssetBPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetBPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 );
 
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);
 
           const reserveA: bigint =
-            tokenA === "lovelace"
+            tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : (output.assetBalances.find(
+              : output.assetBalances.find(
                   (balance: AssetBalance) =>
-                    balance.asset.identifier() === tokenA.identifier(),
-                )?.quantity ?? 0n);
+                    balance.asset.identifier() === tokenA.identifier()
+                )?.quantity ?? 0n;
 
           const reserveB: bigint =
-            tokenB === "lovelace"
+            tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : (output.assetBalances.find(
+              : output.assetBalances.find(
                   (balance: AssetBalance) =>
-                    balance.asset.identifier() === tokenB.identifier(),
-                )?.quantity ?? 0n);
+                    balance.asset.identifier() === tokenB.identifier()
+                )?.quantity ?? 0n;
 
           if (reserveA === 0n || reserveB === 0n) return undefined;
 
@@ -262,14 +262,14 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             possibleOperationStatuses,
             transaction.inputs,
             transaction.outputs.filter(
-              (sibling: Utxo) => sibling.index !== output.index,
+              (sibling: Utxo) => sibling.index !== output.index
             ),
             {
               batcherFee: String(datumParameters.BatcherFee ?? 0),
               feeNumerator: Number(datumParameters.LpFee ?? 0),
               feeDenominator: 10_000,
               minAda: 2_000_000n.toString(),
-            },
+            }
           );
         } catch (e) {
           return undefined;
@@ -277,7 +277,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
       })
       .flat()
       .filter(
-        (operation: LiquidityPoolState | undefined) => operation !== undefined,
+        (operation: LiquidityPoolState | undefined) => operation !== undefined
       ) as LiquidityPoolState[];
   }
 
@@ -293,21 +293,21 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDepositDefinition,
+            poolDepositDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           let depositAToken: Token =
             output.assetBalances.length > 1
               ? output.assetBalances[0].asset
-              : "lovelace";
+              : 'lovelace';
           let depositBToken: Token =
-            depositAToken === "lovelace"
+            depositAToken === 'lovelace'
               ? output.assetBalances[0].asset
               : output.assetBalances[1].asset;
 
@@ -317,34 +317,33 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             depositAToken,
             depositBToken,
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.lovelaceBalance -
                     BigInt(datumParameters.ExecutionFee as number) -
                     BigInt(datumParameters.Deposit as number)
-                : output.assetBalances[0].quantity,
+                : output.assetBalances[0].quantity
             ),
             Number(
-              depositAToken === "lovelace"
+              depositAToken === 'lovelace'
                 ? output.assetBalances[0].quantity
-                : output.assetBalances[1].quantity,
+                : output.assetBalances[1].quantity
             ),
             undefined,
             Number(datumParameters.ExecutionFee),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
             transaction,
-            Dex.Spectrum,
+            Dex.Spectrum
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolDeposit | undefined) =>
-          operation !== undefined,
+        (operation: LiquidityPoolDeposit | undefined) => operation !== undefined
       ) as LiquidityPoolDeposit[];
   }
 
@@ -360,13 +359,13 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolWithdrawDefinition,
+            poolWithdrawDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           return LiquidityPoolWithdraw.make(
@@ -378,12 +377,12 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             undefined,
             Number(datumParameters.ExecutionFee),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
             transaction,
-            Dex.Spectrum,
+            Dex.Spectrum
           );
         } catch (e) {
           return undefined;
@@ -391,7 +390,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
       })
       .filter(
         (operation: LiquidityPoolWithdraw | undefined) =>
-          operation !== undefined,
+          operation !== undefined
       ) as LiquidityPoolWithdraw[];
   }
 }

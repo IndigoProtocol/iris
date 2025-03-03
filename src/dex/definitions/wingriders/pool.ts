@@ -7,7 +7,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.RequestScriptHash
+      bytes: DatumParameterKey.RequestScriptHash,
     },
     {
       constructor: 0,
@@ -23,8 +23,8 @@ export default {
                 },
                 {
                   bytes: DatumParameterKey.PoolAssetAAssetName,
-                }
-              ]
+                },
+              ],
             },
             {
               constructor: 0,
@@ -34,10 +34,10 @@ export default {
                 },
                 {
                   bytes: DatumParameterKey.PoolAssetBAssetName,
-                }
-              ]
-            }
-          ]
+                },
+              ],
+            },
+          ],
         },
         {
           int: DatumParameterKey.LastInteraction,
@@ -47,8 +47,8 @@ export default {
         },
         {
           int: DatumParameterKey.PoolAssetBTreasury,
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ],
 };

@@ -11,8 +11,8 @@ export default {
           fields: [
             {
               bytes: DatumParameterKey.SenderPubKeyHash,
-            }
-          ]
+            },
+          ],
         },
         {
           constructor: 0,
@@ -25,14 +25,14 @@ export default {
                   fields: [
                     {
                       bytes: DatumParameterKey.SenderStakingKeyHash,
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       constructor: 0,
@@ -42,8 +42,8 @@ export default {
           fields: [
             {
               bytes: DatumParameterKey.ReceiverPubKeyHash,
-            }
-          ]
+            },
+          ],
         },
         {
           constructor: 0,
@@ -56,18 +56,18 @@ export default {
                   fields: [
                     {
                       bytes: DatumParameterKey.ReceiverStakingKeyHash,
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       constructor: 1,
-      fields: []
+      fields: [],
     },
     {
       constructor: 4,
@@ -76,23 +76,23 @@ export default {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.TokenPolicyId
+              bytes: DatumParameterKey.TokenPolicyId,
             },
             {
-              bytes: DatumParameterKey.TokenAssetName
-            }
-          ]
+              bytes: DatumParameterKey.TokenAssetName,
+            },
+          ],
         },
         {
-          int: DatumParameterKey.MinReceive
-        }
-      ]
+          int: DatumParameterKey.MinReceive,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.BatcherFee
+      int: DatumParameterKey.BatcherFee,
     },
     {
-      int: DatumParameterKey.DepositFee
-    }
-  ]
-}
+      int: DatumParameterKey.DepositFee,
+    },
+  ],
+};

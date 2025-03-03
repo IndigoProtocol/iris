@@ -7,7 +7,7 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.PoolIdentifier
+      bytes: DatumParameterKey.PoolIdentifier,
     },
     {
       constructor: 0,
@@ -22,58 +22,58 @@ export default {
                   constructor: 1,
                   fields: [
                     {
-                      bytes: DatumParameterKey.RequestScriptHash
-                    }
-                  ]
+                      bytes: DatumParameterKey.RequestScriptHash,
+                    },
+                  ],
                 },
                 {
                   constructor: 1,
-                  fields: []
-                }
-              ]
+                  fields: [],
+                },
+              ],
             },
             {
               constructor: 0,
               fields: [
                 {
-                  bytes: DatumParameterKey.Unknown
-                }
-              ]
-            }
-          ]
+                  bytes: DatumParameterKey.Unknown,
+                },
+              ],
+            },
+          ],
         },
         {
           constructor: 0,
           fields: [
             {
-              bytes: DatumParameterKey.ReceiverPubKeyHash
-            }
-          ]
-        }
-      ]
+              bytes: DatumParameterKey.ReceiverPubKeyHash,
+            },
+          ],
+        },
+      ],
     },
     {
-      int: DatumParameterKey.ScooperFee
+      int: DatumParameterKey.ScooperFee,
     },
     {
       constructor: 0,
       fields: [
         {
           constructor: DatumParameterKey.Action, // 0 -> Token A, 1 -> Token B
-          fields: []
+          fields: [],
         },
         {
-          int: DatumParameterKey.DepositA
+          int: DatumParameterKey.DepositA,
         },
         {
           constructor: 0,
           fields: [
             {
-              int: DatumParameterKey.DepositB
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+              int: DatumParameterKey.DepositB,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

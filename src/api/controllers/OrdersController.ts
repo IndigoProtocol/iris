@@ -15,373 +15,469 @@ import { AssetResource } from '../resources/AssetResource';
 const MAX_PER_PAGE: number = 100;
 
 export class OrdersController extends BaseApiController {
+  bootRoutes(): void {
+    this.router.post(`${this.basePath}/swaps`, this.swaps);
+    this.router.post(`${this.basePath}/deposits`, this.deposits);
+    this.router.post(`${this.basePath}/withdraws`, this.withdraws);
 
-    bootRoutes(): void {
-        this.router.post(`${this.basePath}/swaps`, this.swaps);
-        this.router.post(`${this.basePath}/deposits`, this.deposits);
-        this.router.post(`${this.basePath}/withdraws`, this.withdraws);
+    this.router.post(`${this.basePath}/swaps/assets`, this.swapAssets);
+    this.router.post(`${this.basePath}/deposits/assets`, this.depositAssets);
+  }
 
-        this.router.post(`${this.basePath}/swaps/assets`, this.swapAssets);
-        this.router.post(`${this.basePath}/deposits/assets`, this.depositAssets);
+  private swaps(request: express.Request, response: express.Response) {
+    const { pubKeyHashes, stakeKeyHashes } = request.body;
+    const { poolIdentifier, type, token, page, limit } = request.query;
+
+    const take: number = Math.min(
+      Number((limit ? +limit : undefined) || MAX_PER_PAGE),
+      MAX_PER_PAGE
+    );
+    const skip: number =
+      (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+
+    const [policyId, nameHex] = token
+      ? (token as string).split('.')
+      : [null, null];
+
+    if (!pubKeyHashes && !stakeKeyHashes) {
+      response.send(
+        super.formatPaginatedResponse(
+          Number(page ?? 1),
+          Number(limit ?? MAX_PER_PAGE),
+          1,
+          []
+        )
+      );
     }
 
-    private swaps(request: express.Request, response: express.Response) {
-        const {
-            pubKeyHashes,
-            stakeKeyHashes,
-        } = request.body;
-        const {
-            poolIdentifier,
-            type,
-            token,
-            page,
-            limit,
-        } = request.query;
+    dbApiService
+      .query((manager: EntityManager) => {
+        return manager
+          .createQueryBuilder(LiquidityPoolSwap, 'swaps')
+          .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
+          .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
+          .leftJoinAndSelect('swaps.liquidityPool', 'liquidityPool')
+          .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+          .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+          .leftJoinAndMapMany(
+            'swaps.statuses',
+            OperationStatus,
+            'status',
+            'operationId = swaps.id AND operationType = :operationType',
+            {
+              operationType: LiquidityPoolSwap.name,
+            }
+          )
+          .andWhere(
+            new Brackets((query) => {
+              query.andWhere(
+                new Brackets((query1) => {
+                  if (pubKeyHashes && pubKeyHashes.length > 0) {
+                    query1.orWhere('swaps.senderPubKeyHash IN(:...pkHashes)', {
+                      pkHashes: pubKeyHashes,
+                    });
+                  }
 
-        const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
-        const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+                  if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                    query1.orWhere(
+                      'swaps.senderStakeKeyHash IN(:...skHashes)',
+                      {
+                        skHashes: stakeKeyHashes,
+                      }
+                    );
+                  }
+                })
+              );
 
-        const [policyId, nameHex] = token
-            ? (token as string).split('.')
-            : [null, null];
+              if (poolIdentifier) {
+                query.andWhere('liquidityPool.identifier = :identifier', {
+                  identifier: poolIdentifier,
+                });
+              }
 
-        if (! pubKeyHashes && ! stakeKeyHashes) {
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                1,
-                [],
-            ));
-        }
-
-        dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
-                .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
-                .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
-                .leftJoinAndSelect('swaps.liquidityPool', 'liquidityPool')
-                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
-                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
-                .leftJoinAndMapMany(
-                    'swaps.statuses',
-                    OperationStatus,
-                    'status',
-                    'operationId = swaps.id AND operationType = :operationType',
-                    {
-                        operationType: LiquidityPoolSwap.name,
-                    }
-                )
-                .andWhere(
-                    new Brackets((query) => {
-                        query.andWhere(
-                            new Brackets((query1) => {
-                                if (pubKeyHashes && pubKeyHashes.length > 0) {
-                                    query1.orWhere('swaps.senderPubKeyHash IN(:...pkHashes)', {
-                                        pkHashes: pubKeyHashes,
-                                    });
-                                }
-
-                                if (stakeKeyHashes && stakeKeyHashes.length > 0) {
-                                    query1.orWhere('swaps.senderStakeKeyHash IN(:...skHashes)', {
-                                        skHashes: stakeKeyHashes,
-                                    });
-                                }
+              if (policyId && nameHex) {
+                query.andWhere(
+                  new Brackets((query1) => {
+                    query1
+                      .andWhere(
+                        new Brackets((query2) => {
+                          query2
+                            .andWhere('swapInToken.policyId = :policyId', {
+                              policyId,
                             })
-                        );
-
-                        if (poolIdentifier) {
-                            query.andWhere('liquidityPool.identifier = :identifier', {
-                                identifier: poolIdentifier,
+                            .andWhere('swapInToken.nameHex = :nameHex', {
+                              nameHex,
                             });
-                        }
+                        })
+                      )
+                      .orWhere(
+                        new Brackets((query2) => {
+                          query2
+                            .andWhere('swapOutToken.policyId = :policyId', {
+                              policyId,
+                            })
+                            .andWhere('swapOutToken.nameHex = :nameHex', {
+                              nameHex,
+                            });
+                        })
+                      );
+                  })
+                );
+              }
 
-                        if (policyId && nameHex) {
-                            query.andWhere(new Brackets((query1) => {
-                                query1.andWhere(new Brackets((query2) => {
-                                    query2.andWhere('swapInToken.policyId = :policyId', {
-                                        policyId,
-                                    }).andWhere('swapInToken.nameHex = :nameHex', {
-                                        nameHex,
-                                    });
-                                })).orWhere(new Brackets((query2) => {
-                                    query2.andWhere('swapOutToken.policyId = :policyId', {
-                                        policyId,
-                                    }).andWhere('swapOutToken.nameHex = :nameHex', {
-                                        nameHex,
-                                    });
-                                }));
-                            }));
-                        }
+              if (type && type === 'buy') {
+                query.andWhere(
+                  new Brackets((query1) => {
+                    query1
+                      .andWhere('swaps.swapInTokenId = liquidityPool.tokenAId')
+                      .orWhere(
+                        'swaps.swapInToken IS NULL AND liquidityPool.tokenA IS NULL'
+                      );
+                  })
+                );
+              }
+              if (type && type === 'sell') {
+                query.andWhere(
+                  new Brackets((query1) => {
+                    query1
+                      .andWhere('swaps.swapInTokenId != liquidityPool.tokenAId')
+                      .orWhere(
+                        'swaps.swapInToken IS NOT NULL AND liquidityPool.tokenA IS NULL'
+                      );
+                  })
+                );
+              }
 
-                        if (type && type === 'buy') {
-                            query.andWhere(new Brackets((query1) => {
-                                query1.andWhere('swaps.swapInTokenId = liquidityPool.tokenAId')
-                                    .orWhere('swaps.swapInToken IS NULL AND liquidityPool.tokenA IS NULL');
-                            }));
-                        }
-                        if (type && type === 'sell') {
-                            query.andWhere(new Brackets((query1) => {
-                                query1.andWhere('swaps.swapInTokenId != liquidityPool.tokenAId')
-                                    .orWhere('swaps.swapInToken IS NOT NULL AND liquidityPool.tokenA IS NULL');
-                            }));
-                        }
+              return query;
+            })
+          )
+          .orderBy('swaps.id', 'DESC')
+          .take(take)
+          .skip(skip)
+          .getManyAndCount();
+      })
+      .then(([orders, total]) => {
+        const resource: LiquidityPoolSwapResource =
+          new LiquidityPoolSwapResource();
 
-                        return query;
-                    }),
-                )
-                .orderBy('swaps.id', 'DESC')
-                .take(take)
-                .skip(skip)
-                .getManyAndCount()
-        }).then(([orders, total]) => {
-            const resource: LiquidityPoolSwapResource = new LiquidityPoolSwapResource();
+        response.send(
+          super.formatPaginatedResponse(
+            Number(page ?? 1),
+            Number(limit ?? MAX_PER_PAGE),
+            Math.ceil(total / take),
+            resource.manyToJson(orders)
+          )
+        );
+      })
+      .catch(() =>
+        response.send(super.failResponse('Unable to retrieve swap orders'))
+      );
+  }
 
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                Math.ceil(total / take),
-                resource.manyToJson(orders)
-            ));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve swap orders')));
+  private deposits(request: express.Request, response: express.Response) {
+    const { pubKeyHashes, stakeKeyHashes } = request.body;
+    const { poolIdentifier, token, page, limit } = request.query;
+
+    const take: number = Math.min(
+      Number((limit ? +limit : undefined) || MAX_PER_PAGE),
+      MAX_PER_PAGE
+    );
+    const skip: number =
+      (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+
+    const [policyId, nameHex] = token
+      ? (token as string).split('.')
+      : [null, null];
+
+    if (!pubKeyHashes && !stakeKeyHashes) {
+      response.send(
+        super.formatPaginatedResponse(
+          Number(page ?? 1),
+          Number(limit ?? MAX_PER_PAGE),
+          1,
+          []
+        )
+      );
     }
 
-    private deposits(request: express.Request, response: express.Response) {
-        const {
-            pubKeyHashes,
-            stakeKeyHashes,
-        } = request.body;
-        const {
-            poolIdentifier,
-            token,
-            page,
-            limit,
-        } = request.query;
+    dbApiService
+      .query((manager: EntityManager) => {
+        return manager
+          .createQueryBuilder(LiquidityPoolDeposit, 'deposits')
+          .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
+          .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
+          .leftJoinAndSelect('deposits.liquidityPool', 'liquidityPool')
+          .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+          .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+          .leftJoinAndMapMany(
+            'deposits.statuses',
+            OperationStatus,
+            'status',
+            'operationId = deposits.id AND operationType = :operationType',
+            {
+              operationType: LiquidityPoolDeposit.name,
+            }
+          )
+          .andWhere(
+            new Brackets((query) => {
+              if (poolIdentifier) {
+                query.andWhere('liquidityPool.identifier = :identifier', {
+                  identifier: poolIdentifier,
+                });
+              }
 
-        const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
-        const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+              if (pubKeyHashes && pubKeyHashes.length > 0) {
+                query.andWhere('deposits.senderPubKeyHash IN(:...pkHashes)', {
+                  pkHashes: pubKeyHashes,
+                });
+              }
 
-        const [policyId, nameHex] = token
-            ? (token as string).split('.')
-            : [null, null];
+              if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                query.andWhere('deposits.senderStakeKeyHash IN(:...skHashes)', {
+                  skHashes: stakeKeyHashes,
+                });
+              }
 
-        if (! pubKeyHashes && ! stakeKeyHashes) {
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                1,
-                [],
-            ));
-        }
+              if (policyId && nameHex) {
+                query
+                  .andWhere(
+                    new Brackets((query1) => {
+                      query1
+                        .where('depositAToken.policyId = :policyId', {
+                          policyId,
+                        })
+                        .andWhere('depositAToken.nameHex = :nameHex', {
+                          nameHex,
+                        });
+                    })
+                  )
+                  .orWhere(
+                    new Brackets((query1) => {
+                      query1
+                        .where('depositBToken.policyId = :policyId', {
+                          policyId,
+                        })
+                        .andWhere('depositBToken.nameHex = :nameHex', {
+                          nameHex,
+                        });
+                    })
+                  );
+              }
 
-        dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolDeposit, 'deposits')
-                .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
-                .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
-                .leftJoinAndSelect('deposits.liquidityPool', 'liquidityPool')
-                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
-                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
-                .leftJoinAndMapMany(
-                    'deposits.statuses',
-                    OperationStatus,
-                    'status',
-                    'operationId = deposits.id AND operationType = :operationType',
-                    {
-                        operationType: LiquidityPoolDeposit.name,
-                    }
-                )
-                .andWhere(
-                    new Brackets((query) => {
-                        if (poolIdentifier) {
-                            query.andWhere('liquidityPool.identifier = :identifier', {
-                                identifier: poolIdentifier,
-                            });
-                        }
+              return query;
+            })
+          )
+          .orderBy('deposits.id', 'DESC')
+          .take(take)
+          .skip(skip)
+          .getManyAndCount();
+      })
+      .then(([deposits, total]) => {
+        const resource: LiquidityPoolDepositResource =
+          new LiquidityPoolDepositResource();
 
-                        if (pubKeyHashes && pubKeyHashes.length > 0) {
-                            query.andWhere('deposits.senderPubKeyHash IN(:...pkHashes)', {
-                                pkHashes: pubKeyHashes,
-                            });
-                        }
+        response.send(
+          super.formatPaginatedResponse(
+            Number(page ?? 1),
+            Number(limit ?? MAX_PER_PAGE),
+            Math.ceil(total / take),
+            resource.manyToJson(deposits)
+          )
+        );
+      })
+      .catch(() =>
+        response.send(super.failResponse('Unable to retrieve deposit orders'))
+      );
+  }
 
-                        if (stakeKeyHashes && stakeKeyHashes.length > 0) {
-                            query.andWhere('deposits.senderStakeKeyHash IN(:...skHashes)', {
-                                skHashes: stakeKeyHashes,
-                            });
-                        }
+  private withdraws(request: express.Request, response: express.Response) {
+    const { pubKeyHashes, stakeKeyHashes } = request.body;
+    const { poolIdentifier, page, limit } = request.query;
 
-                        if (policyId && nameHex) {
-                            query.andWhere(new Brackets((query1) => {
-                                query1.where('depositAToken.policyId = :policyId', {
-                                    policyId,
-                                }).andWhere('depositAToken.nameHex = :nameHex', {
-                                    nameHex,
-                                });
-                            })).orWhere(new Brackets((query1) => {
-                                query1.where('depositBToken.policyId = :policyId', {
-                                    policyId,
-                                }).andWhere('depositBToken.nameHex = :nameHex', {
-                                    nameHex,
-                                });
-                            }));
-                        }
+    const take: number = Math.min(
+      Number((limit ? +limit : undefined) || MAX_PER_PAGE),
+      MAX_PER_PAGE
+    );
+    const skip: number =
+      (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
 
-                        return query;
-                    }),
-                )
-                .orderBy('deposits.id', 'DESC')
-                .take(take)
-                .skip(skip)
-                .getManyAndCount()
-        }).then(([deposits, total]) => {
-            const resource: LiquidityPoolDepositResource = new LiquidityPoolDepositResource();
-
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                Math.ceil(total / take),
-                resource.manyToJson(deposits)
-            ));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve deposit orders')));
+    if (!pubKeyHashes && !stakeKeyHashes) {
+      response.send(
+        super.formatPaginatedResponse(
+          Number(page ?? 1),
+          Number(limit ?? MAX_PER_PAGE),
+          1,
+          []
+        )
+      );
     }
 
-    private withdraws(request: express.Request, response: express.Response) {
-        const {
-            pubKeyHashes,
-            stakeKeyHashes,
-        } = request.body;
-        const {
-            poolIdentifier,
-            page,
-            limit,
-        } = request.query;
+    dbApiService
+      .query((manager: EntityManager) => {
+        return manager
+          .createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
+          .leftJoinAndSelect('withdraws.lpToken', 'lpToken')
+          .leftJoinAndSelect('withdraws.liquidityPool', 'liquidityPool')
+          .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
+          .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
+          .leftJoinAndMapMany(
+            'withdraws.statuses',
+            OperationStatus,
+            'status',
+            'operationId = withdraws.id AND operationType = :operationType',
+            {
+              operationType: LiquidityPoolWithdraw.name,
+            }
+          )
+          .andWhere(
+            new Brackets((query) => {
+              if (poolIdentifier) {
+                query.andWhere('liquidityPool.identifier = :identifier', {
+                  identifier: poolIdentifier,
+                });
+              }
 
-        const take: number = Math.min(Number((limit ? +limit : undefined) || MAX_PER_PAGE), MAX_PER_PAGE);
-        const skip: number = (Math.max(Number((page ? +page : undefined) || 1), 1) - 1) * take;
+              if (pubKeyHashes && pubKeyHashes.length > 0) {
+                query.andWhere('withdraws.senderPubKeyHash IN(:...pkHashes)', {
+                  pkHashes: pubKeyHashes,
+                });
+              }
 
-        if (! pubKeyHashes && ! stakeKeyHashes) {
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                1,
-                [],
-            ));
-        }
+              if (stakeKeyHashes && stakeKeyHashes.length > 0) {
+                query.andWhere(
+                  'withdraws.senderStakeKeyHash IN(:...skHashes)',
+                  {
+                    skHashes: stakeKeyHashes,
+                  }
+                );
+              }
 
-        dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolWithdraw, 'withdraws')
-                .leftJoinAndSelect('withdraws.lpToken', 'lpToken')
-                .leftJoinAndSelect('withdraws.liquidityPool', 'liquidityPool')
-                .leftJoinAndSelect('liquidityPool.tokenA', 'tokenA')
-                .leftJoinAndSelect('liquidityPool.tokenB', 'tokenB')
-                .leftJoinAndMapMany(
-                    'withdraws.statuses',
-                    OperationStatus,
-                    'status',
-                    'operationId = withdraws.id AND operationType = :operationType',
-                    {
-                        operationType: LiquidityPoolWithdraw.name,
-                    }
-                )
-                .andWhere(
-                    new Brackets((query) => {
-                        if (poolIdentifier) {
-                            query.andWhere('liquidityPool.identifier = :identifier', {
-                                identifier: poolIdentifier,
-                            });
-                        }
+              return query;
+            })
+          )
+          .orderBy('withdraws.id', 'DESC')
+          .take(take)
+          .skip(skip)
+          .getManyAndCount();
+      })
+      .then(([withdraws, total]) => {
+        const resource: LiquidityPoolWithdrawResource =
+          new LiquidityPoolWithdrawResource();
 
-                        if (pubKeyHashes && pubKeyHashes.length > 0) {
-                            query.andWhere('withdraws.senderPubKeyHash IN(:...pkHashes)', {
-                                pkHashes: pubKeyHashes,
-                            });
-                        }
+        response.send(
+          super.formatPaginatedResponse(
+            Number(page ?? 1),
+            Number(limit ?? MAX_PER_PAGE),
+            Math.ceil(total / take),
+            resource.manyToJson(withdraws)
+          )
+        );
+      })
+      .catch(() =>
+        response.send(super.failResponse('Unable to retrieve deposit orders'))
+      );
+  }
 
-                        if (stakeKeyHashes && stakeKeyHashes.length > 0) {
-                            query.andWhere('withdraws.senderStakeKeyHash IN(:...skHashes)', {
-                                skHashes: stakeKeyHashes,
-                            });
-                        }
+  private swapAssets(request: express.Request, response: express.Response) {
+    const { pubKeyHashes } = request.body;
 
-                        return query;
-                    }),
-                )
-                .orderBy('withdraws.id', 'DESC')
-                .take(take)
-                .skip(skip)
-                .getManyAndCount()
-        }).then(([withdraws, total]) => {
-            const resource: LiquidityPoolWithdrawResource = new LiquidityPoolWithdrawResource();
+    dbApiService
+      .query((manager: EntityManager) => {
+        return manager
+          .createQueryBuilder(LiquidityPoolSwap, 'swaps')
+          .select([
+            'swaps.swapInToken',
+            'swaps.swapOutToken',
+            'swaps.senderPubKeyHash',
+          ])
+          .leftJoinAndSelect('swaps.swapInToken', 'orderSwapInToken')
+          .leftJoinAndSelect('swaps.swapOutToken', 'orderSwapOutToken')
+          .where('swaps.senderPubKeyHash IN(:...hashes)', {
+            hashes: pubKeyHashes,
+          })
+          .getMany();
+      })
+      .then((orders: LiquidityPoolSwap[]) => {
+        const resource: AssetResource = new AssetResource();
 
-            response.send(super.formatPaginatedResponse(
-                Number(page ?? 1),
-                Number(limit ?? MAX_PER_PAGE),
-                Math.ceil(total / take),
-                resource.manyToJson(withdraws)
-            ));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve deposit orders')));
-    }
+        const assets: Asset[] = orders.reduce(
+          (assets: Asset[], order: LiquidityPoolSwap) => {
+            const assetIds: number[] = assets.map((asset: Asset) => asset.id);
 
-    private swapAssets(request: express.Request, response: express.Response) {
-        const {
-            pubKeyHashes,
-        } = request.body;
+            if (order.swapInToken && !assetIds.includes(order.swapInToken.id)) {
+              assets.push(order.swapInToken);
+            }
+            if (
+              order.swapOutToken &&
+              !assetIds.includes(order.swapOutToken.id)
+            ) {
+              assets.push(order.swapOutToken);
+            }
 
-        dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
-                .select(['swaps.swapInToken', 'swaps.swapOutToken', 'swaps.senderPubKeyHash'])
-                .leftJoinAndSelect('swaps.swapInToken', 'orderSwapInToken')
-                .leftJoinAndSelect('swaps.swapOutToken', 'orderSwapOutToken')
-                .where('swaps.senderPubKeyHash IN(:...hashes)', { hashes: pubKeyHashes })
-                .getMany()
-        }).then((orders: LiquidityPoolSwap[]) => {
-            const resource: AssetResource = new AssetResource();
+            return assets;
+          },
+          []
+        );
 
-            const assets: Asset[] = orders.reduce((assets: Asset[], order: LiquidityPoolSwap) => {
-                const assetIds: number[] = assets.map((asset: Asset) => asset.id);
+        response.send(resource.manyToJson(assets));
+      })
+      .catch(() =>
+        response.send(
+          super.failResponse('Unable to retrieve swap order assets')
+        )
+      );
+  }
 
-                if (order.swapInToken && ! assetIds.includes(order.swapInToken.id)) {
-                    assets.push(order.swapInToken);
-                }
-                if (order.swapOutToken && ! assetIds.includes(order.swapOutToken.id)) {
-                    assets.push(order.swapOutToken);
-                }
+  private depositAssets(request: express.Request, response: express.Response) {
+    const { pubKeyHashes } = request.body;
 
-                return assets;
-            }, []);
+    dbApiService
+      .query((manager: EntityManager) => {
+        return manager
+          .createQueryBuilder(LiquidityPoolSwap, 'deposits')
+          .select([
+            'deposits.depositAToken',
+            'deposits.depositBToken',
+            'swaps.senderPubKeyHash',
+          ])
+          .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
+          .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
+          .where('deposits.senderPubKeyHash IN(:...hashes)', {
+            hashes: pubKeyHashes,
+          })
+          .getMany();
+      })
+      .then((orders: LiquidityPoolDeposit[]) => {
+        const resource: AssetResource = new AssetResource();
 
-            response.send(resource.manyToJson(assets));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve swap order assets')));
-    }
+        const assets: Asset[] = orders.reduce(
+          (assets: Asset[], order: LiquidityPoolDeposit) => {
+            const assetIds: number[] = assets.map((asset: Asset) => asset.id);
 
-    private depositAssets(request: express.Request, response: express.Response) {
-        const {
-            pubKeyHashes,
-        } = request.body;
+            if (
+              order.depositAToken &&
+              !assetIds.includes(order.depositAToken.id)
+            ) {
+              assets.push(order.depositAToken);
+            }
+            if (
+              order.depositBToken &&
+              !assetIds.includes(order.depositBToken.id)
+            ) {
+              assets.push(order.depositBToken);
+            }
 
-        dbApiService.query((manager: EntityManager) => {
-            return manager.createQueryBuilder(LiquidityPoolSwap, 'deposits')
-                .select(['deposits.depositAToken', 'deposits.depositBToken', 'swaps.senderPubKeyHash'])
-                .leftJoinAndSelect('deposits.depositAToken', 'depositAToken')
-                .leftJoinAndSelect('deposits.depositBToken', 'depositBToken')
-                .where('deposits.senderPubKeyHash IN(:...hashes)', { hashes: pubKeyHashes })
-                .getMany()
-        }).then((orders: LiquidityPoolDeposit[]) => {
-            const resource: AssetResource = new AssetResource();
+            return assets;
+          },
+          []
+        );
 
-            const assets: Asset[] = orders.reduce((assets: Asset[], order: LiquidityPoolDeposit) => {
-                const assetIds: number[] = assets.map((asset: Asset) => asset.id);
-
-                if (order.depositAToken && ! assetIds.includes(order.depositAToken.id)) {
-                    assets.push(order.depositAToken);
-                }
-                if (order.depositBToken && ! assetIds.includes(order.depositBToken.id)) {
-                    assets.push(order.depositBToken);
-                }
-
-                return assets;
-            }, []);
-
-            response.send(resource.manyToJson(assets));
-        }).catch(() => response.send(super.failResponse('Unable to retrieve deposit order assets')));
-    }
-
+        response.send(resource.manyToJson(assets));
+      })
+      .catch(() =>
+        response.send(
+          super.failResponse('Unable to retrieve deposit order assets')
+        )
+      );
+  }
 }

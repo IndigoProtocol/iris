@@ -4,15 +4,15 @@ export default {
   constructor: 0,
   fields: [
     {
-      bytes: DatumParameterKey.SenderKeyHashes
+      bytes: DatumParameterKey.SenderKeyHashes,
     },
     {
       constructor: 0,
       fields: [
         {
-          int: DatumParameterKey.MinReceive
-        }
-      ]
-    }
-  ]
+          int: DatumParameterKey.MinReceive,
+        },
+      ],
+    },
+  ],
 };

@@ -16,7 +16,7 @@ tags:
   - name: Orders
   - name: Swap
 servers:
-  - url: "http://api-url.com/api/"
+  - url: 'http://api-url.com/api/'
 
 paths:
   '/ping':
@@ -210,14 +210,14 @@ paths:
           required: true
           schema:
             type: string
-            description: "lovelace or token policy ID & name hex"
+            description: 'lovelace or token policy ID & name hex'
             example: lovelace
         - name: swapOutToken
           in: body
           required: true
           schema:
             type: string
-            description: "lovelace or token policy ID & name hex"
+            description: 'lovelace or token policy ID & name hex'
             example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
         - name: swapInAmount
           in: body
@@ -251,14 +251,14 @@ paths:
           required: true
           schema:
             type: string
-            description: "lovelace or token policy ID & name hex"
+            description: 'lovelace or token policy ID & name hex'
             example: lovelace
         - name: swapOutToken
           in: body
           required: true
           schema:
             type: string
-            description: "lovelace or token policy ID & name hex"
+            description: 'lovelace or token policy ID & name hex'
             example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
         - name: swapInAmount
           in: body
@@ -291,20 +291,20 @@ paths:
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            description: 'Unique identifier of a pool given from the API'
+            example: 'lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796'
         - name: type
           in: query
           schema:
             type: string
             enum:
-              - "buy"
-              - "sell"
+              - 'buy'
+              - 'sell'
         - name: token
           in: body
           schema:
             type: string
-            description: "token policy ID & name hex"
+            description: 'token policy ID & name hex'
             example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
         - name: page
           in: query
@@ -338,13 +338,13 @@ paths:
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            description: 'Unique identifier of a pool given from the API'
+            example: 'lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796'
         - name: token
           in: body
           schema:
             type: string
-            description: "Token policy ID & name hex"
+            description: 'Token policy ID & name hex'
             example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
         - name: page
           in: query
@@ -378,8 +378,8 @@ paths:
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            description: 'Unique identifier of a pool given from the API'
+            example: 'lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796'
         - name: page
           in: query
           schema:
@@ -466,25 +466,25 @@ paths:
           in: body
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            description: 'Unique identifier of a pool given from the API'
+            example: 'lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796'
         - name: dex
           in: body
           schema:
             type: string
-            description: "Filter pools on a DEX"
-            example: "Minswap"
+            description: 'Filter pools on a DEX'
+            example: 'Minswap'
         - name: tokenA
           in: body
           schema:
             type: string
-            description: "Filter tokens in the pool"
+            description: 'Filter tokens in the pool'
             example: lovelace
         - name: tokenB
           in: body
           schema:
             type: string
-            description: "Filter tokens in the pool"
+            description: 'Filter tokens in the pool'
             example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
       responses:
         '200':
@@ -556,9 +556,9 @@ paths:
           schema:
             type: string
             enum:
-              - "1m"
-              - "1h"
-              - "1D"
+              - '1m'
+              - '1h'
+              - '1D'
         - name: fromTime
           in: query
           description: Unix timestamp to start from
@@ -593,8 +593,8 @@ paths:
           schema:
             type: string
             enum:
-              - "buy"
-              - "sell"
+              - 'buy'
+              - 'sell'
         - name: page
           in: query
           schema:
@@ -690,7 +690,7 @@ components:
           example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0
         nameHex:
           type: string
-          example: "494e4459"
+          example: '494e4459'
         decimals:
           type: integer
           example: 6
@@ -702,7 +702,7 @@ components:
           example: Indigo DAO Token
         logo:
           type: string
-          example: "base64 image string"
+          example: 'base64 image string'
         isLpToken:
           type: boolean
           example: 'false'
@@ -751,13 +751,13 @@ components:
           example: Minswap
         website:
           type: string
-          example: "https://minswap.org/"
+          example: 'https://minswap.org/'
         image:
           type: string
-          example: "base64 image string"
+          example: 'base64 image string'
         color:
           type: string
-          example: "#2f45c5"
+          example: '#2f45c5'
 
     DexMetadataResponse:
       type: object
@@ -798,9 +798,9 @@ components:
         results:
           type: object
           properties:
-            "Minswap":
+            'Minswap':
               $ref: '#/components/schemas/DexRouteResponse'
-            "SundaeSwap":
+            'SundaeSwap':
               $ref: '#/components/schemas/DexRouteResponse'
 
     SwapOrder:
@@ -890,7 +890,7 @@ components:
       properties:
         tokenA:
           type: string
-          example: ""
+          example: ''
           description: Empty token for 'lovelace'
         tokenB:
           $ref: '#/components/schemas/Asset'
@@ -899,7 +899,7 @@ components:
           example: Spectrum
         identifier:
           type: string
-          example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+          example: 'lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796'
         createdSlot:
           type: number
         state:

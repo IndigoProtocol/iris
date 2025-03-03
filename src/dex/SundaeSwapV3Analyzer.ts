@@ -2,17 +2,17 @@ import {
   AddressDetails,
   Data,
   getAddressDetails,
-} from "@lucid-evolution/lucid";
-import { DefinitionBuilder } from "../DefinitionBuilder";
-import { BIPS, Dex, SwapOrderType } from "../constants";
-import { Asset, Token } from "../db/entities/Asset";
-import { LiquidityPool } from "../db/entities/LiquidityPool";
-import { LiquidityPoolDeposit } from "../db/entities/LiquidityPoolDeposit";
-import { LiquidityPoolState } from "../db/entities/LiquidityPoolState";
-import { LiquidityPoolSwap } from "../db/entities/LiquidityPoolSwap";
-import { LiquidityPoolWithdraw } from "../db/entities/LiquidityPoolWithdraw";
-import { LiquidityPoolZap } from "../db/entities/LiquidityPoolZap";
-import { OperationStatus } from "../db/entities/OperationStatus";
+} from '@lucid-evolution/lucid';
+import { DefinitionBuilder } from '../DefinitionBuilder';
+import { BIPS, Dex, SwapOrderType } from '../constants';
+import { Asset, Token } from '../db/entities/Asset';
+import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
+import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
+import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
+import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
+import { LiquidityPoolZap } from '../db/entities/LiquidityPoolZap';
+import { OperationStatus } from '../db/entities/OperationStatus';
 import {
   AmmDexOperation,
   AssetBalance,
@@ -21,26 +21,26 @@ import {
   DefinitionField,
   Transaction,
   Utxo,
-} from "../types";
-import { toDefinitionDatum, tokensMatch } from "../utils";
-import { BaseAmmDexAnalyzer } from "./BaseAmmDexAnalyzer";
-import poolDefinition from "./definitions/sundaeswap-v3/pool";
-import poolDepositDefinition from "./definitions/sundaeswap-v3/pool-deposit";
-import poolWithdrawDefinition from "./definitions/sundaeswap-v3/pool-withdraw";
-import swapDefinition from "./definitions/sundaeswap-v3/swap";
-import zapDefinition from "./definitions/sundaeswap-v3/zap";
+} from '../types';
+import { toDefinitionDatum, tokensMatch } from '../utils';
+import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
+import poolDefinition from './definitions/sundaeswap-v3/pool';
+import poolDepositDefinition from './definitions/sundaeswap-v3/pool-deposit';
+import poolWithdrawDefinition from './definitions/sundaeswap-v3/pool-withdraw';
+import swapDefinition from './definitions/sundaeswap-v3/swap';
+import zapDefinition from './definitions/sundaeswap-v3/zap';
 
 /**
  * SundaeSwap constants.
  */
 const LP_TOKEN_POLICY_ID: string =
-  "e0302560ced2fdcbfcb2602697df970cd0d6a38f94b32703f51c312b";
-const CANCEL_ORDER_DATUM: string = "d87980";
+  'e0302560ced2fdcbfcb2602697df970cd0d6a38f94b32703f51c312b';
+const CANCEL_ORDER_DATUM: string = 'd87980';
 const DEPOSIT_FEE: bigint = 2_000000n;
 const ORDER_SCRIPT_HASH: string =
-  "fa6a58bbe2d0ff05534431c8e2f0ef2cbdc1602a8456e4b13c8f3077";
+  'fa6a58bbe2d0ff05534431c8e2f0ef2cbdc1602a8456e4b13c8f3077';
 const CANCEL_REFERENCE_TX_HASHES: string[] = [
-  "f9121bf01434f6c263d5b1ffa35a155bed37a1aba641a209b35da7c841082d7b",
+  'f9121bf01434f6c263d5b1ffa35a155bed37a1aba641a209b35da7c841082d7b',
 ];
 
 export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
@@ -50,7 +50,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
    * Analyze transaction for possible DEX operations.
    */
   public async analyzeTransaction(
-    transaction: Transaction,
+    transaction: Transaction
   ): Promise<AmmDexOperation[]> {
     return Promise.all([
       this.liquidityPoolStates(transaction),
@@ -62,7 +62,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
         transaction,
         [ORDER_SCRIPT_HASH],
         CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES,
+        CANCEL_REFERENCE_TX_HASHES
       ),
     ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
   }
@@ -79,7 +79,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
           }
 
           const addressDetails: AddressDetails = getAddressDetails(
-            output.toAddress,
+            output.toAddress
           );
 
           if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
@@ -88,24 +88,24 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
 
           try {
             const definitionField: DefinitionField = toDefinitionDatum(
-              Data.from(output.datum),
+              Data.from(output.datum)
             );
             const builder: DefinitionBuilder = new DefinitionBuilder(
-              swapDefinition,
+              swapDefinition
             );
             const datumParameters: DatumParameters = builder.pullParameters(
-              definitionField as DefinitionConstr,
+              definitionField as DefinitionConstr
             );
 
             // Impossible to know the swap out token unless we know the tokens in the pool
             const existingPool: LiquidityPool | undefined =
               await this.liquidityPoolFromIdentifier(
-                datumParameters.PoolIdentifier as string,
+                datumParameters.PoolIdentifier as string
               );
 
             if (!existingPool)
               return reject(
-                `Unable to find ${Dex.SundaeSwapV3} pool with identifier ${datumParameters.PoolIdentifier}`,
+                `Unable to find ${Dex.SundaeSwapV3} pool with identifier ${datumParameters.PoolIdentifier}`
               );
 
             let swapInToken: Token | undefined;
@@ -117,7 +117,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
               swapInToken = output.assetBalances[0].asset;
               swapOutToken = tokensMatch(
                 output.assetBalances[0].asset,
-                existingPool.tokenA ?? "lovelace",
+                existingPool.tokenA ?? 'lovelace'
               )
                 ? existingPool.tokenB
                 : existingPool.tokenA;
@@ -126,7 +126,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 output.lovelaceBalance -
                 BigInt(datumParameters.ProtocolFee as number) -
                 DEPOSIT_FEE;
-              swapInToken = "lovelace";
+              swapInToken = 'lovelace';
               swapOutToken = !existingPool.tokenA
                 ? existingPool.tokenB
                 : existingPool.tokenA;
@@ -142,14 +142,14 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 Number(datumParameters.MinReceive),
                 Number(datumParameters.ProtocolFee),
                 datumParameters.SenderPubKeyHash as string,
-                (datumParameters.SenderStakingKeyHash ?? "") as string,
+                (datumParameters.SenderStakingKeyHash ?? '') as string,
                 transaction.blockSlot,
                 transaction.hash,
                 output.index,
                 output.toAddress,
                 SwapOrderType.Instant,
-                transaction,
-              ),
+                transaction
+              )
             );
           } catch (e) {
             return resolve(undefined);
@@ -160,7 +160,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
     return Promise.all(promises)
       .then((swapOrders: (LiquidityPoolSwap | undefined)[]) => {
         return swapOrders.filter(
-          (operation: LiquidityPoolSwap | undefined) => operation !== undefined,
+          (operation: LiquidityPoolSwap | undefined) => operation !== undefined
         ) as LiquidityPoolSwap[];
       })
       .catch(() => Promise.resolve([]));
@@ -178,7 +178,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
           }
 
           const addressDetails: AddressDetails = getAddressDetails(
-            output.toAddress,
+            output.toAddress
           );
 
           if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
@@ -187,28 +187,28 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
 
           try {
             const definitionField: DefinitionField = toDefinitionDatum(
-              Data.from(output.datum),
+              Data.from(output.datum)
             );
             const builder: DefinitionBuilder = new DefinitionBuilder(
-              zapDefinition,
+              zapDefinition
             );
             const datumParameters: DatumParameters = builder.pullParameters(
-              definitionField as DefinitionConstr,
+              definitionField as DefinitionConstr
             );
 
             const tokenA: Token =
-              datumParameters.PoolAssetAPolicyId === ""
-                ? "lovelace"
+              datumParameters.PoolAssetAPolicyId === ''
+                ? 'lovelace'
                 : new Asset(
                     datumParameters.PoolAssetAPolicyId as string,
-                    datumParameters.PoolAssetAAssetName as string,
+                    datumParameters.PoolAssetAAssetName as string
                   );
             const tokenB: Token =
-              datumParameters.PoolAssetBPolicyId === ""
-                ? "lovelace"
+              datumParameters.PoolAssetBPolicyId === ''
+                ? 'lovelace'
                 : new Asset(
                     datumParameters.PoolAssetBPolicyId as string,
-                    datumParameters.PoolAssetBAssetName as string,
+                    datumParameters.PoolAssetBAssetName as string
                   );
 
             return resolve(
@@ -225,8 +225,8 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                 transaction.blockSlot,
                 transaction.hash,
                 output.index,
-                transaction,
-              ),
+                transaction
+              )
             );
           } catch (e) {
             return resolve(undefined);
@@ -237,7 +237,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
     return Promise.all(promises)
       .then((zapOrders: (LiquidityPoolZap | undefined)[]) => {
         return zapOrders.filter(
-          (operation: LiquidityPoolZap | undefined) => operation !== undefined,
+          (operation: LiquidityPoolZap | undefined) => operation !== undefined
         ) as LiquidityPoolZap[];
       })
       .catch(() => Promise.resolve([]));
@@ -247,7 +247,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
    * Check for updated liquidity pool states in transaction.
    */
   protected liquidityPoolStates(
-    transaction: Transaction,
+    transaction: Transaction
   ): LiquidityPoolState[] {
     return transaction.outputs
       .map((output: Utxo) => {
@@ -258,7 +258,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
         const relevantAssets: AssetBalance[] = output.assetBalances.filter(
           (assetBalance: AssetBalance) => {
             return assetBalance.asset.policyId !== LP_TOKEN_POLICY_ID;
-          },
+          }
         );
 
         if (![1, 2].includes(relevantAssets.length)) {
@@ -268,40 +268,40 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
         const lpToken: Asset | undefined = output.assetBalances.find(
           (assetBalance: AssetBalance) => {
             return assetBalance.asset.policyId === LP_TOKEN_POLICY_ID;
-          },
+          }
         )?.asset;
 
         if (!lpToken) {
           return undefined;
         } else {
-          lpToken.nameHex = "0014df1" + lpToken.nameHex.substr(7);
+          lpToken.nameHex = '0014df1' + lpToken.nameHex.substr(7);
         }
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
 
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDefinition,
+            poolDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           const tokenA: Token =
-            datumParameters.PoolAssetAPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetAPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 );
           const tokenB: Token =
-            datumParameters.PoolAssetBPolicyId === ""
-              ? "lovelace"
+            datumParameters.PoolAssetBPolicyId === ''
+              ? 'lovelace'
               : new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 );
 
           const possibleOperationStatuses: OperationStatus[] =
@@ -315,15 +315,15 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             tokenB,
             lpToken,
             String(
-              tokenA === "lovelace"
+              tokenA === 'lovelace'
                 ? output.lovelaceBalance -
                     BigInt(datumParameters.ProtocolFee ?? 0n)
-                : relevantAssets[0].quantity,
+                : relevantAssets[0].quantity
             ),
             String(
-              tokenA === "lovelace"
+              tokenA === 'lovelace'
                 ? relevantAssets[0].quantity
-                : relevantAssets[1].quantity,
+                : relevantAssets[1].quantity
             ),
             Number(datumParameters.TotalLpTokens),
             Number(datumParameters.FeeANumerator ?? 0) / 100,
@@ -332,7 +332,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             possibleOperationStatuses,
             transaction.inputs,
             transaction.outputs.filter(
-              (sibling: Utxo) => sibling.index !== output.index,
+              (sibling: Utxo) => sibling.index !== output.index
             ),
             {
               // batcherFee is parameterized at governance UTxO
@@ -342,7 +342,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
               minAda: 0n.toString(),
               FeeANumerator: Number(datumParameters.FeeANumerator ?? 0),
               FeeBNumerator: Number(datumParameters.FeeBNumerator ?? 0),
-            },
+            }
           );
         } catch (e) {
           return undefined;
@@ -350,7 +350,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
       })
       .flat()
       .filter(
-        (operation: LiquidityPoolState | undefined) => operation !== undefined,
+        (operation: LiquidityPoolState | undefined) => operation !== undefined
       ) as LiquidityPoolState[];
   }
 
@@ -365,7 +365,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
@@ -374,13 +374,13 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolDepositDefinition,
+            poolDepositDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           return LiquidityPoolDeposit.make(
@@ -389,33 +389,32 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             datumParameters.PoolAssetAPolicyId
               ? new Asset(
                   datumParameters.PoolAssetAPolicyId as string,
-                  datumParameters.PoolAssetAAssetName as string,
+                  datumParameters.PoolAssetAAssetName as string
                 )
-              : "lovelace",
+              : 'lovelace',
             datumParameters.PoolAssetBPolicyId
               ? new Asset(
                   datumParameters.PoolAssetBPolicyId as string,
-                  datumParameters.PoolAssetBAssetName as string,
+                  datumParameters.PoolAssetBAssetName as string
                 )
-              : "lovelace",
+              : 'lovelace',
             Number(datumParameters.DepositA),
             Number(datumParameters.DepositB),
             undefined,
             Number(datumParameters.ProtocolFee),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
         }
       })
       .filter(
-        (operation: LiquidityPoolDeposit | undefined) =>
-          operation !== undefined,
+        (operation: LiquidityPoolDeposit | undefined) => operation !== undefined
       ) as LiquidityPoolDeposit[];
   }
 
@@ -430,7 +429,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
         }
 
         const addressDetails: AddressDetails = getAddressDetails(
-          output.toAddress,
+          output.toAddress
         );
 
         if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
@@ -439,13 +438,13 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
 
         try {
           const definitionField: DefinitionField = toDefinitionDatum(
-            Data.from(output.datum),
+            Data.from(output.datum)
           );
           const builder: DefinitionBuilder = new DefinitionBuilder(
-            poolWithdrawDefinition,
+            poolWithdrawDefinition
           );
           const datumParameters: DatumParameters = builder.pullParameters(
-            definitionField as DefinitionConstr,
+            definitionField as DefinitionConstr
           );
 
           return LiquidityPoolWithdraw.make(
@@ -453,18 +452,18 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
             datumParameters.PoolIdentifier as string,
             new Asset(
               datumParameters.LpTokenPolicyId as string,
-              datumParameters.LpTokenAssetName as string,
+              datumParameters.LpTokenAssetName as string
             ),
             Number(datumParameters.LpTokens),
             undefined,
             undefined,
             Number(datumParameters.ProtocolFee),
             datumParameters.SenderPubKeyHash as string,
-            (datumParameters.SenderStakingKeyHash ?? "") as string,
+            (datumParameters.SenderStakingKeyHash ?? '') as string,
             transaction.blockSlot,
             transaction.hash,
             output.index,
-            transaction,
+            transaction
           );
         } catch (e) {
           return undefined;
@@ -472,7 +471,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
       })
       .filter(
         (operation: LiquidityPoolWithdraw | undefined) =>
-          operation !== undefined,
+          operation !== undefined
       ) as LiquidityPoolWithdraw[];
   }
 }

@@ -8,11 +8,11 @@ export default {
       fields: [
         {
           bytes: DatumParameterKey.ConsumedTxHash,
-        }
-      ]
+        },
+      ],
     },
     {
-      int: DatumParameterKey.Action
-    }
-  ]
-}
+      int: DatumParameterKey.Action,
+    },
+  ],
+};

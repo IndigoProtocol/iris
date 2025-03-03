@@ -8,20 +8,20 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.PoolIdentifier
-        }
-      ]
+          bytes: DatumParameterKey.PoolIdentifier,
+        },
+      ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SenderStakingKeyHash
-        }
-      ]
+          bytes: DatumParameterKey.SenderStakingKeyHash,
+        },
+      ],
     },
     {
-      int: DatumParameterKey.ProtocolFee
+      int: DatumParameterKey.ProtocolFee,
     },
     {
       constructor: 0,
@@ -33,9 +33,9 @@ export default {
               constructor: 0,
               fields: [
                 {
-                  bytes: DatumParameterKey.SenderPubKeyHash
-                }
-              ]
+                  bytes: DatumParameterKey.SenderPubKeyHash,
+                },
+              ],
             },
             {
               constructor: 0,
@@ -47,40 +47,40 @@ export default {
                       constructor: 0,
                       fields: [
                         {
-                          bytes: DatumParameterKey.SenderStakingKeyHash
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+                          bytes: DatumParameterKey.SenderStakingKeyHash,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
         {
           constructor: 0,
-          fields: []
-        }
-      ]
+          fields: [],
+        },
+      ],
     },
     {
       constructor: 3,
       fields: [
         [
           {
-            bytes: DatumParameterKey.LpTokenPolicyId
+            bytes: DatumParameterKey.LpTokenPolicyId,
           },
           {
-            bytes: DatumParameterKey.LpTokenAssetName
+            bytes: DatumParameterKey.LpTokenAssetName,
           },
           {
-            int: DatumParameterKey.LpTokens
-          }
-        ]
-      ]
+            int: DatumParameterKey.LpTokens,
+          },
+        ],
+      ],
     },
     {
-      bytes: DatumParameterKey.CancelDatum
-    }
-  ]
-}
+      bytes: DatumParameterKey.CancelDatum,
+    },
+  ],
+};

@@ -11,46 +11,46 @@ export default {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SwapInTokenPolicyId
+          bytes: DatumParameterKey.SwapInTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapInTokenAssetName
-        }
+          bytes: DatumParameterKey.SwapInTokenAssetName,
+        },
       ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.SwapOutTokenPolicyId
+          bytes: DatumParameterKey.SwapOutTokenPolicyId,
         },
         {
-          bytes: DatumParameterKey.SwapOutTokenAssetName
-        }
+          bytes: DatumParameterKey.SwapOutTokenAssetName,
+        },
       ],
     },
     {
       constructor: 0,
       fields: [
         {
-          bytes: DatumParameterKey.TokenPolicyId // Pool NFT
+          bytes: DatumParameterKey.TokenPolicyId, // Pool NFT
         },
         {
-          bytes: DatumParameterKey.TokenAssetName
-        }
+          bytes: DatumParameterKey.TokenAssetName,
+        },
       ],
     },
     {
-      int: DatumParameterKey.LpFee
+      int: DatumParameterKey.LpFee,
     },
     {
-      int: DatumParameterKey.LpFeeNumerator // Execution fee numerator
+      int: DatumParameterKey.LpFeeNumerator, // Execution fee numerator
     },
     {
-      int: DatumParameterKey.LpFeeDenominator // Execution fee denominator
+      int: DatumParameterKey.LpFeeDenominator, // Execution fee denominator
     },
     {
-      bytes: DatumParameterKey.SenderPubKeyHash
+      bytes: DatumParameterKey.SenderPubKeyHash,
     },
     (field: DefinitionField, foundParameters: DatumParameters) => {
       if ('fields' in field) {
@@ -59,15 +59,16 @@ export default {
         }
 
         if (field.fields.length > 0 && 'bytes' in field.fields[0]) {
-          foundParameters[DatumParameterKey.SenderStakingKeyHash] = field.fields[0].bytes;
+          foundParameters[DatumParameterKey.SenderStakingKeyHash] =
+            field.fields[0].bytes;
         }
       }
     },
     {
-      int: DatumParameterKey.SwapInAmount
+      int: DatumParameterKey.SwapInAmount,
     },
     {
-      int: DatumParameterKey.MinReceive
-    }
+      int: DatumParameterKey.MinReceive,
+    },
   ],
-}
+};
