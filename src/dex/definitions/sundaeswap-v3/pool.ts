@@ -1,5 +1,5 @@
-import { DatumParameterKey } from '../../../constants';
-import { DatumParameters, DefinitionField } from '../../../types';
+import { DatumParameterKey } from "../../../constants";
+import { DatumParameters, DefinitionField } from "../../../types";
 
 export default {
   constructor: 0,
@@ -10,32 +10,39 @@ export default {
     [
       [
         {
-          bytes: DatumParameterKey.PoolAssetAPolicyId
+          bytes: DatumParameterKey.PoolAssetAPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetAAssetName
-        }
+          bytes: DatumParameterKey.PoolAssetAAssetName,
+        },
       ],
       [
         {
-          bytes: DatumParameterKey.PoolAssetBPolicyId
+          bytes: DatumParameterKey.PoolAssetBPolicyId,
         },
         {
-          bytes: DatumParameterKey.PoolAssetBAssetName
-        }
-      ]
+          bytes: DatumParameterKey.PoolAssetBAssetName,
+        },
+      ],
     ],
     {
-      int: DatumParameterKey.TotalLpTokens
+      int: DatumParameterKey.TotalLpTokens,
     },
     {
-      int: DatumParameterKey.OpeningFee
+      int: DatumParameterKey.FeeANumerator,
     },
     {
-      int: DatumParameterKey.FinalFee
+      int: DatumParameterKey.FeeBNumerator,
     },
     (field: DefinitionField, parameters: DatumParameters) => {
       return parameters;
+    },
+    (field: DefinitionField, parameters: DatumParameters) => {
+      return parameters;
+    },
+    {
+      // https://github.com/SundaeSwap-finance/sundae-contracts/blob/main/lib/types/pool.ak#L33C17-L33C18
+      int: DatumParameterKey.ProtocolFee,
     },
   ],
 };
