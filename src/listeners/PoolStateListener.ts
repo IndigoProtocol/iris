@@ -15,14 +15,11 @@ export class PoolStateListener extends BaseEventListener {
     if (!this.app) return Promise.resolve();
     let storageKey: string;
     switch (event.type) {
-      case IrisEventType.LiquidityPoolCreated:
-      case IrisEventType.LiquidityPoolUpdated:
-        storageKey = `plist:${event.data.id}`;
-
-        return this.app.cache.setKey(storageKey, event.data);
+      // case IrisEventType.LiquidityPoolCreated:
+      // case IrisEventType.LiquidityPoolUpdated:
       case IrisEventType.LiquidityPoolStateCreated:
       case IrisEventType.LiquidityPoolStateUpdated:
-        storageKey = `pstate:${event.data.liquidityPoolIdentifier}`;
+        storageKey = `cardano:pstate:${event.data.liquidityPoolIdentifier}`;
 
         return this.app.cache.setKey(
           storageKey,
