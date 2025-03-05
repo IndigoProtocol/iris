@@ -37,6 +37,8 @@ const LP_TOKEN_POLICY_ID: string =
   '0029cb7c88c7567b63d1a512c0ed626aa169688ec980730c0473b913';
 const CANCEL_ORDER_DATUM: string = 'd87a80';
 const DEPOSIT_FEE: bigint = 2_000000n;
+const BATCHER_FEE = 2_500_000n;
+const MIN_ADA = 2_000_000n;
 
 export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 50367177;
@@ -310,7 +312,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
             lpToken,
             String(
               tokenA === 'lovelace'
-                ? output.lovelaceBalance
+                ? output.lovelaceBalance - MIN_ADA
                 : relevantAssets[0].quantity
             ),
             String(
@@ -328,7 +330,14 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
             transaction.inputs,
             transaction.outputs.filter(
               (sibling: Utxo) => sibling.index !== output.index
-            )
+            ),
+            {
+              minAda: MIN_ADA.toString(),
+              batcherFee: BATCHER_FEE.toString(),
+              feeDenominator: Number(datumParameters.LpFeeDenominator ?? 0),
+              feeNumerator: Number(datumParameters.LpFeeNumerator ?? 0),
+              txHash: transaction.hash,
+            }
           );
         } catch (e) {
           return undefined;
