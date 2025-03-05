@@ -48,6 +48,10 @@ const LP_TOKEN_V1_POLICY_ID: string =
 const LP_TOKEN_V2_POLICY_ID: string =
   'e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d86';
 const CANCEL_ORDER_DATUM: string = 'd87a80';
+const MIN_ADA = 0n;
+const BATCHER_FEE = 2_000_000n;
+const FEE_NUMERATOR = 30;
+const FEE_DENOMINATOR = 10_000;
 
 export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 56553560;
@@ -304,7 +308,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
 
           const reserveA: bigint =
             tokenA === 'lovelace'
-              ? output.lovelaceBalance
+              ? output.lovelaceBalance - MIN_ADA
               : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
@@ -312,7 +316,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
 
           const reserveB: bigint =
             tokenB === 'lovelace'
-              ? output.lovelaceBalance
+              ? output.lovelaceBalance - MIN_ADA
               : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
@@ -341,10 +345,10 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
             ),
             {
               txHash: transaction.hash,
-              minAda: 2_000_000n.toString(),
-              batcherFee: 2_000_000n.toString(),
-              feeNumerator: Number(datumParameters.LpFeeNumerator ?? 0),
-              feeDenominator: Number(datumParameters.LpFeeDenominator ?? 0),
+              minAda: MIN_ADA.toString(),
+              batcherFee: BATCHER_FEE.toString(),
+              feeNumerator: FEE_NUMERATOR,
+              feeDenominator: FEE_DENOMINATOR,
             }
           );
         } catch (e) {
