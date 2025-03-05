@@ -43,6 +43,9 @@ const ORDER_SCRIPT_HASH: string =
 const CANCEL_REFERENCE_TX_HASHES: string[] = [
   'cf4ecddde0d81f9ce8fcc881a85eb1f8ccdaf6807f03fea4cd02da896a621776',
 ];
+const BATCHER_FEE = 2_000_000n;
+const MIN_ADA = 0n;
+const FEE_DENOMINATOR = 10_000;
 
 export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 128247239;
@@ -316,7 +319,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
             String(datumParameters.ReserveA),
             String(datumParameters.ReserveB),
             Number(datumParameters.TotalLpTokens),
-            Number(datumParameters.BaseFee) / 100,
+            Number(datumParameters.FeeANumerator) / 100,
             transaction.blockSlot,
             transaction.hash,
             possibleOperationStatuses,
@@ -326,11 +329,12 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
             ),
             {
               txHash: transaction.hash,
-              batcherFee: 2_000_000n.toString(),
-              feeDenominator: 10_000,
-              feeNumerator: Number(datumParameters.BaseFee ?? 0),
-              minAda: 0n.toString(),
-              BaseFee: Number(datumParameters.BaseFee ?? 0),
+              batcherFee: BATCHER_FEE.toString(),
+              feeDenominator: FEE_DENOMINATOR,
+              feeNumerator: Number(datumParameters.FeeANumerator ?? 0),
+              minAda: MIN_ADA.toString(),
+              FeeANumerator: Number(datumParameters.FeeANumerator ?? 0),
+              FeeBNumerator: Number(datumParameters.FeeBNumerator ?? 0),
             }
           );
         } catch (e) {
