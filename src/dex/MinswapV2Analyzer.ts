@@ -325,6 +325,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: 2_000_000n.toString(),
               feeDenominator: 10_000,
               feeNumerator: Number(datumParameters.BaseFee ?? 0),

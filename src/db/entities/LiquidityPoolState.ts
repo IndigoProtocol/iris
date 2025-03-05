@@ -19,6 +19,7 @@ export type PoolStateExtraData = {
   feeDenominator: number;
   minAda: string;
   batcherFee: string;
+  txHash: string;
 } & { [key in DatumParameterKey]?: string | number | undefined };
 
 @Entity({ name: 'liquidity_pool_states' })
@@ -84,6 +85,7 @@ export class LiquidityPoolState extends BaseEntity {
     transactionInputs: Utxo[] = [],
     transactionOutputs: Utxo[] = [],
     extra: PoolStateExtraData = {
+      txHash: '',
       batcherFee: '0',
       feeDenominator: 10_000,
       feeNumerator: 0,

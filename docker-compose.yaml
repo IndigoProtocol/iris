@@ -5,8 +5,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: iris
-      MYSQL_USER: iris
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
     ports:
       - '3306:3306'
     volumes:

@@ -335,6 +335,7 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               // batcherFee is parameterized at governance UTxO
               batcherFee: (612000 + 668000).toString(),
               feeDenominator: BIPS,

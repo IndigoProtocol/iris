@@ -298,6 +298,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: String(datumParameters.AgentFee ?? 0),
               feeDenominator: Number(datumParameters.FeeBasis ?? 0),
               minAda: MIN_POOL_ADA.toString(),

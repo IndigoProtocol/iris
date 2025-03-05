@@ -231,18 +231,18 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
           const reserveA: bigint =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           const reserveB: bigint =
             tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           if (reserveA === 0n || reserveB === 0n) return undefined;
 
@@ -265,6 +265,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: String(datumParameters.BatcherFee ?? 0),
               feeNumerator: Number(datumParameters.LpFee ?? 0),
               feeDenominator: 10_000,

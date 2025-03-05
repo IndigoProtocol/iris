@@ -292,6 +292,7 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: BATCHER_FEE.toString(),
               feeDenominator: 10_000,
               feeNumerator: FEE_PERCENT * 100,
