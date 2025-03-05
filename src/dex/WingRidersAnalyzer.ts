@@ -270,17 +270,13 @@ export class WingRidersAnalyzer extends BaseAmmDexAnalyzer {
             lpTokenAssetBalance.asset,
             String(
               tokenA === 'lovelace'
-                ? reserveA - treasuryA - MIN_POOL_ADA < 1_000_000n
-                  ? reserveA - treasuryA - MIN_POOL_ADA
-                  : reserveA - treasuryA
-                : reserveA
+                ? reserveA - treasuryA - MIN_POOL_ADA
+                : reserveA - treasuryA
             ),
             String(
               tokenB === 'lovelace'
-                ? reserveB - treasuryB - MIN_POOL_ADA < 1_000_000n
-                  ? reserveB - treasuryB - MIN_POOL_ADA
-                  : reserveB - treasuryB
-                : reserveB
+                ? reserveB - treasuryB - MIN_POOL_ADA
+                : reserveB - treasuryB
             ),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,
