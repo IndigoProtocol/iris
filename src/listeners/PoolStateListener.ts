@@ -23,7 +23,7 @@ export class PoolStateListener extends BaseEventListener {
 
         return this.app.cache.setKey(
           storageKey,
-          new LiquidityPoolStateResource(false).toJson(event.data)
+          new LiquidityPoolStateResource(false).toJsonRedis(event.data)
         );
       default:
         return Promise.resolve();
