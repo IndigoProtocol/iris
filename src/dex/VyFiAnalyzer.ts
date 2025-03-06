@@ -49,9 +49,12 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
     if (this.addressMappings.length === 0) {
       await this.loadMappings();
 
-      setInterval(async () => {
-        await this.loadMappings();
-      }, 1000 * 60 * 10);
+      setInterval(
+        async () => {
+          await this.loadMappings();
+        },
+        1000 * 60 * 10
+      );
     }
 
     return Promise.all([
@@ -180,11 +183,11 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
           const reserveA: bigint =
             poolMapping.tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() ===
                     (poolMapping.tokenA as Asset).identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
           const reserveB: bigint =
             output.assetBalances.find(
               (balance: AssetBalance) =>
@@ -213,6 +216,7 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: PROCESS_FEE.toString(),
               feeDenominator: 10_000,
               feeNumerator: poolMapping.feePercent,

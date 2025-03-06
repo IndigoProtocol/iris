@@ -276,17 +276,13 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             lpTokenAssetBalance.asset,
             String(
               tokenA === 'lovelace'
-                ? reserveA - treasuryA - MIN_POOL_ADA < 1_000_000n
-                  ? reserveA - treasuryA - MIN_POOL_ADA
-                  : reserveA - treasuryA
-                : reserveA
+                ? reserveA - treasuryA - MIN_POOL_ADA
+                : reserveA - treasuryA
             ),
             String(
               tokenB === 'lovelace'
-                ? reserveB - treasuryB - MIN_POOL_ADA < 1_000_000n
-                  ? reserveB - treasuryB - MIN_POOL_ADA
-                  : reserveB - treasuryB
-                : reserveB
+                ? reserveB - treasuryB - MIN_POOL_ADA
+                : reserveB - treasuryB
             ),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,
@@ -298,6 +294,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: String(datumParameters.AgentFee ?? 0),
               feeDenominator: Number(datumParameters.FeeBasis ?? 0),
               minAda: MIN_POOL_ADA.toString(),

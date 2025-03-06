@@ -46,10 +46,17 @@ export default {
       int: DatumParameterKey.ReserveB,
     },
     {
-      int: DatumParameterKey.BaseFee,
+      int: DatumParameterKey.FeeANumerator,
     },
     {
-      int: DatumParameterKey.FeeSharingNumerator,
+      int: DatumParameterKey.FeeBNumerator,
+    },
+    (
+      field: DefinitionField,
+      parameters: DatumParameters,
+      shouldExtract: boolean = true
+    ) => {
+      return;
     },
     (
       field: DefinitionField,

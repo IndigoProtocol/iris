@@ -248,17 +248,17 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
           const reserveA: bigint =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
           const reserveB: bigint =
             tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);
@@ -282,6 +282,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
+              txHash: transaction.hash,
               batcherFee: 2_000_000n.toString(),
               feeNumerator: Number(datumParameters.LpFee ?? 0),
               feeDenominator: BIPS,

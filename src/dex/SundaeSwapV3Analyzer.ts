@@ -335,13 +335,18 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
-              // batcherFee is parameterized at governance UTxO
-              batcherFee: (612000 + 668000).toString(),
+              txHash: transaction.hash,
+              batcherFee: 0n.toString(),
               feeDenominator: BIPS,
               feeNumerator: 0,
               minAda: 0n.toString(),
               FeeANumerator: Number(datumParameters.FeeANumerator ?? 0),
               FeeBNumerator: Number(datumParameters.FeeBNumerator ?? 0),
+              // SimpleFee and BaseFee are parameterized at governance UTxO
+              // https://github.com/SundaeSwap-finance/sundae-contracts/blob/main/lib/types/settings.ak#L53-L56
+              // @TODO: read from gov UTxO
+              SimpleFee: 612000n.toString(),
+              BaseFee: 668000n.toString(),
             }
           );
         } catch (e) {

@@ -50,6 +50,8 @@ const POOL_CONTRACT_STAKE_KEY: string =
   'b2f6abf60ccde92eae1a2f4fdf65f2eaf6208d872c6f0e597cc10b07';
 const ACTION_SWAP: string = '00';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
+const BATCHER_FEE = 2_000_000n;
+const FEE_DENOMINATOR = 100_000;
 
 export class SplashAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 116958314;
@@ -231,18 +233,18 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
           const reserveA: bigint =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           const reserveB: bigint =
             tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           if (reserveA === 0n || reserveB === 0n) return undefined;
 
@@ -256,7 +258,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             String(reserveA - BigInt(datumParameters.PoolAssetATreasury ?? 0)),
             String(reserveB - BigInt(datumParameters.PoolAssetBTreasury ?? 0)),
             Number(MAX_INT - lpTokenBalance.quantity),
-            (1 - Number(datumParameters.LpFee) / 100000) * 100,
+            (1 - Number(datumParameters.LpFee) / FEE_DENOMINATOR) * 100,
             transaction.blockSlot,
             transaction.hash,
             possibleOperationStatuses,
@@ -265,10 +267,15 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
               (sibling: Utxo) => sibling.index !== output.index
             ),
             {
-              batcherFee: String(datumParameters.BatcherFee ?? 0),
-              feeNumerator: Number(datumParameters.LpFee ?? 0),
-              feeDenominator: 10_000,
-              minAda: 2_000_000n.toString(),
+              txHash: transaction.hash,
+              batcherFee: BATCHER_FEE.toString(),
+              // swapFee = lpFee + treasuryFee
+              // The lpFee is reversed, so we need to subtract it
+              feeNumerator:
+                Number(datumParameters.LpFee ?? 0) -
+                Number(datumParameters.TreasuryFee ?? 0),
+              feeDenominator: FEE_DENOMINATOR,
+              minAda: 0n.toString(),
             }
           );
         } catch (e) {
