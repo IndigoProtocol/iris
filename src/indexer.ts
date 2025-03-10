@@ -1,9 +1,9 @@
 import { IndexerApplication } from './IndexerApplication';
 import { logError, logInfo } from './logger';
-import { RedisStorage } from './storage/RedisStorage';
+import { CacheStorage } from './storage/CacheStorage';
 
 const indexerApp: IndexerApplication = new IndexerApplication(
-  new RedisStorage()
+  new CacheStorage()
 );
 
 await indexerApp
