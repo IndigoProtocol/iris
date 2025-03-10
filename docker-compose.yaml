@@ -4,8 +4,10 @@ services:
     container_name: mysql8
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: iris
-      MYSQL_ROOT_PASSWORD: password
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=iris
+      - MYSQL_USERNAME=iris
+      - MYSQL_PASSWORD=irispass
     ports:
       - '3306:3306'
     volumes:
@@ -18,23 +20,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  redis:
-    image: redis:latest
-    container_name: redis
+  indexer:
+    build: .
+    container_name: iris-indexer
     restart: unless-stopped
     ports:
-      - '6379:6379'
+      - '3001:3000'
     volumes:
-      - redis_data:/data
+      - iris_logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=mysql
+      - DATABASE_PORT=3306
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=rootpass
+      - DATABASE=iris
+      - DATABASE_TYPE=mysql
+      - GITHUB_ACCESS_TOKEN=1
+      - OPERATION_WEBSOCKET_PORT=8888
     networks:
       - app-network
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
   app-network:
@@ -42,4 +49,5 @@ networks:
 
 volumes:
   mysql_data:
-  redis_data:
+  iris_logs:
+    driver: local
