@@ -14,6 +14,9 @@ services:
     networks:
       - app-network
   indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: iris-indexer
     image: iris-indexer
     restart: unless-stopped
