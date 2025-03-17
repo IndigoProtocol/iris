@@ -45,12 +45,24 @@ export default (field: DefinitionField, parameters: DatumParameters) => {
   if (fields[5] instanceof Array) return parameters;
 
   parameters[DatumParameterKey.TreasuryFee] = (fields[5] as DefinitionInt).int;
-  parameters[DatumParameterKey.PoolAssetATreasury] = (
-    fields[6] as DefinitionInt
-  ).int;
-  parameters[DatumParameterKey.PoolAssetBTreasury] = (
-    fields[7] as DefinitionInt
-  ).int;
+
+  if (fields.length === 15) {
+    // Definition: https://github.com/splashprotocol/splash-offchain-multiplatform/blob/develop/splash-testing-cardano/plutus.json#L1279
+    parameters[DatumParameterKey.RoyaltyFee] = (fields[6] as DefinitionInt).int;
+    parameters[DatumParameterKey.PoolAssetATreasury] = (
+      fields[7] as DefinitionInt
+    ).int;
+    parameters[DatumParameterKey.PoolAssetBTreasury] = (
+      fields[8] as DefinitionInt
+    ).int;
+  } else {
+    parameters[DatumParameterKey.PoolAssetATreasury] = (
+      fields[6] as DefinitionInt
+    ).int;
+    parameters[DatumParameterKey.PoolAssetBTreasury] = (
+      fields[7] as DefinitionInt
+    ).int;
+  }
 
   return parameters;
 };
