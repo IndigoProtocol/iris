@@ -73,20 +73,20 @@ export class AmmOperationHandler {
         return await this.handleUpdatedPoolState(
           operation as LiquidityPoolState
         );
-      case LiquidityPoolSwap:
-        return await this.handleSwapOrder(operation as LiquidityPoolSwap);
-      case LiquidityPoolZap:
-        return await this.handleZapOrder(operation as LiquidityPoolZap);
-      case LiquidityPoolDeposit:
-        return await this.handlePoolDeposit(operation as LiquidityPoolDeposit);
-      case LiquidityPoolWithdraw:
-        return await this.handlePoolWithdraw(
-          operation as LiquidityPoolWithdraw
-        );
-      case OperationStatus:
-        return await this.handleOperationStatus(operation as OperationStatus);
+      // case LiquidityPoolSwap:
+      //   return await this.handleSwapOrder(operation as LiquidityPoolSwap);
+      // case LiquidityPoolZap:
+      //   return await this.handleZapOrder(operation as LiquidityPoolZap);
+      // case LiquidityPoolDeposit:
+      //   return await this.handlePoolDeposit(operation as LiquidityPoolDeposit);
+      // case LiquidityPoolWithdraw:
+      //   return await this.handlePoolWithdraw(
+      //     operation as LiquidityPoolWithdraw
+      //   );
+      // case OperationStatus:
+      //   return await this.handleOperationStatus(operation as OperationStatus);
       default:
-        return Promise.reject('Encountered unknown event type.');
+        return Promise.resolve(undefined);
     }
   }
 
@@ -121,30 +121,7 @@ export class AmmOperationHandler {
       data: updatedState,
     });
 
-    queue.dispatch(new UpdateLiquidityPoolTvlJob(updatedState));
-
-    return Promise.all(
-      instance.possibleOperationInputs.map((status: OperationStatus) => {
-        return this.handleOperationStatus(status)
-          .then((savedStatus: OperationStatus) => {
-            operationWs.broadcast(savedStatus);
-
-            return savedStatus;
-          })
-          .catch(() => Promise.resolve(undefined));
-      })
-    ).then((statuses: (OperationStatus | undefined)[]) => {
-      statuses = statuses.filter(
-        (status: OperationStatus | undefined) => status !== undefined
-      );
-
-      if (statuses.length > 0) {
-        instance.possibleOperationInputs = statuses as OperationStatus[];
-        queue.dispatch(new UpdateAmountReceived(instance));
-      }
-
-      return Promise.resolve(updatedState);
-    });
+    return Promise.resolve(updatedState);
   }
 
   /**

@@ -53,22 +53,9 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
   public async analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    return Promise.all([
-      this.liquidityPoolStates(transaction),
-      this.swapOrders(transaction),
-      this.depositOrders(transaction),
-      this.withdrawOrders(transaction),
-      this.cancelledOperationInputs(
-        transaction,
-        [
-          SWAP_CONTRACT_ADDRESS,
-          DEPOSIT_CONTRACT_ADDRESS,
-          WITHDRAW_CONTRACT_ADDRESS,
-        ],
-        CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES
-      ),
-    ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
+    return Promise.all([this.liquidityPoolStates(transaction)]).then(
+      (operations: AmmDexOperation[][]) => operations.flat(2)
+    );
   }
 
   /**
@@ -204,17 +191,17 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
           const reserveA: bigint =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
           const reserveB: bigint =
             tokenB === 'lovelace'
               ? output.lovelaceBalance
-              : output.assetBalances.find(
+              : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
-                )?.quantity ?? 0n;
+                )?.quantity ?? 0n);
 
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);

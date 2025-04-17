@@ -54,18 +54,9 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
   public async analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    return Promise.all([
-      this.liquidityPoolStates(transaction),
-      this.swapOrders(transaction),
-      this.depositOrders(transaction),
-      this.withdrawOrders(transaction),
-      this.cancelledOperationInputs(
-        transaction,
-        ORDER_SCRIPT_HASHES,
-        CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES
-      ),
-    ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
+    return Promise.all([this.liquidityPoolStates(transaction)]).then(
+      (operations: AmmDexOperation[][]) => operations.flat(2)
+    );
   }
 
   /**
