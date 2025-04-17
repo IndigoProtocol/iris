@@ -50,16 +50,16 @@ export default {
       int: DatumParameterKey.PoolAssetBTreasury,
     },
     {
-      int: DatumParameterKey.Unknown,
+      int: DatumParameterKey.ProjectTreasuryA,
     },
     {
-      int: DatumParameterKey.Unknown,
+      int: DatumParameterKey.ProjectTreasuryA,
     },
     {
-      int: DatumParameterKey.Unknown,
+      int: DatumParameterKey.ReserveTreasuryA,
     },
     {
-      int: DatumParameterKey.Unknown,
+      int: DatumParameterKey.ReserveTreasuryB,
     },
     (field: DefinitionField, parameters: DatumParameters) => {
       return parameters;

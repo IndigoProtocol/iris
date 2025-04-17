@@ -247,6 +247,19 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
           const treasuryB: bigint = BigInt(
             datumParameters.PoolAssetBTreasury as number
           );
+          const projectTreasuryA = BigInt(
+            datumParameters.ProjectTreasuryA as number
+          );
+          const projectTreasuryB = BigInt(
+            datumParameters.ProjectTreasuryB as number
+          );
+          const reserveTreasuryA = BigInt(
+            datumParameters.ReserveTreasuryA as number
+          );
+          const reserveTreasuryB = BigInt(
+            datumParameters.ReserveTreasuryB as number
+          );
+
           const reserveA: bigint | undefined =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
@@ -276,13 +289,21 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             lpTokenAssetBalance.asset,
             String(
               tokenA === 'lovelace'
-                ? reserveA - treasuryA - MIN_POOL_ADA
-                : reserveA - treasuryA
+                ? reserveA -
+                    treasuryA -
+                    projectTreasuryA -
+                    reserveTreasuryA -
+                    MIN_POOL_ADA
+                : reserveA - treasuryA - projectTreasuryA - reserveTreasuryA
             ),
             String(
               tokenB === 'lovelace'
-                ? reserveB - treasuryB - MIN_POOL_ADA
-                : reserveB - treasuryB
+                ? reserveB -
+                    treasuryB -
+                    projectTreasuryB -
+                    reserveTreasuryB -
+                    MIN_POOL_ADA
+                : reserveB - treasuryB - projectTreasuryB - reserveTreasuryB
             ),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,

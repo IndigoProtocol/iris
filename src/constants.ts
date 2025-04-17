@@ -71,6 +71,10 @@ export enum DatumParameterKey {
   LpTokenAssetName = 'LpTokenAssetName',
 
   PoolAssetBTreasury = 'PoolAssetBTreasury',
+  ProjectTreasuryA = 'ProjectTreasuryA',
+  ProjectTreasuryB = 'ProjectTreasuryB',
+  ReserveTreasuryA = 'ReserveTreasuryA',
+  ReserveTreasuryB = 'ReserveTreasuryB',
   RootKLast = 'RootKLast',
   LastInteraction = 'LastInteraction',
   RequestScriptHash = 'RequestScriptHash',
