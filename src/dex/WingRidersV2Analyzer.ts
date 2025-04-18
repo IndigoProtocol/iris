@@ -54,18 +54,9 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
   public async analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    return Promise.all([
-      this.liquidityPoolStates(transaction),
-      this.swapOrders(transaction),
-      this.depositOrders(transaction),
-      this.withdrawOrders(transaction),
-      this.cancelledOperationInputs(
-        transaction,
-        ORDER_SCRIPT_HASHES,
-        CANCEL_ORDER_DATUM,
-        CANCEL_REFERENCE_TX_HASHES
-      ),
-    ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
+    return Promise.all([this.liquidityPoolStates(transaction)]).then(
+      (operations: AmmDexOperation[][]) => operations.flat(2)
+    );
   }
 
   /**
@@ -247,6 +238,19 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
           const treasuryB: bigint = BigInt(
             datumParameters.PoolAssetBTreasury as number
           );
+          const projectTreasuryA = BigInt(
+            datumParameters.ProjectTreasuryA as number
+          );
+          const projectTreasuryB = BigInt(
+            datumParameters.ProjectTreasuryB as number
+          );
+          const reserveTreasuryA = BigInt(
+            datumParameters.ReserveTreasuryA as number
+          );
+          const reserveTreasuryB = BigInt(
+            datumParameters.ReserveTreasuryB as number
+          );
+
           const reserveA: bigint | undefined =
             tokenA === 'lovelace'
               ? output.lovelaceBalance
@@ -276,13 +280,21 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             lpTokenAssetBalance.asset,
             String(
               tokenA === 'lovelace'
-                ? reserveA - treasuryA - MIN_POOL_ADA
-                : reserveA - treasuryA
+                ? reserveA -
+                    treasuryA -
+                    projectTreasuryA -
+                    reserveTreasuryA -
+                    MIN_POOL_ADA
+                : reserveA - treasuryA - projectTreasuryA - reserveTreasuryA
             ),
             String(
               tokenB === 'lovelace'
-                ? reserveB - treasuryB - MIN_POOL_ADA
-                : reserveB - treasuryB
+                ? reserveB -
+                    treasuryB -
+                    projectTreasuryB -
+                    reserveTreasuryB -
+                    MIN_POOL_ADA
+                : reserveB - treasuryB - projectTreasuryB - reserveTreasuryB
             ),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,
@@ -381,7 +393,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             Number(
               depositAToken === 'lovelace'
                 ? output.lovelaceBalance -
-                    BATCHER_FEE -
+                    MIN_POOL_ADA -
                     BigInt(datumParameters.Deposit as string)
                 : output.assetBalances[0].quantity
             ),

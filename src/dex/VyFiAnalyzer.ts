@@ -46,28 +46,9 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
   public async analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    if (this.addressMappings.length === 0) {
-      await this.loadMappings();
-
-      setInterval(
-        async () => {
-          await this.loadMappings();
-        },
-        1000 * 60 * 10
-      );
-    }
-
-    return Promise.all([
-      this.liquidityPoolStates(transaction),
-      this.swapOrders(transaction),
-      this.depositOrders(transaction),
-      this.withdrawOrders(transaction),
-      this.cancelledOperationInputs(
-        transaction,
-        this.orderAddresses,
-        CANCEL_DATUM
-      ),
-    ]).then((operations: AmmDexOperation[][]) => operations.flat());
+    return Promise.all([this.liquidityPoolStates(transaction)]).then(
+      (operations: AmmDexOperation[][]) => operations.flat(2)
+    );
   }
 
   /**
@@ -204,8 +185,8 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
             poolMapping.tokenA,
             poolMapping.tokenB,
             poolMapping.lpToken,
-            String(reserveA),
-            String(reserveB),
+            String(reserveA - BigInt(datumParameters.PoolAssetABarFee ?? 0n)),
+            String(reserveB - BigInt(datumParameters.PoolAssetBBarFee ?? 0n)),
             Number(datumParameters.TotalLpTokens),
             poolMapping.feePercent / 100,
             transaction.blockSlot,
