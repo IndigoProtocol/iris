@@ -53,7 +53,7 @@ export default {
       int: DatumParameterKey.ProjectTreasuryA,
     },
     {
-      int: DatumParameterKey.ProjectTreasuryA,
+      int: DatumParameterKey.ProjectTreasuryB,
     },
     {
       int: DatumParameterKey.ReserveTreasuryA,
