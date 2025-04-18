@@ -22,6 +22,7 @@ type Config = {
   API_PORT: number;
 
   GITHUB_ACCESS_TOKEN: string;
+  HALT: boolean;
 };
 
 const CONFIG: Config = {
@@ -45,6 +46,7 @@ const CONFIG: Config = {
   API_PORT: Number(process.env.API_PORT) || 8081,
 
   GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN || '',
+  HALT: process.env.HALT === 'true',
 };
 
 export default CONFIG;
