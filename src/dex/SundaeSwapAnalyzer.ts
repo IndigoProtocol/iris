@@ -49,9 +49,18 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
   public async analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    return Promise.all([this.liquidityPoolStates(transaction)]).then(
-      (operations: AmmDexOperation[][]) => operations.flat(2)
-    );
+    return Promise.all([
+      this.liquidityPoolStates(transaction),
+      this.swapOrders(transaction),
+      this.zapOrders(transaction),
+      this.depositOrders(transaction),
+      this.withdrawOrders(transaction),
+      this.cancelledOperationInputs(
+        transaction,
+        [ORDER_CONTRACT_ADDRESS],
+        CANCEL_ORDER_DATUM
+      ),
+    ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
   }
 
   /**
