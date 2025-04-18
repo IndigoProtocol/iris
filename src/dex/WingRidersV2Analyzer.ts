@@ -393,7 +393,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             Number(
               depositAToken === 'lovelace'
                 ? output.lovelaceBalance -
-                    BATCHER_FEE -
+                    MIN_POOL_ADA -
                     BigInt(datumParameters.Deposit as string)
                 : output.assetBalances[0].quantity
             ),
