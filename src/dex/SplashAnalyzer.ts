@@ -3,7 +3,7 @@ import {
   Data,
   getAddressDetails,
 } from '@lucid-evolution/lucid';
-import { Dex, SwapOrderType } from '../constants';
+import { DatumParameterKey, Dex, SwapOrderType } from '../constants';
 import { Asset, Token } from '../db/entities/Asset';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
@@ -34,6 +34,8 @@ const SPECTRUM_POOL_V1_CONTRACT_ADDRESS: string =
   'addr1x8nz307k3sr60gu0e47cmajssy4fmld7u493a4xztjrll0aj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrswgxsta';
 const SPECTRUM_POOL_V2_CONTRACT_ADDRESS: string =
   'addr1x94ec3t25egvhqy2n265xfhq882jxhkknurfe9ny4rl9k6dj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrst84slu';
+const OTHER_SPECTRUM_POOL_CONTRACT_ADDRESS: string =
+  'addr1xxg94wrfjcdsjncmsxtj0r87zk69e0jfl28n934sznu95tdj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrs2993lw';
 const DEPOSIT_CONTRACT_ADDRESS: string =
   'addr1wyr4uz0tp75fu8wrg6gm83t20aphuc9vt6n8kvu09ctkugqpsrmeh';
 const WITHDRAW_CONTRACT_ADDRESS: string =
@@ -170,6 +172,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
           [
             SPECTRUM_POOL_V1_CONTRACT_ADDRESS,
             SPECTRUM_POOL_V2_CONTRACT_ADDRESS,
+            OTHER_SPECTRUM_POOL_CONTRACT_ADDRESS,
           ].includes(output.toAddress)
         ) {
           return undefined;
@@ -248,6 +251,19 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
 
           if (reserveA === 0n || reserveB === 0n) return undefined;
 
+          const treasuryA = BigInt(
+            datumParameters[DatumParameterKey.PoolAssetATreasury] ?? 0
+          );
+          const treasuryB = BigInt(
+            datumParameters[DatumParameterKey.PoolAssetBTreasury] ?? 0
+          );
+          const royaltyA = BigInt(
+            datumParameters[DatumParameterKey.RoyaltyA] ?? 0
+          );
+          const royaltyB = BigInt(
+            datumParameters[DatumParameterKey.RoyaltyB] ?? 0
+          );
+
           return LiquidityPoolState.make(
             Dex.Splash,
             output.toAddress,
@@ -255,8 +271,8 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             tokenA,
             tokenB,
             lpTokenBalance.asset,
-            String(reserveA - BigInt(datumParameters.PoolAssetATreasury ?? 0)),
-            String(reserveB - BigInt(datumParameters.PoolAssetBTreasury ?? 0)),
+            String(reserveA - treasuryA - royaltyA),
+            String(reserveB - treasuryB - royaltyB),
             Number(MAX_INT - lpTokenBalance.quantity),
             (1 - Number(datumParameters.LpFee) / FEE_DENOMINATOR) * 100,
             transaction.blockSlot,
@@ -269,11 +285,12 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             {
               txHash: transaction.hash,
               batcherFee: BATCHER_FEE.toString(),
-              // swapFee = lpFee + treasuryFee
+              // swapFee = lpFee + treasuryFee + royaltyFee
               // The lpFee is reversed, so we need to subtract it
               feeNumerator:
                 Number(datumParameters.LpFee ?? 0) -
-                Number(datumParameters.TreasuryFee ?? 0),
+                Number(datumParameters.TreasuryFee ?? 0) -
+                Number(datumParameters.RoyaltyFee ?? 0),
               feeDenominator: FEE_DENOMINATOR,
               minAda: 0n.toString(),
             }

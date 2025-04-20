@@ -70,6 +70,8 @@ export enum DatumParameterKey {
   LpTokenPolicyId = 'LpTokenPolicyId',
   LpTokenAssetName = 'LpTokenAssetName',
 
+  RoyaltyA = 'RoyaltyA',
+  RoyaltyB = 'RoyaltyB',
   PoolAssetBTreasury = 'PoolAssetBTreasury',
   ProjectTreasuryA = 'ProjectTreasuryA',
   ProjectTreasuryB = 'ProjectTreasuryB',

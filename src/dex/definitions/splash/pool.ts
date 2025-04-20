@@ -55,6 +55,8 @@ export default (field: DefinitionField, parameters: DatumParameters) => {
     parameters[DatumParameterKey.PoolAssetBTreasury] = (
       fields[8] as DefinitionInt
     ).int;
+    parameters[DatumParameterKey.RoyaltyA] = (fields[9] as DefinitionInt).int;
+    parameters[DatumParameterKey.RoyaltyB] = (fields[10] as DefinitionInt).int;
   } else {
     parameters[DatumParameterKey.PoolAssetATreasury] = (
       fields[6] as DefinitionInt
