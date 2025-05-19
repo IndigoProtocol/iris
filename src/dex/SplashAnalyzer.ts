@@ -233,21 +233,23 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);
 
-          const reserveA: bigint =
+          const reserveA = BigInt(
             tokenA === 'lovelace'
               ? output.lovelaceBalance
               : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenA.identifier()
-                )?.quantity ?? 0n);
+                )?.quantity ?? 0n)
+          );
 
-          const reserveB: bigint =
+          const reserveB = BigInt(
             tokenB === 'lovelace'
               ? output.lovelaceBalance
               : (output.assetBalances.find(
                   (balance: AssetBalance) =>
                     balance.asset.identifier() === tokenB.identifier()
-                )?.quantity ?? 0n);
+                )?.quantity ?? 0n)
+          );
 
           if (reserveA === 0n || reserveB === 0n) return undefined;
 

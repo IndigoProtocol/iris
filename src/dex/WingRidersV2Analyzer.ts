@@ -44,6 +44,8 @@ const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE: bigint = 2000000n;
 const FEE_PERCENT: number = 0.35;
 const CANCEL_ORDER_DATUM: string = 'd87a80';
+const STABLE_POOL_SCRIPT_HASH =
+  '946ae228430f2fc64aa8b3acb910ee27e9b3e47aa8f925fac27834a1';
 
 export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 133880255;
@@ -189,6 +191,12 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
             balance.asset.identifier() === `${POOL_NFT_POLICY_ID}4c`
         );
         if (!hasPoolNft || !output.datum) {
+          return undefined;
+        }
+        if (
+          getAddressDetails(output.toAddress).paymentCredential?.hash ===
+          STABLE_POOL_SCRIPT_HASH
+        ) {
           return undefined;
         }
 
