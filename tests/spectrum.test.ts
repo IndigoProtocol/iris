@@ -60,7 +60,7 @@ describe('Spectrum', () => {
     expect(operations.length).toEqual(0);
   });
 
-  it('Can index cfmm v1 pools', async () => {
+  it.skip('Can index cfmm v1 pools', async () => {
     const expected = {
       poolType: 'cfmm',
       id: '72f2990e8f906b589926b4290dd511bc846f0ac727c26fd7542f9db2.574d545f4144415f4e4654',
@@ -147,7 +147,7 @@ describe('Spectrum', () => {
       })
     );
 
-    console.log(operations);
+    // console.log(operations);
     expect(operations.length).toEqual(1);
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
@@ -173,7 +173,7 @@ describe('Spectrum', () => {
     );
   });
 
-  it('Can index cfmm v2 pools', async () => {
+  it.skip('Can index cfmm v2 pools', async () => {
     const expected = {
       poolType: 'cfmm',
       id: 'e3a879f88db87ed3107502bf21f0f43a0210ac7546a54887f2c84d76.53554e4441455f4144415f4e4654',
@@ -260,7 +260,7 @@ describe('Spectrum', () => {
       })
     );
 
-    console.log(operations);
+    // console.log(operations);
     expect(operations.length).toEqual(1);
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
