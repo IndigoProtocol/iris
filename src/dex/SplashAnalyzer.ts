@@ -54,6 +54,10 @@ const ACTION_SWAP: string = '00';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const BATCHER_FEE = 2_000_000n;
 const FEE_DENOMINATOR = 100_000;
+const SPLASH_WEIGHTED_POOL_SCRIPTS = [
+  'c5283689ea30e0920c50adf77345b5809c05c962cc111e0f1d2dbedb',
+  'f60fd1e70f4b9dfc09cdde8d7f7f1277de2694c82a516d7d3cc9e03e',
+];
 
 export class SplashAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 116958314;
@@ -266,6 +270,10 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
             datumParameters[DatumParameterKey.RoyaltyB] ?? 0
           );
 
+          const isWeighted = SPLASH_WEIGHTED_POOL_SCRIPTS.includes(
+            addressDetails.paymentCredential?.hash || ''
+          );
+
           return LiquidityPoolState.make(
             Dex.Splash,
             output.toAddress,
@@ -295,6 +303,8 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                 Number(datumParameters.RoyaltyFee ?? 0),
               feeDenominator: FEE_DENOMINATOR,
               minAda: 0n.toString(),
+              // Only support 1/4 weighted pools
+              ...(isWeighted ? { weight0: 1, weight1: 4 } : {}),
             }
           );
         } catch (e) {
