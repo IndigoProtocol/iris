@@ -20,6 +20,8 @@ export type PoolStateExtraData = {
   minAda: string;
   batcherFee: string;
   txHash: string;
+  weight0?: number;
+  weight1?: number;
 } & { [key in DatumParameterKey]?: string | number | undefined };
 
 @Entity({ name: 'liquidity_pool_states' })

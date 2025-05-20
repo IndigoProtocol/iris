@@ -117,6 +117,8 @@ describe('Splash', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.weight0).toBeUndefined();
+    expect(pool.extra.weight1).toBeUndefined();
   });
 
   it('Can index cfmm v5 pools', async () => {
@@ -227,6 +229,8 @@ describe('Splash', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.weight0).toBeUndefined();
+    expect(pool.extra.weight1).toBeUndefined();
   });
 
   it('Can index cfmm v6 pools', async () => {
@@ -343,9 +347,11 @@ describe('Splash', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee - expected.royaltyFee
     );
+    expect(pool.extra.weight0).toBeUndefined();
+    expect(pool.extra.weight1).toBeUndefined();
   });
 
-  it.only('Can index weighted pools v1', async () => {
+  it('Can index weighted pools v1', async () => {
     const expected = {
       poolType: 'weighted',
       id: '46b3cc854cd3ffaf57d5f4f08f4488af9086d6f0792d71437e14b7df.53504c4153485f4144415f4e4654',
@@ -449,9 +455,11 @@ describe('Splash', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.weight0).toEqual(1);
+    expect(pool.extra.weight1).toEqual(4);
   });
 
-  it.only('Can index weighted pools v2', async () => {
+  it('Can index weighted pools v2', async () => {
     const expected = {
       poolType: 'weighted',
       id: '7127cf43aa973d8940e4c9e77c12194d7a50f240642d4e7c59ec3c95.44474f4c445f4144415f4e4654',
@@ -554,6 +562,7 @@ describe('Splash', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.weight0).toEqual(1);
+    expect(pool.extra.weight1).toEqual(4);
   });
-  it.todo('Can index fee switch pools');
 });
