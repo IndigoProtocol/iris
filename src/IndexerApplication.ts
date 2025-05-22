@@ -41,6 +41,7 @@ import { BaseEventListener } from './listeners/BaseEventListener';
 import { logError, logInfo } from './logger';
 import { BaseCacheStorage } from './storage/BaseCacheStorage';
 import { CacheStorage } from './storage/CacheStorage';
+import { SpectrumAnalyzer } from './dex/SpectrumAnalyzer';
 
 export class IndexerApplication {
   private readonly _cache: BaseCacheStorage;
@@ -63,7 +64,7 @@ export class IndexerApplication {
       new SundaeSwapV3Analyzer(this),
       new WingRidersAnalyzer(this),
       new WingRidersV2Analyzer(this),
-      // new SpectrumAnalyzer(this),
+      new SpectrumAnalyzer(this),
       new SplashAnalyzer(this),
       // new TeddySwapAnalyzer(this),
       new VyFiAnalyzer(this),
