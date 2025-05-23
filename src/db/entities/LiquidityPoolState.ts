@@ -29,7 +29,7 @@ export class LiquidityPoolState extends BaseEntity {
   dex: Dex;
   address: string;
   liquidityPoolIdentifier: string;
-  tokenA: Asset | undefined;
+  tokenA: Asset;
   tokenB: Asset;
   possibleOperationInputs: OperationStatus[];
   transactionInputs: Utxo[];
@@ -116,12 +116,12 @@ export class LiquidityPoolState extends BaseEntity {
 
     // Always force tokenA to the ADA token
     if (tokenA === 'lovelace') {
-      instance.tokenA = undefined;
+      instance.tokenA = new Asset('', '');
       instance.tokenB = tokenB as Asset;
       instance.reserveA = reserveA;
       instance.reserveB = reserveB;
     } else if (tokenB === 'lovelace') {
-      instance.tokenA = undefined;
+      instance.tokenA = new Asset('', '');
       instance.tokenB = tokenA as Asset;
       instance.reserveA = reserveB;
       instance.reserveB = reserveA;
