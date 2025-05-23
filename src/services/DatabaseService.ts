@@ -5,7 +5,6 @@ import CONFIG from '../config';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
 import { ApplicationContext } from '../constants';
 import { IndexerApplication } from '../IndexerApplication';
-import { log } from 'console';
 
 export class DatabaseService extends BaseService {
   public dbSource: DataSource;
@@ -37,8 +36,6 @@ export class DatabaseService extends BaseService {
         `Unable to find database connector for '${CONFIG.DATABASE_TYPE}'.`
       );
     }
-
-    logInfo(JSON.stringify(CONFIG), this._context);
 
     this.dbSource = new DataSource({
       type: CONFIG.DATABASE_TYPE as any,
