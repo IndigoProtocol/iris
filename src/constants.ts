@@ -97,6 +97,7 @@ export enum Dex {
     GeniusYield = 'GeniusYield',
     VyFinance = 'VyFinance',
     Axo = 'Axo',
+    SaturnSwap = 'SaturnSwap',
 }
 
 export enum IrisEventType {

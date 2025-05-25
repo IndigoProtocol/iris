@@ -31,6 +31,7 @@ import { MinswapV2Analyzer } from './dex/MinswapV2Analyzer';
 import { SundaeSwapV3Analyzer } from './dex/SundaeSwapV3Analyzer';
 import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
 import { SplashAnalyzer } from './dex/SplashAnalyzer';
+import { SaturnSwapAnalyzer } from './dex/SaturnSwapAnalyzer';
 
 export class IndexerApplication {
 
@@ -63,6 +64,7 @@ export class IndexerApplication {
         ]),
         new HybridDexTransactionIndexer([
             new MuesliSwapAnalyzer(this),
+            new SaturnSwapAnalyzer(this),
         ]),
     ];
 
