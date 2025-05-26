@@ -18,6 +18,9 @@ export enum DatumParameterKey {
   DepositB = 'DepositB',
   LpTokens = 'LpTokens',
   StakeAdminPolicy = 'StakeAdminPolicy',
+  Amp = 'amp',
+  Multipliers = 'multipliers',
+  Balances = 'balances',
 
   TotalFees = 'TotalFees',
   BatcherFee = 'BatcherFee',
