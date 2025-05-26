@@ -1,5 +1,13 @@
 import { BaseHybridDexAnalyzer } from './BaseHybridDexAnalyzer';
-import { HybridOperation, Transaction, Utxo, AssetBalance } from '../types';
+import {
+    AssetBalance,
+    DatumParameters,
+    DefinitionConstr,
+    DefinitionField,
+    HybridOperation,
+    Transaction,
+    Utxo
+} from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
@@ -7,10 +15,15 @@ import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import { OrderBookMatch } from '../db/entities/OrderBookMatch';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { Dex, DexOperationStatus, SwapOrderType } from '../constants';
+import { Dex, DexOperationStatus, SwapOrderType, DatumParameterKey } from '../constants';
 import { scriptHashToAddress, tokenId } from '../utils';
 import { IndexerApplication } from '../IndexerApplication';
 import { Asset, Token } from '../db/entities/Asset';
+import { lucidUtils, toDefinitionDatum } from '../utils';
+import { DefinitionBuilder } from '../DefinitionBuilder';
+import poolDefinition from './definitions/saturnswap/pool';
+import swapDefinition from './definitions/saturnswap/swap';
+import { Data } from 'lucid-cardano';
 
 /**
  * Simplified SaturnSwap Analyzer
@@ -19,16 +32,45 @@ import { Asset, Token } from '../db/entities/Asset';
  */
 export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
 
-    public startSlot: number = 0; // TODO: Update with actual SaturnSwap launch slot
+    public startSlot: number = 140000000; // Conservative estimate based on known transactions
+
+    private static readonly DEX_KEY = 'SaturnSwap';
+    
+    /**
+     * Constants - Updated with actual values from plutus.json
+     * 
+     * IMPORTANT: SaturnSwap uses parameterized scripts, so there's no single
+     * LP token or pool NFT policy. Each liquidity contract has its own policy ID.
+     */
+    private static readonly POOL_SCRIPT_HASH = '9ee45349eb188aaf652d9ddd3be184efb600e859d0d961ea756df357';
+    private static readonly ORDER_SCRIPT_HASH = '3cf991c2d5b47006c2106c105332456af4d88321301f292f434ad01b';
+    
+    // Cancel redeemer indices from plutus.json
+    private static readonly LIQUIDITY_CANCEL_INDEX = 5; // CancelAction for liquidity
+    private static readonly SWAP_CANCEL_INDEX = 1;      // CancelAction for swaps
+    
+    // Actual SaturnSwap addresses
+    private static readonly LIQUIDITY_ADDRESS = 'addr1qy3v66uc8shcm3c4kqkjhjqe76dh3y0cvq3awa6lnjvj52nrlasf2cg9vah02a70g2n93p202prq9hgzxph7zuunjgrqjev82a';
+    private static readonly MAIN_ADDRESS = 'addr1q80ukhmvgtm498e3h6pwpe52whpdh98yy4qfwup5zqg7lqz75jq4yvpskgayj55xegdp30g5rfynax66r8vgn9fldndskl33sd';
 
     /**
-     * SaturnSwap on-chain constants - THESE NEED TO BE UPDATED
+     * Known SaturnSwap script addresses.
+     * 
+     * From public information:
+     * - Order validator: addr1....
+     * - Pool validator: addr1....
+     * - Fee address: addr1....
      */
-    private readonly poolAddress: string = 'addr1_SATURN_POOL_ADDRESS'; // TODO
-    private readonly orderAddress: string = 'addr1_SATURN_ORDER_ADDRESS'; // TODO
-    private readonly lpTokenPolicyId: string = 'SATURN_LP_TOKEN_POLICY'; // TODO
-    private readonly poolNftPolicyId: string = 'SATURN_POOL_NFT_POLICY'; // TODO
-    private readonly cancelRedeemer: string = 'd87a80'; // TODO: Verify
+    protected readonly orderAddress: string = 'addr1...'; // TODO: Replace with actual order address
+    protected readonly poolAddress: string = 'addr1...';  // TODO: Replace with actual pool address
+    protected readonly feeAddress: string = 'addr1...';   // TODO: Replace with actual fee address
+
+    /**
+     * SaturnSwap on-chain constants
+     */
+    private readonly lpTokenPolicyId: string = ''; // Dynamic - each liquidity contract has its own
+    private readonly poolNftPolicyId: string = ''; // Not used - pools identified by UTXO reference
+    private readonly cancelRedeemer: string = 'd87a8100'; // CancelAction(0) from plutus.json
 
     constructor(app: IndexerApplication) {
         super(app);
@@ -82,43 +124,49 @@ export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
             if (output.toAddress !== this.poolAddress || !output.datum) return;
 
             try {
-                // Find pool NFT
-                const poolNft = output.assetBalances.find((balance: AssetBalance) => 
-                    balance.asset.policyId === this.poolNftPolicyId
-                )?.asset;
-
-                if (!poolNft) return;
-
-                // Extract tokens (excluding LP tokens and pool NFT)
-                const tokens = output.assetBalances.filter((balance: AssetBalance) => 
-                    balance.asset.policyId !== this.lpTokenPolicyId && 
-                    balance.asset.policyId !== this.poolNftPolicyId
+                // SaturnSwap uses ControlDatum for liquidity management, not pool reserves
+                // The ControlDatum manages trading parameters and price ranges
+                const definitionField: DefinitionField = toDefinitionDatum(
+                    Data.from(output.datum)
                 );
+                
+                // Check if this is a ControlDatum (constructor 2)
+                if (!('constructor' in definitionField) || (definitionField as DefinitionConstr).constructor !== 2) {
+                    return;
+                }
 
-                if (tokens.length < 1) return;
+                const builder: DefinitionBuilder = new DefinitionBuilder(poolDefinition);
+                const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
 
-                const tokenA: Token = tokens.length === 1 ? 'lovelace' : tokens[0].asset;
-                const tokenB: Token = tokens.length === 1 ? tokens[0].asset : tokens[1].asset;
-                const lpToken = new Asset(this.lpTokenPolicyId, poolNft.nameHex);
+                // Extract token information from ControlDatum
+                const tokenA: Token = datumParameters[DatumParameterKey.PoolAssetAPolicyId]
+                    ? new Asset(
+                        datumParameters[DatumParameterKey.PoolAssetAPolicyId] as string,
+                        datumParameters[DatumParameterKey.PoolAssetAAssetName] as string
+                    )
+                    : 'lovelace';
+                
+                const tokenB: Token = datumParameters[DatumParameterKey.PoolAssetBPolicyId]
+                    ? new Asset(
+                        datumParameters[DatumParameterKey.PoolAssetBPolicyId] as string,
+                        datumParameters[DatumParameterKey.PoolAssetBAssetName] as string
+                    )
+                    : 'lovelace';
 
-                const reserveA = tokenA === 'lovelace' 
-                    ? output.lovelaceBalance 
-                    : tokens[0].quantity;
-                const reserveB = tokens.length === 1 
-                    ? tokens[0].quantity 
-                    : tokens[1].quantity;
-
+                // For CLOB DEX, we don't have traditional reserves
+                // Instead, we'd need to aggregate order book depth
+                // For now, using 0 as placeholder
                 const state = LiquidityPoolState.make(
                     Dex.SaturnSwap,
                     output.toAddress,
-                    poolNft.identifier(),
+                    `${transaction.hash}#${output.index}`, // Use UTXO reference as identifier
                     tokenA,
                     tokenB,
-                    lpToken,
-                    Number(reserveA),
-                    Number(reserveB),
-                    0, // Total LP tokens - TODO: Extract from datum
-                    0.3, // Fee percent - TODO: Extract from datum
+                    new Asset('', ''), // No LP token in CLOB model
+                    0, // Reserve A - would need order book aggregation
+                    0, // Reserve B - would need order book aggregation  
+                    0, // No LP tokens
+                    0.3, // 0.3% taker fee
                     transaction.blockSlot,
                     transaction.hash,
                     this.spentOperationInputs(transaction),
@@ -128,7 +176,7 @@ export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
 
                 states.push(state);
             } catch (error) {
-                console.error('Error parsing SaturnSwap pool state:', error);
+                console.error('Error parsing SaturnSwap ControlDatum:', error);
             }
         });
 
@@ -142,32 +190,48 @@ export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
             if (output.toAddress !== this.orderAddress || !output.datum) return;
 
             try {
-                // For now, assume any order at the order address is a swap
-                // TODO: Properly parse datum to determine order type
-
-                let swapInToken: Token = 'lovelace';
-                let swapInAmount = output.lovelaceBalance;
-
-                if (output.assetBalances.length > 0) {
-                    swapInToken = output.assetBalances[0].asset;
-                    swapInAmount = output.assetBalances[0].quantity;
+                const definitionField: DefinitionField = toDefinitionDatum(
+                    Data.from(output.datum)
+                );
+                
+                // Check if this is a SwapDatum (constructor 0)
+                if (!('constructor' in definitionField) || (definitionField as DefinitionConstr).constructor !== 0) {
+                    return;
                 }
+
+                const builder: DefinitionBuilder = new DefinitionBuilder(swapDefinition);
+                const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+
+                // Extract swap parameters from SwapDatum
+                const swapInToken: Token = datumParameters[DatumParameterKey.TokenPolicyId]
+                    ? new Asset(
+                        datumParameters[DatumParameterKey.TokenPolicyId] as string,
+                        datumParameters[DatumParameterKey.TokenAssetName] as string
+                    )
+                    : 'lovelace';
+                
+                const swapOutToken: Token = datumParameters[DatumParameterKey.SwapOutTokenPolicyId]
+                    ? new Asset(
+                        datumParameters[DatumParameterKey.SwapOutTokenPolicyId] as string,
+                        datumParameters[DatumParameterKey.SwapOutTokenAssetName] as string
+                    )
+                    : 'lovelace';
 
                 const swap = LiquidityPoolSwap.make(
                     Dex.SaturnSwap,
-                    undefined, // Pool ID - will be resolved later
+                    undefined, // Pool ID not applicable for CLOB
                     swapInToken,
-                    'lovelace', // TODO: Extract from datum
-                    Number(swapInAmount),
-                    0, // Min receive - TODO: Extract from datum
+                    swapOutToken,
+                    Number(datumParameters[DatumParameterKey.SwapInAmount] || 0),
+                    Number(datumParameters[DatumParameterKey.MinReceive] || 0),
                     0, // No batcher fee
-                    '', // Receiver pub key - TODO: Extract from datum
-                    '', // Receiver stake key - TODO: Extract from datum
+                    datumParameters[DatumParameterKey.SenderPubKeyHash] as string || '',
+                    datumParameters[DatumParameterKey.SenderStakingKeyHash] as string || '',
                     transaction.blockSlot,
                     transaction.hash,
                     output.index,
                     output.toAddress,
-                    SwapOrderType.Instant,
+                    SwapOrderType.Limit, // SaturnSwap is limit-order based
                     transaction
                 );
 
@@ -260,9 +324,67 @@ export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
     }
 
     protected async orders(transaction: Transaction): Promise<OrderBookOrder[]> {
-        // For now, return empty array
-        // TODO: Implement order book order parsing
-        return [];
+        const orderAddressUtxos: Utxo[] = transaction.outputs.filter((output: Utxo) => {
+            return output.toAddress === this.orderAddress;
+        });
+
+        const newOrders: (OrderBookOrder | undefined)[] = await Promise.all(
+            orderAddressUtxos.map(async (utxo: Utxo, index: number) => {
+                if (!utxo.datum) return undefined;
+                
+                try {
+                    const definitionField: DefinitionField = toDefinitionDatum(
+                        Data.from(utxo.datum)
+                    );
+                    const builder: DefinitionBuilder = new DefinitionBuilder(swapDefinition);
+                    const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+
+                    // Extract token assets
+                    const swapInToken: Token = datumParameters[DatumParameterKey.SwapInTokenPolicyId]
+                        ? new Asset(
+                            datumParameters[DatumParameterKey.SwapInTokenPolicyId] as string,
+                            datumParameters[DatumParameterKey.SwapInTokenAssetName] as string
+                          )
+                        : 'lovelace';
+                    
+                    const swapOutToken: Token = datumParameters[DatumParameterKey.SwapOutTokenPolicyId]
+                        ? new Asset(
+                            datumParameters[DatumParameterKey.SwapOutTokenPolicyId] as string,
+                            datumParameters[DatumParameterKey.SwapOutTokenAssetName] as string
+                          )
+                        : 'lovelace';
+
+                    // SaturnSwap has 0% maker fee, 0.3% taker fee
+                    const swapInAmount = Number(datumParameters[DatumParameterKey.SwapInAmount]);
+                    const minReceive = Number(datumParameters[DatumParameterKey.MinReceive]);
+                    const price = minReceive / swapInAmount;
+
+                    return OrderBookOrder.make(
+                        Dex.SaturnSwap,
+                        swapInToken,
+                        swapOutToken,
+                        `${transaction.hash}#${utxo.index}`, // identifier
+                        swapInAmount, // originalOfferAmount
+                        swapInAmount, // unFilledOfferAmount (initially same as original)
+                        minReceive, // askedAmount
+                        price, // price
+                        0, // numPartialFills
+                        false, // isCancelled
+                        0, // dexFeesPaid (0 for maker)
+                        datumParameters[DatumParameterKey.SenderPubKeyHash] as string || '',
+                        datumParameters[DatumParameterKey.SenderStakingKeyHash] as string || '',
+                        transaction.blockSlot,
+                        transaction.hash,
+                        utxo.index,
+                        transaction
+                    );
+                } catch (e) {
+                    return undefined;
+                }
+            })
+        );
+
+        return newOrders.filter((order): order is OrderBookOrder => order !== undefined);
     }
 
     protected async matches(transaction: Transaction): Promise<(OrderBookMatch | OrderBookOrder)[]> {
@@ -272,18 +394,43 @@ export class SaturnSwapAnalyzer extends BaseHybridDexAnalyzer {
         transaction.inputs.forEach((input: Utxo, index: number) => {
             if (input.toAddress !== this.orderAddress) return;
 
-            const match = OrderBookMatch.make(
-                DexOperationStatus.Complete,
-                transaction.blockSlot,
-                transaction.hash,
-                index,
-                input.forTxHash,
-                input.index
-            );
+            // Look for outputs that indicate a match
+            const takerFeeOutput = transaction.outputs.find((output: Utxo) => {
+                return output.toAddress === this.feeAddress;
+            });
 
-            matches.push(match);
+            if (takerFeeOutput) {
+                // Extract taker fee amount (0.3% of matched amount)
+                const feeAsset = takerFeeOutput.assetBalances.find(balance => balance.quantity > 0n);
+                
+                if (feeAsset) {
+                    // Calculate matched amount from fee (fee = matched * 0.003)
+                    const matchedAmount = (Number(feeAsset.quantity) * 1000) / 3;
+                    const matchedToken = feeAsset.asset === 'lovelace' ? 'lovelace' : feeAsset.asset;
+
+                    const match = OrderBookMatch.make(
+                        Dex.SaturnSwap,
+                        undefined, // matchedToken can be undefined
+                        matchedAmount,
+                        '', // receiverPubKeyHash - could extract from outputs
+                        '', // receiverStakeKeyHash - could extract from outputs
+                        transaction.blockSlot,
+                        transaction.hash,
+                        index, // outputIndex
+                        input.forTxHash, // consumedTxHash
+                        '', // partialFillOrderIdentifier
+                        undefined, // referenceOrder
+                        transaction,
+                        0 // unFilledAmount
+                    );
+
+                    matches.push(match);
+                }
+            }
         });
 
+        // TODO: Handle partial fills and cancellations
+        
         return matches;
     }
 } 
