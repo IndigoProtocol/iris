@@ -212,6 +212,7 @@ describe('Spectrum', () => {
       version: 'v2',
       timestamp: 1746803292,
       blockHeight: 11842435,
+      denominator: 1_000,
     };
 
     const operations: AmmDexOperation[] = await analyzer.analyzeTransaction(
@@ -283,6 +284,9 @@ describe('Spectrum', () => {
     );
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
+    );
+    expect(pool.extra.LpFeeDenominator).toEqual(
+      expected.denominator
     );
   });
 });
