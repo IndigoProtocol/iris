@@ -38,6 +38,7 @@ const WITHDRAW_CONTRACT_ADDRESS: string =
   'addr1wxpa5704x8qel88ympf4natfdzn59nc9esj7609y3sczmmsasees8';
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const CANCEL_ORDER_DATUM: string = 'd8799f00000001ff';
+const FEE_DENOMINATOR = 1_000;
 
 export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot: number = 98301694;
@@ -232,7 +233,7 @@ export class SpectrumAnalyzer extends BaseAmmDexAnalyzer {
               txHash: transaction.hash,
               batcherFee: 0n.toString(),
               feeNumerator: Number(datumParameters.LpFee ?? 0),
-              feeDenominator: 0,
+              feeDenominator: FEE_DENOMINATOR,
               minAda: 0n.toString(),
             }
           );
