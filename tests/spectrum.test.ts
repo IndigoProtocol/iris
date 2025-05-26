@@ -60,7 +60,7 @@ describe('Spectrum', () => {
     expect(operations.length).toEqual(0);
   });
 
-  it.skip('Can index cfmm v1 pools', async () => {
+  it('Can index cfmm v1 pools', async () => {
     const expected = {
       poolType: 'cfmm',
       id: '72f2990e8f906b589926b4290dd511bc846f0ac727c26fd7542f9db2.574d545f4144415f4e4654',
@@ -99,6 +99,7 @@ describe('Spectrum', () => {
       version: 'v1',
       timestamp: 1733507529,
       blockHeight: 11186051,
+      denominator: 1_000,
     };
 
     const operations: AmmDexOperation[] = await analyzer.analyzeTransaction(
@@ -171,9 +172,10 @@ describe('Spectrum', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.feeDenominator).toEqual(expected.denominator);
   });
 
-  it.skip('Can index cfmm v2 pools', async () => {
+  it('Can index cfmm v2 pools', async () => {
     const expected = {
       poolType: 'cfmm',
       id: 'e3a879f88db87ed3107502bf21f0f43a0210ac7546a54887f2c84d76.53554e4441455f4144415f4e4654',
@@ -212,6 +214,7 @@ describe('Spectrum', () => {
       version: 'v2',
       timestamp: 1746803292,
       blockHeight: 11842435,
+      denominator: 1_000,
     };
 
     const operations: AmmDexOperation[] = await analyzer.analyzeTransaction(
@@ -284,5 +287,6 @@ describe('Spectrum', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.feeDenominator).toEqual(expected.denominator);
   });
 });
