@@ -99,6 +99,7 @@ describe('Spectrum', () => {
       version: 'v1',
       timestamp: 1733507529,
       blockHeight: 11186051,
+      denominator: 1_000,
     };
 
     const operations: AmmDexOperation[] = await analyzer.analyzeTransaction(
@@ -171,6 +172,7 @@ describe('Spectrum', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
+    expect(pool.extra.feeDenominator).toEqual(expected.denominator);
   });
 
   it('Can index cfmm v2 pools', async () => {
@@ -285,8 +287,6 @@ describe('Spectrum', () => {
     expect(pool.extra.feeNumerator).toEqual(
       expected.poolFeeNumX - expected.treasuryFee
     );
-    expect(pool.extra.LpFeeDenominator).toEqual(
-      expected.denominator
-    );
+    expect(pool.extra.feeDenominator).toEqual(expected.denominator);
   });
 });
