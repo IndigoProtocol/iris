@@ -96,8 +96,9 @@ export class AmmOperationHandler {
   private async handleUpdatedPoolState(
     instance: LiquidityPoolState
   ): Promise<any> {
-    instance.tokenA = await this.retrieveAsset(instance.tokenA);
-
+    if (instance.tokenA) {
+      instance.tokenA = await this.retrieveAsset(instance.tokenA);
+    }
     instance.tokenB = await this.retrieveAsset(instance.tokenB);
     instance.tokenLp = await this.retrieveAsset(instance.tokenLp, true);
 
