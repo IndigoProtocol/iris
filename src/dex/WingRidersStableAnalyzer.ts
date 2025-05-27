@@ -209,10 +209,11 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
               ProjectFeeInBasis: Number(datumParameters.ProjectFeeInBasis ?? 0),
               SwapFee: Number(datumParameters.SwapFee ?? 0),
               AgentFee: Number(datumParameters.AgentFee ?? 0),
-              InvariantD: Number(datumParameters.InvariantD ?? 0),
-              Multiplier0: Number(datumParameters.Multiplier0 ?? 0),
-              Multiplier1: Number(datumParameters.Multiplier1 ?? 0),
-  
+              InvariantD: String(datumParameters.InvariantD ?? 0),
+              Multiplier0: String(datumParameters.Multiplier0 ?? 0),
+              Multiplier1: String(datumParameters.Multiplier1 ?? 0),
+              
+
             }
           );
         } catch (e) {

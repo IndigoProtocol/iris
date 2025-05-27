@@ -83,4 +83,9 @@ describe('Wingriders Stable', () => {
   });
 
   // https://cardanoscan.io/transaction/ef501c68c43e9983628afda891df5749b1943a97d501faf11151f5b47dc4cb37
+  it('Can index USDM - DJED pool', async () => {
+    const txn = {}
+
+
+  });
 });
