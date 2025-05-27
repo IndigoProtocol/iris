@@ -91,6 +91,7 @@ export enum DatumParameterKey {
   Batcher = 'Batcher',
   Beacon = 'Beacon',
   Unknown = 'Unknown',
+  ParameterD = 'ParameterD',
 }
 
 export enum Dex {
@@ -100,6 +101,7 @@ export enum Dex {
   SundaeSwapV3 = 'SundaeSwapV3',
   WingRiders = 'WingRiders',
   WingRidersV2 = 'WingRidersV2',
+  WingRidersStable = 'WingRidersStable',
   MuesliSwap = 'MuesliSwap',
   Spectrum = 'Spectrum',
   Splash = 'Splash',

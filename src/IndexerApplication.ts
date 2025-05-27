@@ -42,6 +42,7 @@ import { logError, logInfo } from './logger';
 import { BaseCacheStorage } from './storage/BaseCacheStorage';
 import { CacheStorage } from './storage/CacheStorage';
 import { SpectrumAnalyzer } from './dex/SpectrumAnalyzer';
+import { WingRidersStableAnalyzer } from './dex/WingRidersStableAnalyzer';
 
 export class IndexerApplication {
   private readonly _cache: BaseCacheStorage;
@@ -58,16 +59,17 @@ export class IndexerApplication {
   private _indexers: BaseIndexer[] = [
     new SyncIndexer(),
     new AmmDexTransactionIndexer([
-      new MinswapAnalyzer(this),
-      new MinswapV2Analyzer(this),
-      new SundaeSwapAnalyzer(this),
-      new SundaeSwapV3Analyzer(this),
-      new WingRidersAnalyzer(this),
-      new WingRidersV2Analyzer(this),
-      new SpectrumAnalyzer(this),
-      new SplashAnalyzer(this),
-      // new TeddySwapAnalyzer(this),
-      new VyFiAnalyzer(this),
+      // new MinswapAnalyzer(this),
+      // new MinswapV2Analyzer(this),
+      // new SundaeSwapAnalyzer(this),
+      // new SundaeSwapV3Analyzer(this),
+      // new WingRidersAnalyzer(this),
+      // new WingRidersV2Analyzer(this),
+      // new SpectrumAnalyzer(this),
+      // new SplashAnalyzer(this),
+      // // new TeddySwapAnalyzer(this),
+      // new VyFiAnalyzer(this),
+      new WingRidersStableAnalyzer(this),
     ]),
     new OrderBookDexTransactionIndexer([
       // new GeniusYieldAnalyzer(this),
