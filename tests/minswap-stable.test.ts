@@ -66,6 +66,133 @@ describe('MinswapStable', () => {
     expect(pool.extra.Multiplier1).toEqual('100');
     expect(pool.reserveA).toEqual('258616528493');
     expect(pool.reserveB).toEqual('2041947441');
+
+    expect(pool.tokenA?.identifier()).toEqual(ASSETS.USDC.identifier());
+    expect(pool.tokenB?.identifier()).toEqual(ASSETS.iUSD.identifier());
+  });
+
+  it('Can index DJED-iUSD pool', async () => {
+    // https://cardanoscan.io/transaction/fca8f842f0a36b63c05b82c69b62207d4ca77578067796e1ac092f4c6f844923?tab=summary
+    const txn = {
+      hash: 'fca8f842f0a36b63c05b82c69b62207d4ca77578067796e1ac092f4c6f844923',
+      blockHash:
+        '0244af51d6385c114b24bb97b3aafe5e094fb05b072d422f56ba68fef781d8e6',
+      blockSlot: 153729615,
+      inputs: [],
+      outputs: [
+        {
+          forTxHash:
+            'fca8f842f0a36b63c05b82c69b62207d4ca77578067796e1ac092f4c6f844923',
+          toAddress:
+            'addr1wy7kkcpuf39tusnnyga5t2zcul65dwx9yqzg7sep3cjscesx2q5m5',
+          datum:
+            'd8799f9f1b00000005b788dbb31b00000003ee379b0bff1b000000099590fb540a581c4c4d65a0616f60adc2cba70f533705233b1d7e8cb3e9868cdca39d86ff',
+          index: 0,
+          lovelaceBalance: 1792960n,
+          assetBalances: [
+            {
+              asset: ASSETS.DJED,
+              quantity: 24755170850n,
+            },
+            {
+              asset: Asset.fromId(
+                '5d4b6afd3344adcf37ccef5558bb87f522874578c32f17160512e398.444a45442d695553442d534c50'
+              ),
+              quantity: 1n,
+            },
+            {
+              asset: ASSETS.iUSD,
+              quantity: 17088347252n,
+            },
+          ],
+        } as Utxo,
+      ],
+      fee: 0n,
+      mints: [],
+      datums: {},
+      redeemers: [],
+    };
+
+    const operations = await analyzer.analyzeTransaction(txn);
+
+    expect(operations.length).toEqual(1);
+    const [pool] = operations as [LiquidityPoolState];
+    expect(pool).toBeInstanceOf(LiquidityPoolState);
+    expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.extra.Amp).toEqual('10');
+    expect(pool.extra.feeNumerator).toEqual(1000000);
+    expect(pool.extra.feeDenominator).toEqual(10000000000);
+    expect(pool.extra.Balance0).toEqual('24554036147');
+    expect(pool.extra.Balance1).toEqual('16881523467');
+    expect(pool.extra.Multiplier0).toEqual('1');
+    expect(pool.extra.Multiplier1).toEqual('1');
+    expect(pool.reserveA).toEqual('24755170850');
+    expect(pool.reserveB).toEqual('17088347252');
+
+    expect(pool.tokenA?.identifier()).toEqual(ASSETS.DJED.identifier());
+    expect(pool.tokenB?.identifier()).toEqual(ASSETS.iUSD.identifier());
+  });
+
+  it('Can index USDC-DJED pool', async () => {
+    // https://cardanoscan.io/transaction/3202cd487d26988dc50f116ce506d5906efdeaeea4204964c59d2b8259459619
+    const txn = {
+      hash: '3202cd487d26988dc50f116ce506d5906efdeaeea4204964c59d2b8259459619',
+      blockHash:
+        '0244af51d6385c114b24bb97b3aafe5e094fb05b072d422f56ba68fef781d8e6',
+      blockSlot: 153729615,
+      inputs: [],
+      outputs: [
+        {
+          forTxHash:
+            '3202cd487d26988dc50f116ce506d5906efdeaeea4204964c59d2b8259459619',
+          toAddress:
+            'addr1wx8d45xlfrlxd7tctve8xgdtk59j849n00zz2pgyvv47t8sxa6t53',
+          datum:
+            'd8799f9f1b000001e908e53fe81b0000000553ffce6cff1b000003f2130517ae0a581c62d3e3975c6ec02d4002640413368a2d46ea10548b1cd217a3e9b7cdff',
+          index: 0,
+          lovelaceBalance: 1792960n,
+          assetBalances: [
+            {
+              asset: ASSETS.DJED,
+              quantity: 23297156355n,
+            },
+            {
+              asset: Asset.fromId(
+                'd97fa91daaf63559a253970365fb219dc4364c028e5fe0606cdbfff9.555344432d444a45442d534c50'
+              ),
+              quantity: 1n,
+            },
+            {
+              asset: ASSETS.USDC,
+              quantity: 2142104761098n,
+            },
+          ],
+        } as Utxo,
+      ],
+      fee: 0n,
+      mints: [],
+      datums: {},
+      redeemers: [],
+    };
+
+    const operations = await analyzer.analyzeTransaction(txn);
+
+    expect(operations.length).toEqual(1);
+    const [pool] = operations as [LiquidityPoolState];
+    expect(pool).toBeInstanceOf(LiquidityPoolState);
+    expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.extra.Amp).toEqual('10');
+    expect(pool.extra.feeNumerator).toEqual(1000000);
+    expect(pool.extra.feeDenominator).toEqual(10000000000);
+    expect(pool.extra.Balance0).toEqual('2100388249576');
+    expect(pool.extra.Balance1).toEqual('22884109932');
+    expect(pool.extra.Multiplier0).toEqual('1');
+    expect(pool.extra.Multiplier1).toEqual('100');
+    expect(pool.reserveA).toEqual('2142104761098');
+    expect(pool.reserveB).toEqual('23297156355');
+
+    expect(pool.tokenA?.identifier()).toEqual(ASSETS.USDC.identifier());
+    expect(pool.tokenB?.identifier()).toEqual(ASSETS.DJED.identifier());
   });
 
   it.todo('Can filter non-related transactions');

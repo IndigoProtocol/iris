@@ -7,4 +7,7 @@ export const ASSETS = {
   iUSD: Asset.fromId(
     'f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b69880.69555344'
   ),
+  DJED: Asset.fromId(
+    '8db269c3ec630e06ae29f74bc39edd1f87c819f1056206e879a1cd61.446a65644d6963726f555344'
+  ),
 };
