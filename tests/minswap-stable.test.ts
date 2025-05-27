@@ -257,5 +257,11 @@ describe('MinswapStable', () => {
     expect(pool.tokenB?.identifier()).toEqual(ASSETS.iUSD.identifier());
   });
 
-  it.todo('Can filter non-related transactions');
+  it('Can filter non-related transactions', async () => {
+    const operations = await analyzer.analyzeTransaction(
+      globals.SUNDAESWAP_SWAP_TX
+    );
+
+    expect(operations.length).toEqual(0);
+  });
 });
