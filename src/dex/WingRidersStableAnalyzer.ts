@@ -160,6 +160,24 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
           const possibleOperationStatuses: OperationStatus[] =
             this.spentOperationInputs(transaction);
 
+          const balanceA =
+            tokenA === 'lovelace'
+              ? reserveA -
+                treasuryA -
+                projectTreasuryA -
+                reserveTreasuryA -
+                MIN_POOL_ADA
+              : reserveA - treasuryA - projectTreasuryA - reserveTreasuryA;
+
+          const balanceB =
+            tokenB === 'lovelace'
+              ? reserveB -
+                treasuryB -
+                projectTreasuryB -
+                reserveTreasuryB -
+                MIN_POOL_ADA
+              : reserveB - treasuryB - projectTreasuryB - reserveTreasuryB;
+
           return LiquidityPoolState.make(
             Dex.WingRidersStable,
             output.toAddress,
@@ -167,24 +185,8 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
             tokenA,
             tokenB,
             lpTokenAssetBalance.asset,
-            String(
-              tokenA === 'lovelace'
-                ? reserveA -
-                    treasuryA -
-                    projectTreasuryA -
-                    reserveTreasuryA -
-                    MIN_POOL_ADA
-                : reserveA - treasuryA - projectTreasuryA - reserveTreasuryA
-            ),
-            String(
-              tokenB === 'lovelace'
-                ? reserveB -
-                    treasuryB -
-                    projectTreasuryB -
-                    reserveTreasuryB -
-                    MIN_POOL_ADA
-                : reserveB - treasuryB - projectTreasuryB - reserveTreasuryB
-            ),
+            String(balanceA),
+            String(balanceB),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
             FEE_PERCENT,
             transaction.blockSlot,
@@ -212,8 +214,8 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
               InvariantD: String(datumParameters.InvariantD ?? 0),
               Multiplier0: String(datumParameters.Multiplier0 ?? 0),
               Multiplier1: String(datumParameters.Multiplier1 ?? 0),
-              
-
+              Balance0: String(balanceA),
+              Balance1: String(balanceB),
             }
           );
         } catch (e) {
