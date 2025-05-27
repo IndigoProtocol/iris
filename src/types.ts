@@ -53,7 +53,7 @@ export type DefinitionBytes = {
 };
 
 export type DefinitionInt = {
-  int: number | DatumParameterKey;
+  int: bigint | DatumParameterKey;
 };
 
 export type DefinitionConstr = {

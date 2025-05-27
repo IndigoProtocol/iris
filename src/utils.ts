@@ -34,7 +34,7 @@ export function toDefinitionDatum(unconstructedField: any): DefinitionField {
 
   if (typeof unconstructedField === 'bigint') {
     return {
-      int: Number(unconstructedField),
+      int: unconstructedField,
     } as DefinitionInt;
   }
 
@@ -93,8 +93,8 @@ export function formatTransaction(
               ? transaction.datums[output.datum]
               : output.datum
             : transaction.datums && output.datumHash
-            ? transaction.datums[output.datumHash]
-            : undefined,
+              ? transaction.datums[output.datumHash]
+              : undefined,
           index: index,
           lovelaceBalance: BigInt(output.value.ada.lovelace),
           assetBalances: output.value

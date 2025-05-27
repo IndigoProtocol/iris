@@ -6,10 +6,11 @@ import { Utxo } from '../src/types';
 import { ASSETS } from './fixtures';
 import { globals } from './setup';
 
-describe('Minswap', () => {
+describe('MinswapStable', () => {
   const analyzer: BaseAmmDexAnalyzer = new MinswapStableAnalyzer(globals.app);
 
   it('Can index USDC-iUSD pool', async () => {
+    // https://cardanoscan.io/transaction/fe0dbbced37a4a0d19a22a14504441bbbd8a6de46590822b6cf6fddb1cebea2c?tab=summary
     const txn = {
       hash: 'fe0dbbced37a4a0d19a22a14504441bbbd8a6de46590822b6cf6fddb1cebea2c',
       blockHash:
@@ -56,11 +57,13 @@ describe('Minswap', () => {
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
     expect(pool.txHash).toEqual(txn.hash);
-    expect(pool.extra.amp).toEqual(10);
-    expect(pool.extra.feeNumerator).toEqual(1);
-    expect(pool.extra.feeDenominator).toEqual(10000);
-    expect(pool.extra.multipliers).toEqual([1, 100]);
-    expect(pool.extra.balances).toEqual(['279238336896', '1841864598']);
+    expect(pool.extra.Amp).toEqual('10');
+    expect(pool.extra.feeNumerator).toEqual(1000000);
+    expect(pool.extra.feeDenominator).toEqual(10000000000);
+    expect(pool.extra.Balance0).toEqual('258614009000');
+    expect(pool.extra.Balance1).toEqual('2041864596');
+    expect(pool.extra.Multiplier0).toEqual('1');
+    expect(pool.extra.Multiplier1).toEqual('100');
     expect(pool.reserveA).toEqual('258616528493');
     expect(pool.reserveB).toEqual('2041947441');
   });

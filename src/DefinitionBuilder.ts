@@ -98,9 +98,7 @@ export class DefinitionBuilder {
         throw new Error("Template definition does not match with 'int'");
       }
 
-      if (typeof templateDefinition.int !== 'number') {
-        foundParameters[templateDefinition.int] = definedDefinition.int;
-      }
+      foundParameters[String(templateDefinition.int)] = definedDefinition.int;
     }
 
     if ('bytes' in definedDefinition) {
