@@ -72,13 +72,13 @@ export default {
       constructor: 0,
       fields: [
         {
-          int: DatumParameterKey.ParameterD,
+          int: DatumParameterKey.InvariantD,
         },
         {
-          int: DatumParameterKey.AScale,
+          int: DatumParameterKey.Multiplier0,
         },
         {
-          int: DatumParameterKey.BScale,
+          int: DatumParameterKey.Multiplier1,
         },
       ],
     },

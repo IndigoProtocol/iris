@@ -43,18 +43,13 @@ const BATCHER_FEE = 200000n; // Batcher fee for stable pools
 
 export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot = 133880255;
-  public async analyzeTransaction(
+  public analyzeTransaction(
     transaction: Transaction
   ): Promise<AmmDexOperation[]> {
-    console.log(
-      `Analyzing WingRiders Stable transaction ${transaction.hash} at slot ${transaction.blockSlot}`
-    );
-    const a = await Promise.all([
+    return Promise.all([
       this.liquidityPoolStates(transaction),
       this.swapOrders(transaction),
     ]).then((operations: AmmDexOperation[][]) => operations.flat(2));
-    console.log('find transaction ', a);
-    return a;
   }
 
   protected liquidityPoolStates(
@@ -214,9 +209,10 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
               ProjectFeeInBasis: Number(datumParameters.ProjectFeeInBasis ?? 0),
               SwapFee: Number(datumParameters.SwapFee ?? 0),
               AgentFee: Number(datumParameters.AgentFee ?? 0),
-              ParameterD: Number(datumParameters.ParameterD ?? 0),
-              AScale: Number(datumParameters.AScale ?? 0),
-              BScale: Number(datumParameters.BScale ?? 0),
+              InvariantD: Number(datumParameters.InvariantD ?? 0),
+              Multiplier0: Number(datumParameters.Multiplier0 ?? 0),
+              Multiplier1: Number(datumParameters.Multiplier1 ?? 0),
+  
             }
           );
         } catch (e) {

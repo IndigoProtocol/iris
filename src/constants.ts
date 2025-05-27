@@ -24,6 +24,7 @@ export enum DatumParameterKey {
   Multiplier0 = 'Multiplier0',
   Multiplier1 = 'Multiplier1',
   OrderHash = 'OrderHash',
+  InvariantD = 'InvariantD',
 
   TotalFees = 'TotalFees',
   BatcherFee = 'BatcherFee',
@@ -97,7 +98,6 @@ export enum DatumParameterKey {
   Batcher = 'Batcher',
   Beacon = 'Beacon',
   Unknown = 'Unknown',
-  ParameterD = 'ParameterD',
 }
 
 export enum Dex {
