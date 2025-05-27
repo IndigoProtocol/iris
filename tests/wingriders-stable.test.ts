@@ -77,6 +77,7 @@ describe('Wingriders Stable', () => {
     expect(pool.extra.feeDenominator).toEqual(10_000);
     expect(pool.reserveA).toEqual(String(1_196_355_383 - 153_449));
     expect(pool.reserveB).toEqual(String(1_019_838_729 - 176_249));
+    // Extra balances same as reserves
     expect(pool.extra.Balance0).toEqual(String(1_196_355_383 - 153_449));
     expect(pool.extra.Balance1).toEqual(String(1_019_838_729 - 176_249));
 
