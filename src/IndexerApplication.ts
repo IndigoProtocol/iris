@@ -42,6 +42,7 @@ import { logError, logInfo } from './logger';
 import { BaseCacheStorage } from './storage/BaseCacheStorage';
 import { CacheStorage } from './storage/CacheStorage';
 import { SpectrumAnalyzer } from './dex/SpectrumAnalyzer';
+import { MinswapStableAnalyzer } from './dex/MinswapStableAnalyzer';
 
 export class IndexerApplication {
   private readonly _cache: BaseCacheStorage;
@@ -60,6 +61,7 @@ export class IndexerApplication {
     new AmmDexTransactionIndexer([
       new MinswapAnalyzer(this),
       new MinswapV2Analyzer(this),
+      new MinswapStableAnalyzer(this),
       new SundaeSwapAnalyzer(this),
       new SundaeSwapV3Analyzer(this),
       new WingRidersAnalyzer(this),

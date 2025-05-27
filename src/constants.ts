@@ -18,6 +18,12 @@ export enum DatumParameterKey {
   DepositB = 'DepositB',
   LpTokens = 'LpTokens',
   StakeAdminPolicy = 'StakeAdminPolicy',
+  Amp = 'Amp',
+  Balance0 = 'Balance0',
+  Balance1 = 'Balance1',
+  Multiplier0 = 'Multiplier0',
+  Multiplier1 = 'Multiplier1',
+  OrderHash = 'OrderHash',
 
   TotalFees = 'TotalFees',
   BatcherFee = 'BatcherFee',
@@ -95,6 +101,7 @@ export enum DatumParameterKey {
 
 export enum Dex {
   Minswap = 'Minswap',
+  MinswapStable = 'MinswapStable',
   MinswapV2 = 'MinswapV2',
   SundaeSwap = 'SundaeSwap',
   SundaeSwapV3 = 'SundaeSwapV3',
