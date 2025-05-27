@@ -350,6 +350,7 @@ export class MinswapStableAnalyzer extends BaseAmmDexAnalyzer {
             }
           );
         } catch (e) {
+          console.error("Error while parsing LiquidityPoolState datum:", e);
           return undefined;
         }
       })
