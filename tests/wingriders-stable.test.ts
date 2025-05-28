@@ -65,6 +65,7 @@ describe('Wingriders Stable', () => {
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
     expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.feePercent).toEqual(0.06);
     expect(pool.extra.feeNumerator).toEqual(6);
     expect(pool.extra.feeDenominator).toEqual(10_000);
     // Extra data for Wingriders Stable pools
@@ -138,6 +139,7 @@ describe('Wingriders Stable', () => {
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
     expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.feePercent).toEqual(0.06);
     expect(pool.extra.feeNumerator).toEqual(6);
     expect(pool.extra.feeDenominator).toEqual(10_000);
     // Extra data for Wingriders Stable pools

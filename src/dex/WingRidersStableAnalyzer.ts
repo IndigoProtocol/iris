@@ -1,45 +1,31 @@
-import {
-  AddressDetails,
-  Data,
-  getAddressDetails,
-} from '@lucid-evolution/lucid';
+import { Data, getAddressDetails } from '@lucid-evolution/lucid';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { BIPS, DatumParameterKey, Dex, SwapOrderType } from '../constants';
+import { Dex } from '../constants';
 import { Asset, Token } from '../db/entities/Asset';
 import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
 import { LiquidityPoolSwap } from '../db/entities/LiquidityPoolSwap';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
-import { OrderBookMatch } from '../db/entities/OrderBookMatch';
-import { OrderBookOrder } from '../db/entities/OrderBookOrder';
 import {
   AmmDexOperation,
   AssetBalance,
   DatumParameters,
   DefinitionConstr,
   DefinitionField,
-  HybridOperation,
   Transaction,
   Utxo,
 } from '../types';
-import { stringify, toDefinitionDatum, tokensMatch } from '../utils';
-import { BaseHybridDexAnalyzer } from './BaseHybridDexAnalyzer';
+import { toDefinitionDatum, tokensMatch } from '../utils';
 import poolDefinition from './definitions/wingriderstable/pool';
-import poolDepositDefinition from './definitions/muesliswap/pool-deposit';
-import poolWithdrawDefinition from './definitions/muesliswap/pool-withdraw';
-import swapDefinition from './definitions/muesliswap/swap';
 import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
 
-// TODO: Update with the correct script hash
 const POOL_NFT_POLICY_ID: string =
   '6fdc63a1d71dc2c65502b79baae7fb543185702b12c3c5fb639ed737';
 const MIN_POOL_ADA = 2000000n;
 const MAX_INT: bigint = 9_223_372_036_854_775_807n;
-const FEE_PERCENT: number = 0.35;
 const STABLE_POOL_SCRIPT_HASH =
   '946ae228430f2fc64aa8b3acb910ee27e9b3e47aa8f925fac27834a1';
-const BATCHER_FEE = 200000n; // Batcher fee for stable pools
 
 export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
   public startSlot = 133880255;
@@ -183,6 +169,9 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
             BigInt(datumParameters.ProjectFeeInBasis ?? 0) +
             BigInt(datumParameters.ReserveFeeInBasis ?? 0);
 
+          const feeNumerator =
+            BigInt(datumParameters.SwapFeeInBasis ?? 0) + otherFeeInBasis;
+
           return LiquidityPoolState.make(
             Dex.WingRidersStable,
             output.toAddress,
@@ -193,7 +182,8 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
             String(balanceA),
             String(balanceB),
             Number(MAX_INT - lpTokenAssetBalance.quantity),
-            FEE_PERCENT,
+            (Number(feeNumerator) * 100) /
+              Number(datumParameters.FeeBasis ?? 0),
             transaction.blockSlot,
             transaction.hash,
             possibleOperationStatuses,
@@ -206,11 +196,7 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
               batcherFee: String(datumParameters.AgentFee ?? 0),
               feeDenominator: Number(datumParameters.FeeBasis ?? 0),
               minAda: MIN_POOL_ADA.toString(),
-              feeNumerator:
-                Number(datumParameters.SwapFeeInBasis ?? 0) +
-                Number(datumParameters.ProtocolFeeInBasis ?? 0) +
-                Number(datumParameters.ProjectFeeInBasis ?? 0) +
-                Number(datumParameters.ReserveFeeInBasis ?? 0),
+              feeNumerator: Number(feeNumerator),
               SwapFeeInBasis: Number(datumParameters.SwapFeeInBasis ?? 0),
               OtherFeeInBasis: Number(otherFeeInBasis),
               AgentFee: Number(datumParameters.AgentFee ?? 0),
