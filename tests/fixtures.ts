@@ -13,4 +13,7 @@ export const ASSETS = {
   USDM: Asset.fromId(
     'c48cbb3d5e57ed56e276bc45f99ab39abe94e6cd7ac39fb402da47ad.0014df105553444d'
   ),
+  USDA: Asset.fromId(
+    'fe7c786ab321f41c654ef6c1af7b3250a613c24e4213e0425a7ae456.55534441'
+  ),
 };

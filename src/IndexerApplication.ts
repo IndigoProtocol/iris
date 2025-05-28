@@ -43,6 +43,7 @@ import { BaseCacheStorage } from './storage/BaseCacheStorage';
 import { CacheStorage } from './storage/CacheStorage';
 import { SpectrumAnalyzer } from './dex/SpectrumAnalyzer';
 import { MinswapStableAnalyzer } from './dex/MinswapStableAnalyzer';
+import { WingRidersStableAnalyzer } from './dex/WingRidersStableAnalyzer';
 
 export class IndexerApplication {
   private readonly _cache: BaseCacheStorage;
@@ -68,6 +69,7 @@ export class IndexerApplication {
       new WingRidersV2Analyzer(this),
       new SpectrumAnalyzer(this),
       new SplashAnalyzer(this),
+      new WingRidersStableAnalyzer(this),
       // new TeddySwapAnalyzer(this),
       new VyFiAnalyzer(this),
     ]),
