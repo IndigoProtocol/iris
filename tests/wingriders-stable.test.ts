@@ -1,15 +1,10 @@
 import { WingRidersStableAnalyzer } from './../src/dex/WingRidersStableAnalyzer';
 import { globals } from './setup';
 import { BaseAmmDexAnalyzer } from '../src/dex/BaseAmmDexAnalyzer';
-import { WingRidersAnalyzer } from '../src/dex/WingRidersAnalyzer';
 import { AmmDexOperation, Utxo } from '../src/types';
-import { LiquidityPoolSwap } from '../src/db/entities/LiquidityPoolSwap';
-import { LiquidityPoolDeposit } from '../src/db/entities/LiquidityPoolDeposit';
-import { LiquidityPoolWithdraw } from '../src/db/entities/LiquidityPoolWithdraw';
 import { LiquidityPoolState } from '../src/db/entities/LiquidityPoolState';
 import { Asset } from '../src/db/entities/Asset';
 import { ASSETS } from './fixtures';
-import exp from 'constants';
 
 describe('Wingriders Stable', () => {
   const analyzer: BaseAmmDexAnalyzer = new WingRidersStableAnalyzer(
