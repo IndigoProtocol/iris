@@ -77,9 +77,7 @@ export class IndexerApplication {
       // new GeniusYieldAnalyzer(this),
       // new AxoAnalyzer(this),
     ]),
-    new HybridDexTransactionIndexer([
-      new MuesliSwapAnalyzer(this)
-    ]),
+    new HybridDexTransactionIndexer([new MuesliSwapAnalyzer(this)]),
   ];
 
   /**
