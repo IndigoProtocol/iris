@@ -178,6 +178,11 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
                 MIN_POOL_ADA
               : reserveB - treasuryB - projectTreasuryB - reserveTreasuryB;
 
+          const otherFeeInBasis =
+            BigInt(datumParameters.ProtocolFeeInBasis ?? 0) +
+            BigInt(datumParameters.ProjectFeeInBasis ?? 0) +
+            BigInt(datumParameters.ReserveFeeInBasis ?? 0);
+
           return LiquidityPoolState.make(
             Dex.WingRidersStable,
             output.toAddress,
@@ -202,14 +207,12 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
               feeDenominator: Number(datumParameters.FeeBasis ?? 0),
               minAda: MIN_POOL_ADA.toString(),
               feeNumerator:
-                Number(datumParameters.SwapFee ?? 0) +
-                Number(datumParameters.ProtocolFee ?? 0) +
+                Number(datumParameters.SwapFeeInBasis ?? 0) +
+                Number(datumParameters.ProtocolFeeInBasis ?? 0) +
                 Number(datumParameters.ProjectFeeInBasis ?? 0) +
                 Number(datumParameters.ReserveFeeInBasis ?? 0),
-              ReserveFeeInBasis: Number(datumParameters.ReserveFeeInBasis ?? 0),
-              ProtocolFee: Number(datumParameters.ProtocolFee ?? 0),
-              ProjectFeeInBasis: Number(datumParameters.ProjectFeeInBasis ?? 0),
-              SwapFee: Number(datumParameters.SwapFee ?? 0),
+              SwapFeeInBasis: Number(datumParameters.SwapFeeInBasis ?? 0),
+              OtherFeeInBasis: Number(otherFeeInBasis),
               AgentFee: Number(datumParameters.AgentFee ?? 0),
               InvariantD: String(datumParameters.InvariantD ?? 0),
               Multiplier0: String(datumParameters.Multiplier0 ?? 0),

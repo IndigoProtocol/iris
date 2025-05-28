@@ -24,10 +24,10 @@ export default {
       bytes: DatumParameterKey.PoolAssetBAssetName,
     },
     {
-      int: DatumParameterKey.SwapFee,
+      int: DatumParameterKey.SwapFeeInBasis,
     },
     {
-      int: DatumParameterKey.ProtocolFee,
+      int: DatumParameterKey.ProtocolFeeInBasis,
     },
     {
       int: DatumParameterKey.ProjectFeeInBasis,

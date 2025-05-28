@@ -65,11 +65,14 @@ describe('Wingriders Stable', () => {
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
     expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.extra.feeNumerator).toEqual(6);
+    expect(pool.extra.feeDenominator).toEqual(10_000);
+    // Extra data for Wingriders Stable pools
     expect(pool.extra.Multiplier0).toEqual('1');
     expect(pool.extra.Multiplier1).toEqual('1');
     expect(pool.extra.InvariantD).toEqual(String(2_215_817_546));
-    expect(pool.extra.feeNumerator).toEqual(6);
-    expect(pool.extra.feeDenominator).toEqual(10_000);
+    expect(pool.extra.SwapFeeInBasis).toEqual(5);
+    expect(pool.extra.OtherFeeInBasis).toEqual(1);
     expect(pool.reserveA).toEqual(String(1_196_355_383 - 153_449));
     expect(pool.reserveB).toEqual(String(1_019_838_729 - 176_249));
     // Extra balances same as reserves
@@ -81,7 +84,7 @@ describe('Wingriders Stable', () => {
   });
 
   // https://cardanoscan.io/transaction/ef501c68c43e9983628afda891df5749b1943a97d501faf11151f5b47dc4cb37
-  it('Can index DJED -USDM pool', async () => {
+  it('Can index DJED - USDM pool', async () => {
     const txn = {
       hash: 'ef501c68c43e9983628afda891df5749b1943a97d501faf11151f5b47dc4cb37',
       blockHash:
@@ -135,11 +138,14 @@ describe('Wingriders Stable', () => {
     const [pool] = operations as [LiquidityPoolState];
     expect(pool).toBeInstanceOf(LiquidityPoolState);
     expect(pool.txHash).toEqual(txn.hash);
+    expect(pool.extra.feeNumerator).toEqual(6);
+    expect(pool.extra.feeDenominator).toEqual(10_000);
+    // Extra data for Wingriders Stable pools
     expect(pool.extra.Multiplier0).toEqual('1');
     expect(pool.extra.Multiplier1).toEqual('1');
     expect(pool.extra.InvariantD).toEqual(String(4_256_036_144));
-    expect(pool.extra.feeNumerator).toEqual(6);
-    expect(pool.extra.feeDenominator).toEqual(10_000);
+    expect(pool.extra.SwapFeeInBasis).toEqual(5);
+    expect(pool.extra.OtherFeeInBasis).toEqual(1);
     expect(pool.reserveA).toEqual(String(1_944_193_234 - 10_002_383));
     expect(pool.reserveB).toEqual(String(2_332_159_478 - 10_196_230));
     // Extra balances same as reserves
