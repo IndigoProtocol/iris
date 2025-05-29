@@ -1,4 +1,4 @@
-import { WingRidersStableAnalyzer } from './../src/dex/WingRidersStableAnalyzer';
+import { WingRidersStableV2Analyzer } from '../src/dex/WingRidersStableV2Analyzer';
 import { globals } from './setup';
 import { BaseAmmDexAnalyzer } from '../src/dex/BaseAmmDexAnalyzer';
 import { AmmDexOperation, Utxo } from '../src/types';
@@ -6,8 +6,8 @@ import { LiquidityPoolState } from '../src/db/entities/LiquidityPoolState';
 import { Asset } from '../src/db/entities/Asset';
 import { ASSETS } from './fixtures';
 
-describe('Wingriders Stable', () => {
-  const analyzer: BaseAmmDexAnalyzer = new WingRidersStableAnalyzer(
+describe('Wingriders Stable V2', () => {
+  const analyzer: BaseAmmDexAnalyzer = new WingRidersStableV2Analyzer(
     globals.app
   );
 

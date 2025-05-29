@@ -111,7 +111,7 @@ export enum Dex {
   SundaeSwapV3 = 'SundaeSwapV3',
   WingRiders = 'WingRiders',
   WingRidersV2 = 'WingRidersV2',
-  WingRidersStable = 'WingRidersStable',
+  WingRidersStableV2 = 'WingRidersStableV2',
   MuesliSwap = 'MuesliSwap',
   Spectrum = 'Spectrum',
   Splash = 'Splash',

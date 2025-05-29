@@ -17,7 +17,7 @@ import {
   Utxo,
 } from '../types';
 import { toDefinitionDatum, tokensMatch } from '../utils';
-import poolDefinition from './definitions/wingriderstable/pool';
+import poolDefinition from './definitions/wingriders-stable-v2/pool';
 import { BaseAmmDexAnalyzer } from './BaseAmmDexAnalyzer';
 
 const POOL_NFT_POLICY_ID: string =
@@ -27,7 +27,7 @@ const MAX_INT: bigint = 9_223_372_036_854_775_807n;
 const STABLE_POOL_SCRIPT_HASH =
   '946ae228430f2fc64aa8b3acb910ee27e9b3e47aa8f925fac27834a1';
 
-export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
+export class WingRidersStableV2Analyzer extends BaseAmmDexAnalyzer {
   public startSlot = 133880255;
   public analyzeTransaction(
     transaction: Transaction
@@ -173,7 +173,7 @@ export class WingRidersStableAnalyzer extends BaseAmmDexAnalyzer {
             BigInt(datumParameters.SwapFeeInBasis ?? 0) + otherFeeInBasis;
 
           return LiquidityPoolState.make(
-            Dex.WingRidersStable,
+            Dex.WingRidersStableV2,
             output.toAddress,
             lpTokenAssetBalance.asset.identifier(),
             tokenA,
