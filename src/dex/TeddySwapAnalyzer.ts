@@ -155,6 +155,7 @@ export class TeddySwapAnalyzer extends BaseAmmDexAnalyzer {
                     Number(reserveB),
                     Number(MAX_INT - lpTokenAssetBalance.quantity),
                     (1000 - Number(datumParameters.LpFee)) / 10,
+                    (1000 - Number(datumParameters.LpFee)) / 10,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

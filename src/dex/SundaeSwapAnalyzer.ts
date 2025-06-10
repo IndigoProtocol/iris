@@ -252,6 +252,7 @@ export class SundaeSwapAnalyzer extends BaseAmmDexAnalyzer {
                         : relevantAssets[1].quantity),
                     Number(datumParameters.TotalLpTokens),
                     ((Number(datumParameters.LpFeeNumerator)) / Number(datumParameters.LpFeeDenominator)) * 100,
+                    ((Number(datumParameters.LpFeeNumerator)) / Number(datumParameters.LpFeeDenominator)) * 100,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

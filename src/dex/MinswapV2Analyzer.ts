@@ -239,6 +239,7 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
                     Number(datumParameters.ReserveB),
                     Number(datumParameters.TotalLpTokens),
                     Number(datumParameters.BaseFee) / 100,
+                    Number(datumParameters.BaseFee) / 100,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

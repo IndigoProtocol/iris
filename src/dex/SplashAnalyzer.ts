@@ -28,8 +28,16 @@ import { OperationStatus } from '../db/entities/OperationStatus';
  */
 const SPECTRUM_POOL_V1_CONTRACT_ADDRESS: string = 'addr1x8nz307k3sr60gu0e47cmajssy4fmld7u493a4xztjrll0aj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrswgxsta';
 const SPECTRUM_POOL_V2_CONTRACT_ADDRESS: string = 'addr1x94ec3t25egvhqy2n265xfhq882jxhkknurfe9ny4rl9k6dj764lvrxdayh2ux30fl0ktuh27csgmpevdu89jlxppvrst84slu';
-const DEPOSIT_CONTRACT_ADDRESS: string = 'addr1wyr4uz0tp75fu8wrg6gm83t20aphuc9vt6n8kvu09ctkugqpsrmeh';
-const WITHDRAW_CONTRACT_ADDRESS: string = 'addr1wxpa5704x8qel88ympf4natfdzn59nc9esj7609y3sczmmsasees8';
+const DEPOSIT_CONTRACT_ADDRESSES: string[] = [
+    'addr1wyr4uz0tp75fu8wrg6gm83t20aphuc9vt6n8kvu09ctkugqpsrmeh',
+    'addr1w95q755yrsr0xt8vmn007tpqee4hps49yjdef5dzknhl99qntsmh0',
+    'addr1wymhr2l96gm22xkwz0rn3zz79xz9l400nm5sa580kssdyagr5z7wq',
+];
+const WITHDRAW_CONTRACT_ADDRESSES: string[] = [
+    'addr1wxpa5704x8qel88ympf4natfdzn59nc9esj7609y3sczmmsasees8',
+    'addr1wxrl2p9s0tweu8t54cgz75at070ly3tda6yh5s7cufanfzc52gv39',
+    'addr1wxu29wa80fd4ptpfwqe20vpxrum45f57ud3r6egh9vuyhfc2a3jhj',
+];
 const CANCEL_ORDER_DATUM: string = 'd87980';
 const ORDER_SCRIPT_HASHES: string[] = [
     '2025463437ee5d64e89814a66ce7f98cb184a66ae85a2fbbfd750106',
@@ -175,9 +183,10 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
                     tokenA,
                     tokenB,
                     lpTokenBalance.asset,
-                    Number(reserveA) - Number(datumParameters.PoolAssetATreasury),
-                    Number(reserveB) - Number(datumParameters.PoolAssetBTreasury),
+                    Number(reserveA),
+                    Number(reserveB),
                     Number(MAX_INT - lpTokenBalance.quantity),
+                    (1 - (Number(datumParameters.LpFee) / 100000)) * 100,
                     (1 - (Number(datumParameters.LpFee) / 100000)) * 100,
                     transaction.blockSlot,
                     transaction.hash,
@@ -196,7 +205,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected depositOrders(transaction: Transaction): LiquidityPoolDeposit[] {
         return transaction.outputs.map((output: Utxo) => {
-            if (output.toAddress !== DEPOSIT_CONTRACT_ADDRESS || ! output.datum) {
+            if (! DEPOSIT_CONTRACT_ADDRESSES.includes(output.toAddress) || ! output.datum) {
                 return undefined;
             }
 
@@ -246,7 +255,7 @@ export class SplashAnalyzer extends BaseAmmDexAnalyzer {
      */
     protected withdrawOrders(transaction: Transaction): LiquidityPoolWithdraw[] {
         return transaction.outputs.map((output: Utxo) => {
-            if (output.toAddress !== WITHDRAW_CONTRACT_ADDRESS || ! output.datum) {
+            if (! WITHDRAW_CONTRACT_ADDRESSES.includes(output.toAddress) || ! output.datum) {
                 return undefined;
             }
 

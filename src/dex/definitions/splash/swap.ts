@@ -92,10 +92,8 @@ export default {
     {
       bytes: DatumParameterKey.SenderPubKeyHash
     },
-    [
-      {
-        bytes: DatumParameterKey.Batcher
-      }
-    ]
+    (field: DefinitionField, parameters: DatumParameters) => {
+      return parameters;
+    },
   ]
 }

@@ -212,6 +212,7 @@ export class MuesliSwapAnalyzer extends BaseHybridDexAnalyzer {
                     Number(reserveB),
                     Number(datumParameters.TotalLpTokens),
                     Number(datumParameters.LpFee) / 100,
+                    Number(datumParameters.LpFee) / 100,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

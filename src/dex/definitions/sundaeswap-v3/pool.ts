@@ -37,5 +37,15 @@ export default {
     (field: DefinitionField, parameters: DatumParameters) => {
       return parameters;
     },
+    (field: DefinitionField, parameters: DatumParameters) => {
+      return parameters;
+    },
+    (field: DefinitionField, parameters: DatumParameters) => {
+      if (field && 'int' in field) {
+        parameters.ProtocolFee = field.int;
+
+      }
+      return parameters;
+    },
   ],
 };

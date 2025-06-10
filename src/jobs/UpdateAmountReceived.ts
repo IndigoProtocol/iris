@@ -1,5 +1,5 @@
 import { BaseJob } from './BaseJob';
-import { EntityManager } from 'typeorm';
+import { Brackets, EntityManager } from 'typeorm';
 import { dbService } from '../indexerServices';
 import { AssetBalance, Utxo } from '../types';
 import { LiquidityPoolState } from '../db/entities/LiquidityPoolState';
@@ -30,44 +30,71 @@ export class UpdateAmountReceived extends BaseJob {
 
         let swapOrders: LiquidityPoolSwap[] | null = await dbService.dbSource.createQueryBuilder(LiquidityPoolSwap, 'orders')
             .leftJoinAndSelect('orders.swapOutToken', 'swapOutToken')
-            .where('orders.txHash IN(:...txHashes)', {
-                txHashes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.forTxHash),
-            })
-            .andWhere('orders.outputIndex IN(:...indexes)', {
-                indexes: this._liquidityPoolState.transactionInputs.map((input: Utxo) => input.index)
-            })
+            .where(new Brackets((query) => {
+                this._liquidityPoolState.transactionInputs.forEach((input: Utxo, index: number) => {
+                    query.orWhere(new Brackets((query1) => {
+                        const params: any = {};
+
+                        params[`txHash${index}`] = input.forTxHash;
+                        params[`index${index}`] = input.index;
+
+                        query1.where(`orders.txHash = :txHash${index}`, params)
+                            .andWhere(`orders.outputIndex = :index${index}`, params);
+                    }))
+                });
+            }))
             .andWhere('orders.liquidityPoolId = :poolId', { poolId: this._liquidityPoolState.liquidityPool.id })
+            .orderBy('orders.outputIndex', 'ASC')
             .getMany();
 
         // Could be a deposit / withdraw
         if (! swapOrders) return Promise.reject('Unable to find linked swap order to update amount received');
 
-        swapOrders = swapOrders.map((swapOrder: LiquidityPoolSwap) => {
-            const settledUtxo: Utxo | undefined = this._liquidityPoolState.transactionOutputs.find((utxo: Utxo) => {
-                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(utxo.toAddress);
+        const stakeKeys: string[] = [...new Set(swapOrders.map((order: LiquidityPoolSwap) => order.senderStakeKeyHash))];
 
-                return (addressDetails.paymentCredential && addressDetails.paymentCredential.hash === swapOrder.senderPubKeyHash)
-                    && (! swapOrder.senderStakeKeyHash || (addressDetails.stakeCredential && addressDetails.stakeCredential.hash === swapOrder.senderStakeKeyHash));
-            });
+        stakeKeys.forEach((stakeKey: string) => {
+            return swapOrders
+                ?.filter((order: LiquidityPoolSwap) => order.senderStakeKeyHash && order.senderStakeKeyHash === stakeKey)
+                .forEach((order: LiquidityPoolSwap, index: number) => {
+                    const possibleOutputs: Utxo[] = this._liquidityPoolState.transactionOutputs
+                        .filter((utxo: Utxo) => {
+                            const addressDetails: AddressDetails = lucidUtils.getAddressDetails(utxo.toAddress);
 
-            if (! settledUtxo) return undefined;
+                            return addressDetails.stakeCredential && addressDetails.stakeCredential.hash === order.senderStakeKeyHash;
+                        });
 
-            // 2 ADA as estimation for deposit returned
-            const amountToAddress: bigint = ! swapOrder.swapOutToken
-                ? settledUtxo.lovelaceBalance - 2_000000n
-                : settledUtxo.assetBalances.find((assetBalance: AssetBalance) => tokenId(assetBalance.asset) === tokenId(swapOrder.swapOutToken as Asset))?.quantity ?? 0n;
+                    if (possibleOutputs.length === 0) return;
 
-            if (amountToAddress === 0n) return undefined;
+                    logInfo(`[Queue] \t\t Updating receive for swap order ${order.txHash}`);
 
-            swapOrder.actualReceive = Number(amountToAddress);
+                    const settledUtxo: Utxo | undefined = possibleOutputs[index];
 
-            logInfo(`[Queue] \t\t Updating receive for swap order ${swapOrder.txHash}`);
+                    if (! settledUtxo) return;
 
-            return swapOrder;
-        }).filter((order: LiquidityPoolSwap | undefined) => order !== undefined) as LiquidityPoolSwap[];
+                    const amountToAddress: bigint = ! order.swapOutToken
+                        ? settledUtxo.lovelaceBalance - 2_000000n
+                        : settledUtxo.assetBalances.find((assetBalance: AssetBalance) => tokenId(assetBalance.asset) === tokenId(order.swapOutToken as Asset))?.quantity ?? 0n;
+
+                    if (amountToAddress === 0n) return undefined;
+
+                    order.actualReceive = Number(amountToAddress);
+                });
+        });
+
+        if (! swapOrders || swapOrders.length === 0) return Promise.resolve();
 
         return dbService.transaction((manager: EntityManager) => {
-            return manager.save(swapOrders);
+            return Promise.any(
+                swapOrders.map((order: LiquidityPoolSwap) => {
+                    return manager.createQueryBuilder()
+                        .update(LiquidityPoolSwap)
+                        .set({
+                            actualReceive: order.actualReceive,
+                        })
+                        .where('id = :id', { id: order.id })
+                        .execute()
+                })
+            );
         });
     }
 

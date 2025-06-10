@@ -41,7 +41,10 @@ export class LiquidityPoolState extends BaseEntity {
     tvl: number;
 
     @Column({ type: 'float' })
-    feePercent: number;
+    buyFeePercent: number;
+
+    @Column({ type: 'float' })
+    sellFeePercent: number;
 
     @Column({ type: 'bigint', unsigned: true })
     slot: number;
@@ -59,7 +62,8 @@ export class LiquidityPoolState extends BaseEntity {
         reserveA: number,
         reserveB: number,
         lpTokens: number,
-        feePercent: number,
+        buyFeePercent: number,
+        sellFeePercent: number,
         slot: number,
         txHash: string,
         spentInputs: OperationStatus[] = [],
@@ -73,7 +77,8 @@ export class LiquidityPoolState extends BaseEntity {
         instance.liquidityPoolIdentifier = liquidityPoolIdentifier;
         instance.tokenLp = tokenLp;
         instance.lpTokens = lpTokens;
-        instance.feePercent = feePercent;
+        instance.buyFeePercent = buyFeePercent;
+        instance.sellFeePercent = sellFeePercent;
         instance.slot = slot;
         instance.txHash = txHash;
         instance.possibleOperationInputs = spentInputs;

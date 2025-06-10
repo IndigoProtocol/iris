@@ -198,13 +198,14 @@ export class AmmOperationHandler {
                     type: 'LiquidityPoolUpdated',
                     data: liquidityPool,
                 });
-                eventService.pushEvent({
-                    type: 'LiquidityPoolSwapCreated',
-                    data: order,
-                });
 
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolSwap) => {
+                        eventService.pushEvent({
+                            type: 'LiquidityPoolSwapCreated',
+                            data: order,
+                        });
+
                         const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
@@ -297,13 +298,13 @@ export class AmmOperationHandler {
             if (liquidityPool) {
                 order.liquidityPool = liquidityPool;
 
-                eventService.pushEvent({
-                    type: 'LiquidityPoolZapCreated',
-                    data: order,
-                });
-
                 return await manager.save(order)
                     .then(async (entity: LiquidityPoolZap) => {
+                        eventService.pushEvent({
+                            type: 'LiquidityPoolZapCreated',
+                            data: order,
+                        });
+
                         const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
@@ -396,13 +397,13 @@ export class AmmOperationHandler {
             if (liquidityPool) {
                 deposit.liquidityPool = liquidityPool;
 
-                eventService.pushEvent({
-                    type: 'LiquidityPoolDepositCreated',
-                    data: deposit,
-                });
-
                 return await manager.save(deposit)
                     .then(async (entity: LiquidityPoolDeposit) => {
+                        eventService.pushEvent({
+                            type: 'LiquidityPoolDepositCreated',
+                            data: deposit,
+                        });
+
                         const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
@@ -471,13 +472,13 @@ export class AmmOperationHandler {
             if (liquidityPoolState) {
                 withdraw.liquidityPool = liquidityPoolState.liquidityPool;
 
-                eventService.pushEvent({
-                    type: 'LiquidityPoolWithdrawCreated',
-                    data: withdraw,
-                });
-
                 return await manager.save(withdraw)
                     .then(async (entity: LiquidityPoolWithdraw) => {
+                        eventService.pushEvent({
+                            type: 'LiquidityPoolWithdrawCreated',
+                            data: withdraw,
+                        });
+
                         const status: OperationStatus = await this.handleOperationStatus(
                             OperationStatus.make(
                                 DexOperationStatus.OnChain,
@@ -591,13 +592,13 @@ export class AmmOperationHandler {
                 }
             }
 
-            eventService.pushEvent({
-                type: 'AssetCreated',
-                data: asset,
-            });
-
             return await manager.save(asset)
                 .then(() => {
+                    eventService.pushEvent({
+                        type: 'AssetCreated',
+                        data: asset,
+                    });
+
                     operationWs.broadcast(asset);
 
                     return Promise.resolve(asset);
@@ -642,13 +643,13 @@ export class AmmOperationHandler {
                 state.slot,
             );
 
-            eventService.pushEvent({
-                type: 'LiquidityPoolCreated',
-                data: liquidityPool,
-            });
-
             return await manager.save(liquidityPool)
                 .then(() => {
+                    eventService.pushEvent({
+                        type: 'LiquidityPoolCreated',
+                        data: liquidityPool,
+                    });
+
                     operationWs.broadcast(liquidityPool);
 
                     return Promise.resolve(liquidityPool);

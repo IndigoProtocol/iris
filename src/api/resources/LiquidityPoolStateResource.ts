@@ -26,7 +26,8 @@ export class LiquidityPoolStateResource extends BaseEntityResource {
             reserveB: Number(entity.reserveB),
             lpTokens: Number(entity.lpTokens ?? 0),
             tvl: Number(entity.tvl ?? 0),
-            feePercent: Number(entity.feePercent ?? 0),
+            buyFeePercent: Number(entity.buyFeePercent ?? 0),
+            sellFeePercent: Number(entity.sellFeePercent ?? 0),
             slot: Number(entity.slot ?? 0),
         };
 
@@ -48,7 +49,8 @@ export class LiquidityPoolStateResource extends BaseEntityResource {
             rB: Number(entity.reserveB),
             lpTs: Number(entity.lpTokens),
             tvl: Number(entity.tvl),
-            f: Number(entity.feePercent),
+            bF: Number(entity.buyFeePercent ?? 0),
+            sF: Number(entity.sellFeePercent ?? 0),
             s: Number(entity.slot),
         };
 

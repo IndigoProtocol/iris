@@ -165,6 +165,7 @@ export class VyFiAnalyzer extends BaseAmmDexAnalyzer {
                     Number(reserveB),
                     Number(datumParameters.TotalLpTokens),
                     poolMapping.feePercent,
+                    poolMapping.feePercent,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

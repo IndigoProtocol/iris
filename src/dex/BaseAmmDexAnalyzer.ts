@@ -88,9 +88,11 @@ export abstract class BaseAmmDexAnalyzer {
         const containsOrderAddress: boolean = transaction.scriptHashes?.some((scriptHash: string) => {
             return orderAddresses.includes(scriptHashToAddress(scriptHash)) || orderAddresses.includes(scriptHash);
         }) ?? false;
-        const containsReference: boolean = transaction.references?.some((reference: Utxo) => {
-            return referenceHashes.includes(reference.forTxHash);
-        }) ?? false;
+        const containsReference: boolean = transaction.references !== undefined
+            && transaction.references.length === 1
+            && transaction.references.some((reference: Utxo) => {
+                return referenceHashes.includes(reference.forTxHash);
+            });
 
         if (! containsOrderAddress && ! containsReference) return [];
 

@@ -202,23 +202,24 @@ export class AssetController extends BaseApiController {
                     policyId: tokenPolicyId,
                     nameHex: tokenNameHex,
                 })
-                .andWhere('latestState.tvl >= :minTvl', { minTvl: 100_000_000000 })
                 .getMany();
         }).then((liquidityPools: LiquidityPool[]) => {
             if (liquidityPools.length === 0) {
                 return response.send({ price: 0 });
             }
 
-            const avgPrice: number = liquidityPools.reduce((avgPrice: number, pool: LiquidityPool) => {
-                const tokenADecimals: number = 6;
-                const tokenBDecimals: number = pool.tokenB.decimals ?? 0;
-                const price: number = (pool.latestState.reserveA / 10**tokenADecimals) / (pool.latestState.reserveB / 10**tokenBDecimals);
+            const tokenADecimals: number = 6;
+            const tokenBDecimals: number = liquidityPools[0].tokenB.decimals ?? 0;
 
-                return avgPrice + price;
-            }, 0) / liquidityPools.length;
+            const totalReserveA: number = liquidityPools.reduce((total: number, pool: LiquidityPool) => {
+                return total + Number(pool.latestState.reserveA) / 10**tokenADecimals;
+            }, 0);
+            const totalReserveB: number = liquidityPools.reduce((total: number, pool: LiquidityPool) => {
+                return total + Number(pool.latestState.reserveB) / 10**tokenBDecimals;
+            }, 0);
 
-            return response.send({ price: avgPrice });
-        }).catch(() => response.send(super.failResponse('Unable to retrieve asset price')));
+            return response.send({ price: totalReserveA / totalReserveB });
+        }).catch(() => response.send('Unable to retrieve asset price'));
     }
 
     private ticks(request: express.Request, response: express.Response) {

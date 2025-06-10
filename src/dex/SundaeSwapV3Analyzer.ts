@@ -34,7 +34,7 @@ const CANCEL_ORDER_DATUM: string = 'd87980';
 const DEPOSIT_FEE: bigint = 2_000000n;
 const ORDER_SCRIPT_HASH: string = 'fa6a58bbe2d0ff05534431c8e2f0ef2cbdc1602a8456e4b13c8f3077';
 const CANCEL_REFERENCE_TX_HASHES: string[] = [
-    'f9121bf01434f6c263d5b1ffa35a155bed37a1aba641a209b35da7c841082d7b',
+    'f5f1bdfad3eb4d67d2fc36f36f47fc2938cf6f001689184ab320735a28642cf2',
 ];
 
 export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
@@ -245,13 +245,14 @@ export class SundaeSwapV3Analyzer extends BaseAmmDexAnalyzer {
                     tokenB,
                     lpToken,
                     Number(tokenA === 'lovelace'
-                        ? output.lovelaceBalance
+                        ? output.lovelaceBalance - BigInt(datumParameters.ProtocolFee ?? 0)
                         : relevantAssets[0].quantity),
                     Number(tokenA === 'lovelace'
                         ? relevantAssets[0].quantity
                         : relevantAssets[1].quantity),
                     Number(datumParameters.TotalLpTokens),
                     Number(datumParameters.OpeningFee) / 100,
+                    Number(datumParameters.FinalFee) / 100,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

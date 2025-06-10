@@ -235,6 +235,7 @@ export class MinswapAnalyzer extends BaseAmmDexAnalyzer {
                     Number(reserveB),
                     Number(datumParameters.TotalLpTokens),
                     FEE_PERCENT,
+                    FEE_PERCENT,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,

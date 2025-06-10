@@ -297,18 +297,18 @@ export class LiquidityPoolController extends BaseApiController {
                         if (tokenA === 'lovelace') {
                             query.andWhere('pools.tokenA IS NULL');
                         } else if (tokenAPolicyId && tokenANameHex) {
-                            query.andWhere("tokenA.policyId = :policyId", {
-                                policyId: tokenAPolicyId,
-                            }).andWhere("tokenA.nameHex = :nameHex", {
-                                nameHex: tokenANameHex,
+                            query.andWhere("tokenA.policyId = :policyIdA", {
+                                policyIdA: tokenAPolicyId,
+                            }).andWhere("tokenA.nameHex = :nameHexA", {
+                                nameHexA: tokenANameHex,
                             });
                         }
 
                         if (tokenBPolicyId && tokenBNameHex) {
-                            query.andWhere("tokenB.policyId = :policyId", {
-                                policyId: tokenBPolicyId,
-                            }).andWhere("tokenB.nameHex = :nameHex", {
-                                nameHex: tokenBNameHex,
+                            query.andWhere("tokenB.policyId = :policyIdB", {
+                                policyIdB: tokenBPolicyId,
+                            }).andWhere("tokenB.nameHex = :nameHexB", {
+                                nameHexB: tokenBNameHex,
                             });
                         }
 
@@ -428,7 +428,7 @@ export class LiquidityPoolController extends BaseApiController {
             });
         };
 
-        return dbApiService.transaction(fetchTicks)
+        return dbApiService.query(fetchTicks)
             .then((ticks: LiquidityPoolTick[]) => {
                 const resource: LiquidityPoolTickResource = new LiquidityPoolTickResource();
 

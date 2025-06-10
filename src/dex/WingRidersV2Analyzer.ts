@@ -208,6 +208,7 @@ export class WingRidersV2Analyzer extends BaseAmmDexAnalyzer {
                         : reserveB),
                     Number(MAX_INT - lpTokenAssetBalance.quantity),
                     FEE_PERCENT,
+                    FEE_PERCENT,
                     transaction.blockSlot,
                     transaction.hash,
                     possibleOperationStatuses,
