@@ -78,6 +78,8 @@ export class UpdateAmountReceived extends BaseJob {
                     if (amountToAddress === 0n) return undefined;
 
                     order.actualReceive = Number(amountToAddress);
+
+                    return;
                 });
         });
 
@@ -85,7 +87,7 @@ export class UpdateAmountReceived extends BaseJob {
 
         return dbService.transaction((manager: EntityManager) => {
             return Promise.any(
-                swapOrders.map((order: LiquidityPoolSwap) => {
+                (swapOrders || []).map((order: LiquidityPoolSwap) => {
                     return manager.createQueryBuilder()
                         .update(LiquidityPoolSwap)
                         .set({
