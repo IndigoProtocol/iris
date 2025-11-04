@@ -1,5 +1,5 @@
 import { BaseIndexer } from './BaseIndexer';
-import { Slot, BlockPraos, Transaction as OgmiosTransaction } from '@cardano-ogmios/schema';
+import { Slot, BlockPraos } from '@cardano-ogmios/schema';
 import { BaseAmmDexAnalyzer } from '../dex/BaseAmmDexAnalyzer';
 import { AmmDexOperation, Transaction } from '../types';
 import { dbService } from '../indexerServices';
@@ -22,58 +22,57 @@ export class AmmDexTransactionIndexer extends BaseIndexer {
     }
 
     async onRollForward(block: BlockPraos): Promise<any> {
-        const operationPromises: Promise<AmmDexOperation[]>[] = (block.transactions ?? []).map((transaction: OgmiosTransaction) => {
-            return this._analyzers.map((analyzer: BaseAmmDexAnalyzer) => {
-                const tx: Transaction = formatTransaction(block, transaction);
+        for (const transaction of (block.transactions ?? [])) {
+            const operations: AmmDexOperation[] = (
+                await Promise.all(
+                    this._analyzers.map((analyzer: BaseAmmDexAnalyzer) => {
+                        const tx: Transaction = formatTransaction(block, transaction);
 
-                if (analyzer.startSlot > tx.blockSlot) return [];
+                        if (analyzer.startSlot > tx.blockSlot) return [];
 
-                return analyzer.analyzeTransaction(tx);
-            });
-        }).flat(2);
-
-        return await Promise.all(operationPromises)
-            .then(async (operationsUnSorted: AmmDexOperation[][]) => {
-                const operations: AmmDexOperation[] = operationsUnSorted.flat();
-
-                const sortedOperations: AmmDexOperation[] = operations
-                    .sort((a: AmmDexOperation, b: AmmDexOperation) => {
-                        // Prioritize new LP states before other operations
-                        if (a instanceof LiquidityPoolState) {
-                            return -1;
-                        }
-                        if (b instanceof LiquidityPoolState) {
-                            return 1;
-                        }
-                        return 0;
+                        return analyzer.analyzeTransaction(tx);
                     })
-                    .sort((a: AmmDexOperation, b: AmmDexOperation) => {
-                        // Prioritize orders if in same block as corresponding state
-                        const inLpState = (txHash: string): boolean => {
-                            return operations.some((operation: AmmDexOperation) => {
-                                if (! (operation instanceof LiquidityPoolState)) return false;
+                )
+            ).flat();
 
-                                const operationTxHashes: string[] = operation.possibleOperationInputs
-                                    .map((operationInput: OperationStatus) => operationInput.operationTxHash);
+            const sortedOperations: AmmDexOperation[] = operations
+                .sort((a: AmmDexOperation, b: AmmDexOperation) => {
+                    // Prioritize new LP states before other operations
+                    if (a instanceof LiquidityPoolState) {
+                        return -1;
+                    }
+                    if (b instanceof LiquidityPoolState) {
+                        return 1;
+                    }
+                    return 0;
+                })
+                .sort((a: AmmDexOperation, b: AmmDexOperation) => {
+                    // Prioritize orders if in same block as corresponding state
+                    const inLpState = (txHash: string): boolean => {
+                        return operations.some((operation: AmmDexOperation) => {
+                            if (! (operation instanceof LiquidityPoolState)) return false;
 
-                                return operationTxHashes.includes(txHash);
-                            });
-                        }
+                            const operationTxHashes: string[] = operation.possibleOperationInputs
+                                .map((operationInput: OperationStatus) => operationInput.operationTxHash);
 
-                        if (inLpState(a.txHash)) {
-                            return -1;
-                        }
-                        if (inLpState(b.txHash)) {
-                            return 1;
-                        }
-                        return 0;
-                    });
+                            return operationTxHashes.includes(txHash);
+                        });
+                    }
 
-                // Synchronize updates. 'forEach' is not sequential
-                for (const operation of sortedOperations) {
-                    await this._handler.handle(operation);
-                }
-            });
+                    if (inLpState(a.txHash)) {
+                        return -1;
+                    }
+                    if (inLpState(b.txHash)) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
+            // Synchronize updates. 'forEach' is not sequential
+            for (const operation of sortedOperations) {
+                await this._handler.handle(operation);
+            }
+        }
     }
 
     async onRollBackward(blockHash: string, slot: Slot): Promise<any> {
