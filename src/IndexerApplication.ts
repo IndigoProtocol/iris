@@ -33,6 +33,10 @@ import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
 import { SplashAnalyzer } from './dex/SplashAnalyzer';
 import config from './config';
 import { SplashPreprodAnalyzer } from './dex/SplashPreprodAnalyzer';
+import { ProtocolTransactionIndexer } from './indexers/ProtocolTransactionIndexer';
+import { IndigoAnalyzer } from './protocol/IndigoAnalyzer';
+import { LiqwidAnalyzer } from './protocol/LiqwidAnalyzer';
+import { BodegaAnalyzer } from './protocol/BodegaAnalyzer';
 
 export class IndexerApplication {
 
@@ -66,6 +70,11 @@ export class IndexerApplication {
             ]),
             new HybridDexTransactionIndexer([
                 new MuesliSwapAnalyzer(this),
+            ]),
+            new ProtocolTransactionIndexer([
+                new IndigoAnalyzer(this),
+                new LiqwidAnalyzer(this),
+                new BodegaAnalyzer(this),
             ]),
         ]
     : [

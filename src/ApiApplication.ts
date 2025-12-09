@@ -14,6 +14,9 @@ import { ApplicationContext } from './constants';
 import { OrdersController } from './api/controllers/OrdersController';
 import { PingController } from './api/controllers/PingController';
 import { OrderBookController } from './api/controllers/OrderBookController';
+import { IndigoController } from './api/controllers/IndigoController';
+import { LiqwidController } from './api/controllers/LiqwidController';
+import { BodegaController } from './api/controllers/BodegaController';
 
 export class ApiApplication {
 
@@ -59,6 +62,9 @@ export class ApiApplication {
             new OrderBookController('/order-books'),
             new DexController('/dex'),
             new OrdersController('/orders'),
+            new IndigoController('/indigo'),
+            new LiqwidController('/liqwid'),
+            new BodegaController('/bodega'),
         ];
 
         controllers.forEach((controller: BaseApiController) => {

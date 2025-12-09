@@ -78,6 +78,8 @@ export type AmmDexOperation = LiquidityPoolState
     | LiquidityPoolZap
     | OperationStatus;
 
+export type ProtocolOperation = {};
+
 export type OrderBookOrderCancellation = {
     type: 'OrderBookOrderCancellation',
     senderPubKeyHash: string | null,
