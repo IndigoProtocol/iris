@@ -1,5 +1,6 @@
 import { AmmDexOperation, ProtocolOperation, Transaction } from '../types';
 import { IndexerApplication } from '../IndexerApplication';
+import { BlockPraos } from '@cardano-ogmios/schema';
 
 export abstract class BaseProtocolAnalyzer {
 
@@ -12,5 +13,7 @@ export abstract class BaseProtocolAnalyzer {
     }
 
     public abstract analyzeTransaction(transaction: Transaction): Promise<ProtocolOperation[]>;
+
+    public onBlock?(block: BlockPraos): Promise<any>;
 
 }

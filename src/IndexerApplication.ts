@@ -32,9 +32,9 @@ import { SplashAnalyzer } from './dex/SplashAnalyzer';
 import config from './config';
 import { SplashPreprodAnalyzer } from './dex/SplashPreprodAnalyzer';
 import { ProtocolTransactionIndexer } from './indexers/ProtocolTransactionIndexer';
-import { IndigoAnalyzer } from './protocol/IndigoAnalyzer';
 import { LiqwidAnalyzer } from './protocol/LiqwidAnalyzer';
 import { BodegaAnalyzer } from './protocol/BodegaAnalyzer';
+import { IndigoIndexer } from './indexers/IndigoIndexer';
 
 export class IndexerApplication {
 
@@ -47,28 +47,28 @@ export class IndexerApplication {
     /**
      * Indexers to make aware of new blocks & rollbacks.
      */
-    private _indexers: BaseIndexer[] = config.NETWORK === 'mainnet'
+    private _indexers: BaseIndexer[] = config.NETWORK_ID === 'mainnet'
         ? [
             new SyncIndexer(),
-            new AmmDexTransactionIndexer([
-                new MinswapAnalyzer(this),
-                new MinswapV2Analyzer(this),
-                new SundaeSwapAnalyzer(this),
-                new SundaeSwapV3Analyzer(this),
-                new WingRidersAnalyzer(this),
-                new WingRidersV2Analyzer(this),
-                new SpectrumAnalyzer(this),
-                new SplashAnalyzer(this),
-                new VyFiAnalyzer(this),
-            ]),
-            new HybridDexTransactionIndexer([
-                new MuesliSwapAnalyzer(this),
-            ]),
-            new ProtocolTransactionIndexer([
-                new IndigoAnalyzer(this),
-                new LiqwidAnalyzer(this),
-                new BodegaAnalyzer(this),
-            ]),
+            new IndigoIndexer(),
+            // new AmmDexTransactionIndexer([
+            //     new MinswapAnalyzer(this),
+            //     new MinswapV2Analyzer(this),
+            //     new SundaeSwapAnalyzer(this),
+            //     new SundaeSwapV3Analyzer(this),
+            //     new WingRidersAnalyzer(this),
+            //     new WingRidersV2Analyzer(this),
+            //     new SpectrumAnalyzer(this),
+            //     new SplashAnalyzer(this),
+            //     new VyFiAnalyzer(this),
+            // ]),
+            // new HybridDexTransactionIndexer([
+            //     new MuesliSwapAnalyzer(this),
+            // ]),
+            // new ProtocolTransactionIndexer([
+            //     new LiqwidAnalyzer(this),
+            //     new BodegaAnalyzer(this),
+            // ]),
         ]
     : [
         new SyncIndexer(),

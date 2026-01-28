@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 type Config = {
-    NETWORK: string,
+    NETWORK_ID: string,
     LOG_DIR: string,
     VERBOSE: boolean,
 
@@ -26,7 +26,7 @@ type Config = {
 }
 
 const CONFIG: Config = {
-    NETWORK: process.env.NETWORK || 'mainnet',
+    NETWORK_ID: process.env.NETWORK_ID || 'mainnet',
     LOG_DIR: process.env.LOG_DIR || 'logs',
     VERBOSE: process.env.VERBOSE === 'true',
 

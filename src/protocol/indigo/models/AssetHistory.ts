@@ -1,0 +1,24 @@
+export type AssetHistoryRow = {
+    hash: string;
+    slot: number;
+    output_hash: string;
+    output_index: number;
+    asset: string;
+    oracle_nft_cs?: string;
+    oracle_nft_tn?: string;
+    interest_oracle_nft_cs?: string;
+    interest_oracle_nft_tn?: string;
+    delist_price?: number;
+    mcr?: number;
+    redemption_ratio_percentage?: number;
+    maintenance_ratio_percentage?: number;
+    liquidation_ratio_percentage?: number;
+    debt_minting_fee_percentage?: number;
+    liquidation_processing_fee_percentage?: number;
+    stability_pool_withdrawal_fee_percentage?: number;
+    redemption_reimbursement_percentage?: number;
+    redemption_processing_fee_percentage?: number;
+    interest_collector_portion_percentage?: number;
+    base_rates?: string;
+    version: string;
+};
