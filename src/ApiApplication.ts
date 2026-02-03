@@ -63,7 +63,6 @@ export class ApiApplication {
             new DexController('/dex'),
             new OrdersController('/orders'),
             new IndigoController('/indigo'),
-            new LiqwidController('/liqwid'),
             new BodegaController('/bodega'),
         ];
 

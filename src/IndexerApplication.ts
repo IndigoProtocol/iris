@@ -31,10 +31,8 @@ import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
 import { SplashAnalyzer } from './dex/SplashAnalyzer';
 import config from './config';
 import { SplashPreprodAnalyzer } from './dex/SplashPreprodAnalyzer';
-import { ProtocolTransactionIndexer } from './indexers/ProtocolTransactionIndexer';
-import { LiqwidAnalyzer } from './protocol/LiqwidAnalyzer';
-import { BodegaAnalyzer } from './protocol/BodegaAnalyzer';
 import { IndigoIndexer } from './indexers/IndigoIndexer';
+import { BodegaIndexer } from './indexers/BodegaIndexer';
 
 export class IndexerApplication {
 
@@ -51,24 +49,21 @@ export class IndexerApplication {
         ? [
             new SyncIndexer(),
             new IndigoIndexer(),
-            // new AmmDexTransactionIndexer([
-            //     new MinswapAnalyzer(this),
-            //     new MinswapV2Analyzer(this),
-            //     new SundaeSwapAnalyzer(this),
-            //     new SundaeSwapV3Analyzer(this),
-            //     new WingRidersAnalyzer(this),
-            //     new WingRidersV2Analyzer(this),
-            //     new SpectrumAnalyzer(this),
-            //     new SplashAnalyzer(this),
-            //     new VyFiAnalyzer(this),
-            // ]),
-            // new HybridDexTransactionIndexer([
-            //     new MuesliSwapAnalyzer(this),
-            // ]),
-            // new ProtocolTransactionIndexer([
-            //     new LiqwidAnalyzer(this),
-            //     new BodegaAnalyzer(this),
-            // ]),
+            new BodegaIndexer(),
+            new AmmDexTransactionIndexer([
+                new MinswapAnalyzer(this),
+                new MinswapV2Analyzer(this),
+                new SundaeSwapAnalyzer(this),
+                new SundaeSwapV3Analyzer(this),
+                new WingRidersAnalyzer(this),
+                new WingRidersV2Analyzer(this),
+                new SpectrumAnalyzer(this),
+                new SplashAnalyzer(this),
+                new VyFiAnalyzer(this),
+            ]),
+            new HybridDexTransactionIndexer([
+                new MuesliSwapAnalyzer(this),
+            ]),
         ]
     : [
         new SyncIndexer(),
