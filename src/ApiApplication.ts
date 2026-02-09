@@ -64,6 +64,7 @@ export class ApiApplication {
             new OrdersController('/orders'),
             new IndigoController('/indigo'),
             new BodegaController('/bodega'),
+            new LiqwidController('/liqwid'),
         ];
 
         controllers.forEach((controller: BaseApiController) => {

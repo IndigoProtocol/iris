@@ -33,6 +33,7 @@ import config from './config';
 import { SplashPreprodAnalyzer } from './dex/SplashPreprodAnalyzer';
 import { IndigoIndexer } from './indexers/IndigoIndexer';
 import { BodegaIndexer } from './indexers/BodegaIndexer';
+import { LiqwidIndexer } from './indexers/LiqwidIndexer';
 
 export class IndexerApplication {
 
@@ -47,23 +48,24 @@ export class IndexerApplication {
      */
     private _indexers: BaseIndexer[] = config.NETWORK_ID === 'mainnet'
         ? [
-            new SyncIndexer(),
-            new IndigoIndexer(),
-            new BodegaIndexer(),
-            new AmmDexTransactionIndexer([
-                new MinswapAnalyzer(this),
-                new MinswapV2Analyzer(this),
-                new SundaeSwapAnalyzer(this),
-                new SundaeSwapV3Analyzer(this),
-                new WingRidersAnalyzer(this),
-                new WingRidersV2Analyzer(this),
-                new SpectrumAnalyzer(this),
-                new SplashAnalyzer(this),
-                new VyFiAnalyzer(this),
-            ]),
-            new HybridDexTransactionIndexer([
-                new MuesliSwapAnalyzer(this),
-            ]),
+            // new SyncIndexer(),
+            // new IndigoIndexer(),
+            // new BodegaIndexer(),
+            new LiqwidIndexer(),
+            // new AmmDexTransactionIndexer([
+            //     new MinswapAnalyzer(this),
+            //     new MinswapV2Analyzer(this),
+            //     new SundaeSwapAnalyzer(this),
+            //     new SundaeSwapV3Analyzer(this),
+            //     new WingRidersAnalyzer(this),
+            //     new WingRidersV2Analyzer(this),
+            //     new SpectrumAnalyzer(this),
+            //     new SplashAnalyzer(this),
+            //     new VyFiAnalyzer(this),
+            // ]),
+            // new HybridDexTransactionIndexer([
+            //     new MuesliSwapAnalyzer(this),
+            // ]),
         ]
     : [
         new SyncIndexer(),
