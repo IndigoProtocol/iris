@@ -19,8 +19,6 @@ import { SyncIndexer } from './indexers/SyncIndexer';
 import { EntityManager } from 'typeorm';
 import { Sync } from './db/entities/Sync';
 import { FIRST_SYNC_BLOCK_HASH, FIRST_SYNC_SLOT } from './constants';
-import { TeddySwapAnalyzer } from './dex/TeddySwapAnalyzer';
-import { OrderBookDexTransactionIndexer } from './indexers/OrderBookDexTransactionIndexer';
 import { BaseEventListener } from './listeners/BaseEventListener';
 import { MuesliSwapAnalyzer } from './dex/MuesliSwapAnalyzer';
 import { CacheStorage } from './storage/CacheStorage';
@@ -33,6 +31,9 @@ import { WingRidersV2Analyzer } from './dex/WingRidersV2Analyzer';
 import { SplashAnalyzer } from './dex/SplashAnalyzer';
 import config from './config';
 import { SplashPreprodAnalyzer } from './dex/SplashPreprodAnalyzer';
+import { IndigoIndexer } from './indexers/IndigoIndexer';
+import { BodegaIndexer } from './indexers/BodegaIndexer';
+import { LiqwidIndexer } from './indexers/LiqwidIndexer';
 
 export class IndexerApplication {
 
@@ -45,28 +46,26 @@ export class IndexerApplication {
     /**
      * Indexers to make aware of new blocks & rollbacks.
      */
-    private _indexers: BaseIndexer[] = config.NETWORK === 'mainnet'
+    private _indexers: BaseIndexer[] = config.NETWORK_ID === 'mainnet'
         ? [
-            new SyncIndexer(),
-            new AmmDexTransactionIndexer([
-                new MinswapAnalyzer(this),
-                new MinswapV2Analyzer(this),
-                new SundaeSwapAnalyzer(this),
-                new SundaeSwapV3Analyzer(this),
-                new WingRidersAnalyzer(this),
-                new WingRidersV2Analyzer(this),
-                new SpectrumAnalyzer(this),
-                new SplashAnalyzer(this),
-                new TeddySwapAnalyzer(this),
-                new VyFiAnalyzer(this),
-            ]),
-            new OrderBookDexTransactionIndexer([
-                // new GeniusYieldAnalyzer(this),
-                // new AxoAnalyzer(this),
-            ]),
-            new HybridDexTransactionIndexer([
-                new MuesliSwapAnalyzer(this),
-            ]),
+            // new SyncIndexer(),
+            // new IndigoIndexer(),
+            // new BodegaIndexer(),
+            new LiqwidIndexer(),
+            // new AmmDexTransactionIndexer([
+            //     new MinswapAnalyzer(this),
+            //     new MinswapV2Analyzer(this),
+            //     new SundaeSwapAnalyzer(this),
+            //     new SundaeSwapV3Analyzer(this),
+            //     new WingRidersAnalyzer(this),
+            //     new WingRidersV2Analyzer(this),
+            //     new SpectrumAnalyzer(this),
+            //     new SplashAnalyzer(this),
+            //     new VyFiAnalyzer(this),
+            // ]),
+            // new HybridDexTransactionIndexer([
+            //     new MuesliSwapAnalyzer(this),
+            // ]),
         ]
     : [
         new SyncIndexer(),
@@ -196,8 +195,6 @@ export class IndexerApplication {
          * MuesliSwap    - 64985346,  8cfa563e6f3ed6e810e95b6fce681b3e974ac311b0e6066e3f97528a7bef5eca
          * VyFi          - 92003644,  bc671f811db2d4ecb25fd11e444aee98a42eb0132729982f9cd7f80a1bc84b73
          * Spectrum      - 98301694,  d0d2abcaf741be13d353ac80b0f9001d7b323a2b5827ff2dce6480bf032dd3db
-         * TeddySwap     - 109078697, 8494922f6266885a671408055d7123e1c7bdf78b9cd86720680c55c1f94e839e
-         * GeniusYield   - 110315300, d7281a52d68eef89a7472860fdece323ecc39d3054cdd1fa0825afe56b942a86
          * Splash        - 116958314, 6e783dc520d3e9991e52098c280b7156c6c8dd58446f3db59af04d50a65987d5
          * SundaeSwap v3 - 123703733, 3e5f5bca1d1ae0749c808d29817212ef64606c79732d238d6492a085057b493f
          * Minswap v2    - 128247239, d7edc62dcfeb8e809f4a8584354b9bf0df640d365ff47cb26a0f9e972ba1dca4
