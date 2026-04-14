@@ -27,6 +27,16 @@ export class TokenMetadataService extends BaseService {
                 logo: response.data.logo?.value ?? '',
                 description: response.data.description?.value ?? '',
             }
+        }).catch((e) => {
+            return {
+                policyId: policyId,
+                nameHex: nameHex,
+                name: '',
+                decimals: 0,
+                ticker: '',
+                logo: '',
+                description: '',
+            }
         });
     }
 

@@ -48,21 +48,21 @@ export class IndexerApplication {
      */
     private _indexers: BaseIndexer[] = config.NETWORK_ID === 'mainnet'
         ? [
-            // new SyncIndexer(),
-            // new IndigoIndexer(),
-            // new BodegaIndexer(),
+            new SyncIndexer(),
+            new IndigoIndexer(),
+            new BodegaIndexer(),
             new LiqwidIndexer(),
-            // new AmmDexTransactionIndexer([
-            //     new MinswapAnalyzer(this),
-            //     new MinswapV2Analyzer(this),
-            //     new SundaeSwapAnalyzer(this),
-            //     new SundaeSwapV3Analyzer(this),
-            //     new WingRidersAnalyzer(this),
-            //     new WingRidersV2Analyzer(this),
-            //     new SpectrumAnalyzer(this),
-            //     new SplashAnalyzer(this),
-            //     new VyFiAnalyzer(this),
-            // ]),
+            new AmmDexTransactionIndexer([
+                new MinswapAnalyzer(this),
+                new MinswapV2Analyzer(this),
+                new SundaeSwapAnalyzer(this),
+                new SundaeSwapV3Analyzer(this),
+                new WingRidersAnalyzer(this),
+                new WingRidersV2Analyzer(this),
+                new SpectrumAnalyzer(this),
+                new SplashAnalyzer(this),
+                new VyFiAnalyzer(this),
+            ]),
             // new HybridDexTransactionIndexer([
             //     new MuesliSwapAnalyzer(this),
             // ]),

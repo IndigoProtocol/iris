@@ -1,11 +1,9 @@
 openapi: 3.0.2
 info:
-  version: '1.0.0'
-
+  version: "1.0.0"
   title: API
-
   description: |
-    API to retrieve liquidity pools, asset, and order information from supported Cardano DEXs.
+    API to retrieve liquidity pools, assets, and order information from supported Cardano DEXs.
 
 tags:
   - name: Ping
@@ -15,40 +13,51 @@ tags:
   - name: Liquidity Pools
   - name: Orders
   - name: Swap
+  - name: Liqwid
+  - name: Indigo
+  - name: Bodega
+
 servers:
-  - url: "http://api-url.com/api/"
+  - url: http://api-url.com/api/
 
 paths:
-  '/ping':
+  /ping:
     get:
       tags:
         - Ping
       summary: Ping API status
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
-              example:
-                status: true
-  '/sync':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                required:
+                  - status
+
+  /sync:
     get:
       tags:
         - Sync
       summary: Get latest sync
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sync'
+                $ref: "#/components/schemas/Sync"
 
   /assets:
     get:
       tags:
         - Assets
-      summary: Retreive assets
+      summary: Retrieve assets
       parameters:
         - name: page
           in: query
@@ -59,12 +68,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetResponse'
+                $ref: "#/components/schemas/AssetResponse"
     post:
       tags:
         - Assets
@@ -78,81 +87,94 @@ paths:
           in: query
           schema:
             type: integer
-        - name: policyId
-          in: body
-          schema:
-            type: string
-        - name: nameHex
-          in: body
-          schema:
-            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                policyId:
+                  type: string
+                nameHex:
+                  type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetResponse'
+                $ref: "#/components/schemas/AssetResponse"
 
-  /assets/:asset:
+  /assets/{asset}:
     get:
       tags:
         - Assets
-      summary: Retreive specific asset
+      summary: Retrieve specific asset
       parameters:
         - name: asset
           in: path
           required: true
-          example: 'policyId.nameHex'
+          description: Asset identifier in the form policyId.nameHex
           schema:
             type: string
+            example: policyId.nameHex
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Asset'
+                $ref: "#/components/schemas/Asset"
 
-  /assets/:asset/price:
+  /assets/{asset}/price:
     get:
       tags:
         - Assets
-      summary: Retreive avg. asset price across DEXs
+      summary: Retrieve average asset price across DEXs
       parameters:
         - name: asset
           in: path
           required: true
-          example: 'policyId.nameHex'
+          description: Asset identifier in the form policyId.nameHex
           schema:
             type: string
+            example: policyId.nameHex
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
-              example:
-                price: 7.09845734
+              schema:
+                type: object
+                properties:
+                  price:
+                    type: number
+                    format: double
+                    example: 7.09845734
+                required:
+                  - price
 
-  /assets/:lpToken/pool:
+  /assets/{lpToken}/pool:
     get:
       tags:
         - Assets
-      summary: Retreive liquidity pool for a LP token
+      summary: Retrieve liquidity pool for an LP token
       parameters:
         - name: lpToken
           in: path
           required: true
-          example: 'policyId.nameHex'
+          description: LP token identifier in the form policyId.nameHex
           schema:
             type: string
+            example: policyId.nameHex
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LiquidityPool'
+                $ref: "#/components/schemas/LiquidityPool"
 
   /assets/search:
     get:
@@ -173,12 +195,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetResponse'
+                $ref: "#/components/schemas/AssetResponse"
 
   /dex/metadata:
     get:
@@ -186,126 +208,116 @@ paths:
         - DEX
       summary: DEX metadata
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DexMetadataResponse'
+                $ref: "#/components/schemas/DexMetadataResponse"
 
   /swap/route/receive:
     post:
       tags:
         - Swap
       summary: Route swap order given a swap in amount
-      parameters:
-        - name: dexs
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of DEX names to include in order routing (could be split)
-        - name: swapInToken
-          in: body
-          required: true
-          schema:
-            type: string
-            description: "lovelace or token policy ID & name hex"
-            example: lovelace
-        - name: swapOutToken
-          in: body
-          required: true
-          schema:
-            type: string
-            description: "lovelace or token policy ID & name hex"
-            example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
-        - name: swapInAmount
-          in: body
-          required: true
-          schema:
-            type: string
-            description: Amount in lovelace
-            example: 1000_000000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dexs
+                - swapInToken
+                - swapOutToken
+                - swapInAmount
+              properties:
+                dexs:
+                  type: array
+                  description: Array of DEX names to include in order routing (could be split)
+                  items:
+                    type: string
+                swapInToken:
+                  type: string
+                  description: lovelace or token policy ID & name hex
+                  example: lovelace
+                swapOutToken:
+                  type: string
+                  description: lovelace or token policy ID & name hex
+                  example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
+                swapInAmount:
+                  type: string
+                  description: Amount in lovelace
+                  example: "1000000000"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderRouteResponse'
+                $ref: "#/components/schemas/OrderRouteResponse"
 
   /swap/route/send:
     post:
       tags:
         - Swap
       summary: Route swap order given a swap out amount
-      parameters:
-        - name: dexs
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of DEX names to include in order routing (could be split)
-        - name: swapInToken
-          in: body
-          required: true
-          schema:
-            type: string
-            description: "lovelace or token policy ID & name hex"
-            example: lovelace
-        - name: swapOutToken
-          in: body
-          required: true
-          schema:
-            type: string
-            description: "lovelace or token policy ID & name hex"
-            example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
-        - name: swapInAmount
-          in: body
-          required: true
-          schema:
-            type: string
-            description: Amount in lovelace
-            example: 1000_000000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dexs
+                - swapInToken
+                - swapOutToken
+                - swapOutAmount
+              properties:
+                dexs:
+                  type: array
+                  description: Array of DEX names to include in order routing (could be split)
+                  items:
+                    type: string
+                swapInToken:
+                  type: string
+                  description: lovelace or token policy ID & name hex
+                  example: lovelace
+                swapOutToken:
+                  type: string
+                  description: lovelace or token policy ID & name hex
+                  example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
+                swapOutAmount:
+                  type: string
+                  description: Desired output amount in token base units
+                  example: "1000000"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderRouteResponse'
+                $ref: "#/components/schemas/OrderRouteResponse"
 
   /orders/swaps:
     post:
       tags:
         - Orders
-      summary: Retreive your DEX swap orders
+      summary: Retrieve your DEX swap orders
       parameters:
-        - name: pubKeyHashes
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of your wallet public key hashes
         - name: poolIdentifier
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            example: lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796
+          description: Unique identifier of a pool given from the API
         - name: type
           in: query
           schema:
             type: string
             enum:
-              - "buy"
-              - "sell"
-        - name: token
-          in: body
-          schema:
-            type: string
-            description: "token policy ID & name hex"
-            example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
+              - buy
+              - sell
         - name: page
           in: query
           schema:
@@ -314,38 +326,44 @@ paths:
           in: query
           schema:
             type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pubKeyHashes
+              properties:
+                pubKeyHashes:
+                  type: array
+                  description: Array of wallet public key hashes
+                  items:
+                    type: string
+                token:
+                  type: string
+                  description: Token policy ID & name hex
+                  example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SwapOrderResponse'
+                $ref: "#/components/schemas/SwapOrderResponse"
 
   /orders/deposits:
     post:
       tags:
         - Orders
-      summary: Retreive your DEX deposit orders
+      summary: Retrieve your DEX deposit orders
       parameters:
-        - name: pubKeyHashes
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of your wallet public key hashes
         - name: poolIdentifier
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
-        - name: token
-          in: body
-          schema:
-            type: string
-            description: "Token policy ID & name hex"
-            example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
+            example: lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796
+          description: Unique identifier of a pool given from the API
         - name: page
           in: query
           schema:
@@ -354,32 +372,44 @@ paths:
           in: query
           schema:
             type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pubKeyHashes
+              properties:
+                pubKeyHashes:
+                  type: array
+                  description: Array of wallet public key hashes
+                  items:
+                    type: string
+                token:
+                  type: string
+                  description: Token policy ID & name hex
+                  example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DepositOrderResponse'
+                $ref: "#/components/schemas/DepositOrderResponse"
 
   /orders/withdraws:
     post:
       tags:
         - Orders
-      summary: Retreive your DEX withdraw orders
+      summary: Retrieve your DEX withdraw orders
       parameters:
-        - name: pubKeyHashes
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of your wallet public key hashes
         - name: poolIdentifier
           in: query
           schema:
             type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+            example: lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796
+          description: Unique identifier of a pool given from the API
         - name: page
           in: query
           schema:
@@ -388,53 +418,81 @@ paths:
           in: query
           schema:
             type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pubKeyHashes
+              properties:
+                pubKeyHashes:
+                  type: array
+                  description: Array of wallet public key hashes
+                  items:
+                    type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WithdrawOrderResponse'
+                $ref: "#/components/schemas/WithdrawOrderResponse"
 
   /orders/swaps/assets:
     post:
       tags:
         - Orders
       summary: Assets related to your historic swaps
-      parameters:
-        - name: pubKeyHashes
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of your wallet public key hashes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pubKeyHashes
+              properties:
+                pubKeyHashes:
+                  type: array
+                  description: Array of wallet public key hashes
+                  items:
+                    type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetResponse'
+                $ref: "#/components/schemas/AssetResponse"
 
   /orders/deposits/assets:
     post:
       tags:
         - Orders
       summary: Assets related to your historic deposits
-      parameters:
-        - name: pubKeyHashes
-          in: body
-          required: true
-          schema:
-            type: array
-            description: Array of your wallet public key hashes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pubKeyHashes
+              properties:
+                pubKeyHashes:
+                  type: array
+                  description: Array of wallet public key hashes
+                  items:
+                    type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssetResponse'
+                $ref: "#/components/schemas/AssetResponse"
 
   /liquidity-pools:
     get:
@@ -451,48 +509,46 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LiquidityPoolResponse'
+                $ref: "#/components/schemas/LiquidityPoolResponse"
     post:
       tags:
         - Liquidity Pools
       summary: Retrieve liquidity pools with filters
-      parameters:
-        - name: identifier
-          in: body
-          schema:
-            type: string
-            description: "Unique identifier of a pool given from the API"
-            example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
-        - name: dex
-          in: body
-          schema:
-            type: string
-            description: "Filter pools on a DEX"
-            example: "Minswap"
-        - name: tokenA
-          in: body
-          schema:
-            type: string
-            description: "Filter tokens in the pool"
-            example: lovelace
-        - name: tokenB
-          in: body
-          schema:
-            type: string
-            description: "Filter tokens in the pool"
-            example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identifier:
+                  type: string
+                  description: Unique identifier of a pool given from the API
+                  example: lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796
+                dex:
+                  type: string
+                  description: Filter pools on a DEX
+                  example: Minswap
+                tokenA:
+                  type: string
+                  description: Filter token A in the pool
+                  example: lovelace
+                tokenB:
+                  type: string
+                  description: Filter token B in the pool
+                  example: 533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0.494e4459
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LiquidityPoolResponse'
+                $ref: "#/components/schemas/LiquidityPoolResponse"
 
   /liquidity-pools/search:
     get:
@@ -502,7 +558,7 @@ paths:
       parameters:
         - name: query
           in: query
-          description: Search tokens ticker, policy ID, name hex within pool
+          description: Search token ticker, policy ID, or name hex within pool
           schema:
             type: string
         - name: page
@@ -514,18 +570,18 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LiquidityPoolResponse'
+                $ref: "#/components/schemas/LiquidityPoolResponse"
 
-  /liquidity-pools/:identifier:
+  /liquidity-pools/{identifier}:
     get:
       tags:
         - Liquidity Pools
-      summary: Retreive liquidity pool by unique ID
+      summary: Retrieve liquidity pool by unique ID
       parameters:
         - name: identifier
           in: path
@@ -533,18 +589,18 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LiquidityPool'
+                $ref: "#/components/schemas/LiquidityPool"
 
-  /liquidity-pools/:identifier/ticks:
+  /liquidity-pools/{identifier}/ticks:
     get:
       tags:
         - Liquidity Pools
-      summary: Retreive historic liquidity pool ticks
+      summary: Retrieve historic liquidity pool ticks
       parameters:
         - name: identifier
           in: path
@@ -556,9 +612,9 @@ paths:
           schema:
             type: string
             enum:
-              - "1m"
-              - "1h"
-              - "1D"
+              - 1m
+              - 1h
+              - 1D
         - name: fromTime
           in: query
           description: Unix timestamp to start from
@@ -570,18 +626,18 @@ paths:
           schema:
             type: number
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TicksResponse'
+                $ref: "#/components/schemas/TicksResponse"
 
-  /liquidity-pools/:identifier/swaps:
+  /liquidity-pools/{identifier}/swaps:
     get:
       tags:
         - Liquidity Pools
-      summary: Retreive liquidity poool swap orders
+      summary: Retrieve liquidity pool swap orders
       parameters:
         - name: identifier
           in: path
@@ -593,8 +649,8 @@ paths:
           schema:
             type: string
             enum:
-              - "buy"
-              - "sell"
+              - buy
+              - sell
         - name: page
           in: query
           schema:
@@ -609,18 +665,18 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SwapOrderResponse'
+                $ref: "#/components/schemas/SwapOrderResponse"
 
-  /liquidity-pools/:identifier/deposits:
+  /liquidity-pools/{identifier}/deposits:
     get:
       tags:
         - Liquidity Pools
-      summary: Retreive liquidity poool deposit orders
+      summary: Retrieve liquidity pool deposit orders
       parameters:
         - name: identifier
           in: path
@@ -641,18 +697,18 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DepositOrderResponse'
+                $ref: "#/components/schemas/DepositOrderResponse"
 
-  /liquidity-pools/:identifier/withdraws:
+  /liquidity-pools/{identifier}/withdraws:
     get:
       tags:
         - Liquidity Pools
-      summary: Retreive liquidity poool withdraw orders
+      summary: Retrieve liquidity pool withdraw orders
       parameters:
         - name: identifier
           in: path
@@ -673,12 +729,113 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WithdrawOrderResponse'
+                $ref: "#/components/schemas/WithdrawOrderResponse"
+
+  /liqwid/markets/parameters:
+    get:
+      tags:
+        - Liqwid
+      summary: Retrieve latest Liqwid market parameters by asset
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiqwidMarketParameter"
+
+  /indigo/cdps:
+    get:
+      tags:
+        - Indigo
+      summary: Retrieve active Indigo CDPs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IndigoCdp"
+
+  /indigo/staking/positions:
+    get:
+      tags:
+        - Indigo
+      summary: Retrieve active Indigo staking positions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IndigoStakingPosition"
+
+  /bodega/markets:
+    get:
+      tags:
+        - Bodega
+      summary: Retrieve prediction markets
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionMarketResponse"
+
+  /bodega/markets/{uuid}/history:
+    get:
+      tags:
+        - Bodega
+      summary: Retrieve prediction market history by UUID
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionMarketHistoryResponse"
+
 
 components:
   schemas:
@@ -702,10 +859,10 @@ components:
           example: Indigo DAO Token
         logo:
           type: string
-          example: "base64 image string"
+          example: base64 image string
         isLpToken:
           type: boolean
-          example: 'false'
+          example: false
         description:
           type: string
           example: Indigo is a synthetics protocol...
@@ -716,9 +873,9 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Asset'
+            $ref: "#/components/schemas/Asset"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     Pagination:
       type: object
@@ -751,10 +908,10 @@ components:
           example: Minswap
         website:
           type: string
-          example: "https://minswap.org/"
+          example: https://minswap.org/
         image:
           type: string
-          example: "base64 image string"
+          example: base64 image string
         color:
           type: string
           example: "#2f45c5"
@@ -765,7 +922,7 @@ components:
         dex:
           type: array
           items:
-            $ref: '#/components/schemas/DexMetadata'
+            $ref: "#/components/schemas/DexMetadata"
 
     DexRouteResponse:
       type: object
@@ -797,19 +954,29 @@ components:
           example: 45600
         results:
           type: object
-          properties:
-            "Minswap":
-              $ref: '#/components/schemas/DexRouteResponse'
-            "SundaeSwap":
-              $ref: '#/components/schemas/DexRouteResponse'
+          additionalProperties:
+            $ref: "#/components/schemas/DexRouteResponse"
+          example:
+            Minswap:
+              swapInAmount: 61500000
+              splitPercentage: 50
+              poolFeePercent: 0.3
+              estimatedReceive: 22800
+              priceImpactPercent: 2.1
+            SundaeSwap:
+              swapInAmount: 61500000
+              splitPercentage: 50
+              poolFeePercent: 0.3
+              estimatedReceive: 22800
+              priceImpactPercent: 2.2
 
     SwapOrder:
       type: object
       properties:
         swapInToken:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         swapOutToken:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         swapInAmount:
           type: number
           example: 45600
@@ -834,9 +1001,9 @@ components:
       type: object
       properties:
         depositAToken:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         depositBToken:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         depositAAmount:
           type: number
           example: 45600
@@ -861,7 +1028,7 @@ components:
       type: object
       properties:
         lpToken:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         lpTokenAmount:
           type: number
           example: 45600
@@ -889,21 +1056,23 @@ components:
       type: object
       properties:
         tokenA:
-          type: string
-          example: ""
-          description: Empty token for 'lovelace'
+          oneOf:
+            - type: string
+              example: lovelace
+            - $ref: "#/components/schemas/Asset"
+          description: Asset A in the pool. Can be the string 'lovelace' for ADA or a full Asset object.
         tokenB:
-          $ref: '#/components/schemas/Asset'
+          $ref: "#/components/schemas/Asset"
         dex:
           type: string
           example: Spectrum
         identifier:
           type: string
-          example: "lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796"
+          example: lovelace.e4214b7cce62ac6fbba385d164df48e157eae5863521b4b67ca71d8680de0bde4e25229cb5443dfbb93a8a14beb6aa442d587a484800301d02cca796
         createdSlot:
           type: number
         state:
-          $ref: '#/components/schemas/LiquidityPoolState'
+          $ref: "#/components/schemas/LiquidityPoolState"
 
     LiquidityPoolState:
       type: object
@@ -944,7 +1113,7 @@ components:
     TicksResponse:
       type: array
       items:
-        $ref: '#/components/schemas/Tick'
+        $ref: "#/components/schemas/Tick"
 
     SwapOrderResponse:
       type: object
@@ -952,9 +1121,9 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SwapOrder'
+            $ref: "#/components/schemas/SwapOrder"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     DepositOrderResponse:
       type: object
@@ -962,9 +1131,9 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/DepositOrder'
+            $ref: "#/components/schemas/DepositOrder"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     WithdrawOrderResponse:
       type: object
@@ -972,9 +1141,9 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/WithdrawOrder'
+            $ref: "#/components/schemas/WithdrawOrder"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     LiquidityPoolResponse:
       type: object
@@ -982,6 +1151,52 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/LiquidityPool'
+            $ref: "#/components/schemas/LiquidityPool"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
+
+    LiqwidMarketParameter:
+      type: object
+      description: Latest Liqwid market parameter row for a given asset.
+      additionalProperties: true
+
+    IndigoCdp:
+      type: object
+      description: Active collateralized debt position row from Indigo.
+      additionalProperties: true
+
+    IndigoStakingPosition:
+      type: object
+      description: Active staking position row from Indigo.
+      additionalProperties: true
+
+    PredictionMarket:
+      type: object
+      description: Serialized prediction market resource.
+      additionalProperties: true
+
+    PredictionMarketHistory:
+      type: object
+      description: Serialized prediction market history resource.
+      additionalProperties: true
+
+    PredictionMarketResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictionMarket"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    PredictionMarketHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictionMarketHistory"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
