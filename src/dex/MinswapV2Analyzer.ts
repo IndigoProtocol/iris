@@ -9,10 +9,11 @@ import {
     Utxo,
 } from '../types';
 import { DefinitionBuilder } from '../DefinitionBuilder';
-import { lucidUtils, toDefinitionDatum } from '../utils';
+import { lucidUtils, toDefinitionDatum, tokensMatch } from '../utils';
 import { AddressDetails, Data } from 'lucid-cardano';
 import { Dex, SwapOrderType } from '../constants';
 import swapDefinition from './definitions/minswap-v2/swap';
+import routedDefinition from './definitions/minswap-v2/routed';
 import zapDefinition from './definitions/minswap-v2/zap';
 import poolDefinition from './definitions/minswap-v2/pool';
 import poolDepositDefinition from './definitions/minswap-v2/pool-deposit';
@@ -25,6 +26,10 @@ import { LiquidityPoolDeposit } from '../db/entities/LiquidityPoolDeposit';
 import { LiquidityPoolWithdraw } from '../db/entities/LiquidityPoolWithdraw';
 import { OperationStatus } from '../db/entities/OperationStatus';
 import { LiquidityPool } from '../db/entities/LiquidityPool';
+import { dbService } from '../indexerServices';
+import { EntityManager } from 'typeorm';
+import * as process from 'process';
+import { logError } from '../logger';
 
 /**
  * MinswapV2 constants.
@@ -46,8 +51,9 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
      */
     public async analyzeTransaction(transaction: Transaction): Promise<AmmDexOperation[]> {
         return Promise.all([
-            this.liquidityPoolStates(transaction),
             this.swapOrders(transaction),
+            this.routedOrders(transaction),
+            this.liquidityPoolStates(transaction),
             this.zapOrders(transaction),
             this.depositOrders(transaction),
             this.withdrawOrders(transaction),
@@ -116,6 +122,106 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
         return Promise.all(promises)
             .then((swapOrders: (LiquidityPoolSwap | undefined)[]) => {
                 return swapOrders.filter((operation: LiquidityPoolSwap | undefined) => operation !== undefined) as LiquidityPoolSwap[]
+            })
+            .catch(() => Promise.resolve([]));
+    }
+
+    protected async routedOrders(transaction: Transaction): Promise<LiquidityPoolSwap[]> {
+        const promises: Promise<LiquidityPoolSwap[] | undefined>[] = transaction.outputs.map((output: Utxo) => {
+            return new Promise(async (resolve, reject) => {
+                if (! output.datum) {
+                    return resolve(undefined);
+                }
+
+                const addressDetails: AddressDetails = lucidUtils.getAddressDetails(output.toAddress);
+
+                if (addressDetails.paymentCredential?.hash !== ORDER_SCRIPT_HASH) {
+                    return resolve(undefined);
+                }
+
+                try {
+                    const definitionField: DefinitionField = toDefinitionDatum(
+                        Data.from(output.datum)
+                    );
+                    const builder: DefinitionBuilder = new DefinitionBuilder(routedDefinition);
+                    const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+
+                    const lpTokenA: Asset = new Asset(datumParameters.LpTokenAPolicyId as string, datumParameters.LpTokenAAssetName as string);
+                    const lpTokenB: Asset = new Asset(datumParameters.LpTokenBPolicyId as string, datumParameters.LpTokenBAssetName as string);
+
+                    const existingPoolA: LiquidityPool | undefined = await this.liquidityPoolFromIdentifier(lpTokenA.identifier());
+                    const existingPoolB: LiquidityPool | undefined = await this.liquidityPoolFromIdentifier(lpTokenB.identifier());
+
+                    if (! existingPoolA) return reject(`Unable to find ${Dex.MinswapV2} pool with identifier ${lpTokenA.identifier()}`);
+                    if (! existingPoolB) return reject(`Unable to find ${Dex.MinswapV2} pool with identifier ${lpTokenB.identifier()}`);
+
+                    let swapInToken: Token | undefined;
+                    let swapMiddleToken: Token | undefined;
+
+                    if (output.assetBalances.length > 0) {
+                        swapInToken = output.assetBalances[0].asset;
+                        swapMiddleToken = tokensMatch(output.assetBalances[0].asset, existingPoolA.tokenA ?? 'lovelace')
+                            ? existingPoolA.tokenB
+                            : existingPoolA.tokenA;
+                    } else {
+                        swapInToken = 'lovelace';
+                        swapMiddleToken = ! existingPoolA.tokenA
+                            ? existingPoolA.tokenB
+                            : existingPoolA.tokenA;
+                    }
+
+                    const swapOutToken = tokensMatch(swapMiddleToken ?? 'lovelace', existingPoolB.tokenA ?? 'lovelace')
+                        ? existingPoolB.tokenB
+                        : existingPoolB.tokenA;
+
+                    return resolve([
+                        LiquidityPoolSwap.make(
+                            Dex.MinswapV2,
+                            existingPoolA.identifier,
+                            swapInToken,
+                            swapMiddleToken,
+                            Number(datumParameters.SwapInAmount),
+                            0,
+                            Number(datumParameters.BatcherFee),
+                            datumParameters.SenderPubKeyHash as string,
+                            (datumParameters.SenderStakingKeyHash ?? '') as string,
+                            transaction.blockSlot,
+                            transaction.hash,
+                            output.index,
+                            output.toAddress,
+                            SwapOrderType.Instant,
+                            transaction,
+                        ),
+                        LiquidityPoolSwap.make(
+                            Dex.MinswapV2,
+                            existingPoolB.identifier,
+                            swapMiddleToken,
+                            swapOutToken,
+                            0,
+                            Number(datumParameters.MinReceive),
+                            Number(datumParameters.BatcherFee),
+                            datumParameters.SenderPubKeyHash as string,
+                            (datumParameters.SenderStakingKeyHash ?? '') as string,
+                            transaction.blockSlot,
+                            transaction.hash,
+                            output.index,
+                            output.toAddress,
+                            SwapOrderType.Instant,
+                            transaction,
+                        )
+                    ]);
+                } catch (e) {
+                    return resolve(undefined);
+                }
+            });
+        });
+
+        return Promise.all(promises)
+            .then((swapOrders: (LiquidityPoolSwap[] | undefined)[]) => {
+                return (
+                    swapOrders
+                        .filter((operation: LiquidityPoolSwap[] | undefined) => operation !== undefined) as LiquidityPoolSwap[][]
+                ).flat()
             })
             .catch(() => Promise.resolve([]));
     }
@@ -196,60 +302,136 @@ export class MinswapV2Analyzer extends BaseAmmDexAnalyzer {
     /**
      * Check for updated liquidity pool states in transaction.
      */
-    protected liquidityPoolStates(transaction: Transaction): LiquidityPoolState[] {
-        return transaction.outputs.map((output: Utxo) => {
-            // Check if pool output is valid
-            const hasFactoryNft: boolean = output.assetBalances.some((balance: AssetBalance) => {
-                return balance.asset.policyId === LP_TOKEN_POLICY_ID;
-            });
+    protected async liquidityPoolStates(transaction: Transaction): Promise<LiquidityPoolState[]> {
+        const stateOutputs: Utxo[] = transaction.outputs.filter((output: Utxo) => {
+           return output.assetBalances.some((balance: AssetBalance) => {
+               return balance.asset.policyId === LP_TOKEN_POLICY_ID;
+           }) && output.datum;
+        }).sort((a, b) => a.index - b.index);
 
-            if (! output.datum || ! hasFactoryNft) {
-                return undefined;
+        if (stateOutputs.length === 0) return [];
+
+        let possibleOperationStatuses: OperationStatus[] = this.spentOperationInputs(transaction);
+
+        return Promise.all(
+            stateOutputs.map((output: Utxo) => {
+                return new Promise(async (resolve) => {
+                    try {
+                        const definitionField: DefinitionField = toDefinitionDatum(
+                            Data.from(output.datum as string)
+                        );
+                        const builder: DefinitionBuilder = new DefinitionBuilder(poolDefinition);
+                        const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
+
+                        const tokenA: Token = datumParameters.PoolAssetAPolicyId === ''
+                            ? 'lovelace'
+                            : new Asset(datumParameters.PoolAssetAPolicyId as string, datumParameters.PoolAssetAAssetName as string);
+                        const tokenB: Token = datumParameters.PoolAssetBPolicyId === ''
+                            ? 'lovelace'
+                            : new Asset(datumParameters.PoolAssetBPolicyId as string, datumParameters.PoolAssetBAssetName as string);
+                        const lpToken: Asset | undefined = output.assetBalances.find((balance: AssetBalance) => {
+                            return balance.asset.policyId === LP_TOKEN_POLICY_ID && balance.asset.identifier() !== MSP;
+                        })?.asset;
+
+                        if (! lpToken) return resolve(undefined);
+
+                        return resolve(
+                            LiquidityPoolState.make(
+                                Dex.MinswapV2,
+                                output.toAddress,
+                                lpToken.identifier(),
+                                tokenA,
+                                tokenB,
+                                lpToken,
+                                Number(datumParameters.ReserveA),
+                                Number(datumParameters.ReserveB),
+                                Number(datumParameters.TotalLpTokens),
+                                Number(datumParameters.BaseFee) / 100,
+                                Number(datumParameters.BaseFee) / 100,
+                                transaction.blockSlot,
+                                transaction.hash,
+                                possibleOperationStatuses,
+                                transaction.inputs,
+                                transaction.outputs.filter((sibling: Utxo) => sibling.index !== output.index),
+                            )
+                        );
+                    } catch (e) {
+                        return resolve(undefined);
+                    }
+                });
+            })
+        ).then(async (states: any) => {
+            const filteredStates = states.filter((state: LiquidityPoolState | undefined) => state !== undefined) as LiquidityPoolState[];
+
+            if (filteredStates.length > 1) {
+                const transactionHashes = transaction.inputs.map((input: Utxo) => input.forTxHash);
+
+                let lastOrder: LiquidityPoolSwap | null = null;
+
+                for (let i = 0; i < filteredStates.length; i++) {
+                    await dbService.transaction(async (manager: EntityManager) => {
+                        const pool = await manager.createQueryBuilder(LiquidityPool, 'pools')
+                            .leftJoinAndSelect('pools.latestState', 'latestState')
+                            .where('identifier = :identifier', {
+                                identifier: filteredStates[i].liquidityPoolIdentifier,
+                            })
+                            .limit(1)
+                            .getOne();
+
+                        if (! pool) {
+                            logError(`Cant find pool for routed order ${filteredStates[i].txHash} ${i}`);
+                            return;
+                        }
+
+                        const relevantOrder = await manager.createQueryBuilder(LiquidityPoolSwap, 'swaps')
+                            .leftJoinAndSelect('swaps.swapInToken', 'swapInToken')
+                            .leftJoinAndSelect('swaps.swapOutToken', 'swapOutToken')
+                            .where('liquidityPoolId = :poolId', {
+                                poolId: pool.id,
+                            })
+                            .andWhere('txHash IN(:...hashes)', {
+                                hashes: transactionHashes,
+                            })
+                            .limit(1)
+                            .getOne();
+
+                        if (! relevantOrder) {
+                            logError(`Cant find routed order ${filteredStates[i].txHash} ${i}`);
+                            return;
+                        }
+
+                        const updateFields: any = {};
+
+                        if (i === 0) {
+                            updateFields['minReceive'] = tokensMatch(relevantOrder.swapInToken ?? 'lovelace', pool.tokenA ?? 'lovelace')
+                                ? Math.abs(pool.latestState.reserveA - filteredStates[i].reserveA)
+                                : Math.abs(pool.latestState.reserveB - filteredStates[i].reserveB);
+                            updateFields['actualReceive'] = tokensMatch(relevantOrder.swapInToken ?? 'lovelace', pool.tokenA ?? 'lovelace')
+                                ? Math.abs(pool.latestState.reserveA - filteredStates[i].reserveA)
+                                : Math.abs(pool.latestState.reserveB - filteredStates[i].reserveB);
+                        } else {
+                            updateFields['swapInAmount'] = lastOrder?.actualReceive ?? 0;
+                            updateFields['actualReceive'] = tokensMatch(relevantOrder.swapInToken ?? 'lovelace', pool.tokenA ?? 'lovelace')
+                                ? Math.abs(pool.latestState.reserveB - filteredStates[i].reserveB)
+                                : Math.abs(pool.latestState.reserveA - filteredStates[i].reserveA);
+                        }
+
+                        lastOrder = {
+                            ...lastOrder,
+                            ...updateFields
+                        };
+
+                        await manager.createQueryBuilder()
+                            .update(LiquidityPoolSwap)
+                            .set(updateFields)
+                            .where('id = :id', { id: relevantOrder.id })
+                            .execute();
+                    }).catch(() => undefined);
+                }
             }
 
-            try {
-                const definitionField: DefinitionField = toDefinitionDatum(
-                    Data.from(output.datum)
-                );
-                const builder: DefinitionBuilder = new DefinitionBuilder(poolDefinition);
-                const datumParameters: DatumParameters = builder.pullParameters(definitionField as DefinitionConstr);
-
-                const tokenA: Token = datumParameters.PoolAssetAPolicyId === ''
-                    ? 'lovelace'
-                    : new Asset(datumParameters.PoolAssetAPolicyId as string, datumParameters.PoolAssetAAssetName as string);
-                const tokenB: Token = datumParameters.PoolAssetBPolicyId === ''
-                    ? 'lovelace'
-                    : new Asset(datumParameters.PoolAssetBPolicyId as string, datumParameters.PoolAssetBAssetName as string);
-                const lpToken: Asset | undefined = output.assetBalances.find((balance: AssetBalance) => {
-                    return balance.asset.policyId === LP_TOKEN_POLICY_ID && balance.asset.identifier() !== MSP;
-                })?.asset;
-
-                if (! lpToken) return undefined;
-
-                const possibleOperationStatuses: OperationStatus[] = this.spentOperationInputs(transaction);
-
-                return LiquidityPoolState.make(
-                    Dex.MinswapV2,
-                    output.toAddress,
-                    lpToken.identifier(),
-                    tokenA,
-                    tokenB,
-                    lpToken,
-                    Number(datumParameters.ReserveA),
-                    Number(datumParameters.ReserveB),
-                    Number(datumParameters.TotalLpTokens),
-                    Number(datumParameters.BaseFee) / 100,
-                    Number(datumParameters.BaseFee) / 100,
-                    transaction.blockSlot,
-                    transaction.hash,
-                    possibleOperationStatuses,
-                    transaction.inputs,
-                    transaction.outputs.filter((sibling: Utxo) => sibling.index !== output.index),
-                );
-            } catch (e) {
-                return undefined;
-            }
-        }).flat().filter((operation: LiquidityPoolState | undefined) => operation !== undefined) as (LiquidityPoolState)[];
+            return filteredStates;
+        });
     }
 
     /**
