@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> This repository is archived and no longer maintained.
+
+
 <div align="center">
     <h1 align="center">Iris Cardano DEX Indexer</h1>
 </div>
