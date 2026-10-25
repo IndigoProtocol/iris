@@ -485,6 +485,7 @@ export class LiquidityPoolController extends BaseApiController {
                         tick.close = 1 / tick.close;
                         tick.high = 1 / tick.high;
                         tick.low = 1 / tick.low;
+                        tick.volume = 1 / tick.volume;
                     });
                 }
 
